@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Formations Fédérales — IRFBB HDF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#F4F0E8; --sand-deep:#EAE3D5; --sage:#8FA38B; --sage-deep:#6E8169;
+    --ink:#33312C; --ink-soft:#6B675E; --terra:#C17A56; --line:#DDD5C5;
+    --white:#FFFEFB; --warn:#C17A56; --ok:#6E8169;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--sand);color:var(--ink);font-family:'Inter',sans-serif;}
+  h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;margin:0;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 32px;border-bottom:1px solid var(--line);background:var(--white);}
+  .topbar h1{font-size:22px;color:var(--ink);}
+  .topbar .sub{color:var(--ink-soft);font-size:13px;margin-top:2px;}
+  .tabs{display:flex;gap:6px;padding:14px 32px 0;background:var(--white);}
+  .tab{padding:10px 18px;border-radius:10px 10px 0 0;cursor:pointer;font-size:14px;color:var(--ink-soft);border:1px solid transparent;}
+  .tab.active{background:var(--sand);color:var(--ink);font-weight:600;border-color:var(--line);border-bottom-color:var(--sand);}
+  main{padding:28px 32px 60px;max-width:1200px;margin:0 auto;}
+  .view{display:none;} .view.active{display:block;}
+
+  .card{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px;}
+  .grid-sessions{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+  .session-card{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:.15s;}
+  .session-card:hover{border-color:var(--sage);box-shadow:0 4px 16px rgba(110,129,105,.12);}
+  .session-card .type{display:inline-block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;background:var(--sage);color:#fff;padding:3px 9px;border-radius:20px;margin-bottom:8px;}
+  .session-card .type.bf{background:var(--terra);}
+  .session-card h3{font-size:16px;line-height:1.3;margin-bottom:6px;}
+  .session-card .meta{color:var(--ink-soft);font-size:12.5px;margin-bottom:10px;}
+  .status-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .pill{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--sand-deep);color:var(--ink-soft);}
+  .pill.done{background:var(--sage);color:#fff;}
+  .pill.warn{background:var(--terra);color:#fff;}
+
+  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:9px;padding:10px 16px;font-size:13.5px;font-weight:600;}
+  .btn-primary{background:var(--sage-deep);color:#fff;}
+  .btn-primary:hover{background:#5c6e58;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .btn-ghost:hover{border-color:var(--sage);}
+  .btn-row{display:flex;gap:10px;margin-bottom:18px;}
+
+  input,select,textarea{font-family:'Inter',sans-serif;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13.5px;background:var(--white);width:100%;}
+  label{font-size:12.5px;color:var(--ink-soft);display:block;margin-bottom:4px;}
+  .field{margin-bottom:14px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;color:var(--ink-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid var(--line);}
+  td{padding:8px 10px;border-bottom:1px solid var(--sand-deep);}
+  tr:hover td{background:var(--sand);}
+  .check{width:18px;height:18px;accent-color:var(--sage-deep);}
+
+  .subtabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--line);}
+  .subtab{padding:8px 14px;font-size:13px;color:var(--ink-soft);cursor:pointer;border-bottom:2px solid transparent;}
+  .subtab.active{color:var(--ink);font-weight:600;border-color:var(--sage-deep);}
+  .subview{display:none;} .subview.active{display:block;}
+
+  .back-link{color:var(--ink-soft);font-size:13px;cursor:pointer;margin-bottom:14px;display:inline-block;}
+  .back-link:hover{color:var(--ink);}
+
+  .empty{text-align:center;color:var(--ink-soft);padding:50px 20px;}
+  .stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
+  .stat{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:140px;}
+  .stat .num{font-family:'Playfair Display',serif;font-size:26px;color:var(--sage-deep);}
+  .stat .lbl{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(51,49,44,.45);align-items:center;justify-content:center;z-index:50;}
+  .modal-bg.active{display:flex;}
+  .modal{background:var(--white);border-radius:16px;padding:26px;width:480px;max-width:92vw;max-height:88vh;overflow:auto;}
+  .modal h3{margin-bottom:16px;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:30px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:100;}
+  .toast.show{opacity:1;}
+  textarea.csv{min-height:90px;font-family:monospace;font-size:11.5px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>Suivi Formations Fédérales</h1>
+    <div class="sub">DETB · Brevet Fédéral — IRFBB Hauts-de-France</div>
+  </div>
+  <button class="btn-primary" onclick="openNewSession()">+ Nouvelle session</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-view="dashboard" onclick="switchView('dashboard')">Sessions</div>
+</div>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div class="stat-row" id="global-stats"></div>
+    <div class="grid-sessions" id="sessions-grid"></div>
+  </div>
+
+  <!-- DETAIL SESSION -->
+  <div class="view" id="view-detail">
+    <span class="back-link" onclick="switchView('dashboard')">← Retour aux sessions</span>
+    <h2 id="detail-title" style="font-size:22px;margin-bottom:4px;"></h2>
+    <div class="sub" id="detail-sub" style="color:var(--ink-soft);font-size:13px;margin-bottom:18px;"></div>
+
+    <div class="subtabs">
+      <div class="subtab active" data-sub="stagiaires" onclick="switchSub('stagiaires')">Stagiaires</div>
+      <div class="subtab" data-sub="repas" onclick="switchSub('repas')">Liste repas</div>
+      <div class="subtab" data-sub="tel" onclick="switchSub('tel')">Liste tél.</div>
+      <div class="subtab" data-sub="emargement" onclick="switchSub('emargement')">Émargement</div>
+      <div class="subtab" data-sub="bilan" onclick="switchSub('bilan')">Bilan financier</div>
+      <div class="subtab" data-sub="import" onclick="switchSub('import')">Importer stagiaires</div>
+      <div class="subtab" data-sub="import-paiements" onclick="switchSub('import-paiements')">Importer paiements</div>
+    </div>
+
+    <div class="subview active" id="sub-stagiaires"><div id="stagiaires-table"></div></div>
+    <div class="subview" id="sub-repas"><div id="repas-table"></div></div>
+    <div class="subview" id="sub-tel"><div id="tel-table"></div></div>
+    <div class="subview" id="sub-emargement">
+      <div class="card">
+        <label>Dates de la session (séparées par une virgule, ex: 28/09/2025,12/10/2025,2/11/2025)</label>
+        <div style="display:flex;gap:10px;">
+          <input id="emargement-dates" placeholder="jj/mm/aaaa, jj/mm/aaaa, ...">
+          <button class="btn-ghost" onclick="renderEmargement()">Générer la grille</button>
+        </div>
+      </div>
+      <div id="emargement-table"></div>
+    </div>
+    <div class="subview" id="sub-bilan"><div id="bilan-content"></div></div>
+    <div class="subview" id="sub-import">
+      <div class="card">
+        <p style="font-size:13.5px;color:var(--ink-soft);margin-top:0;">Colle ici le CSV exporté de Kalisport (onglet "Liste des participants"). Première ligne = en-têtes.</p>
+        <textarea class="csv" id="csv-input" placeholder="ID,NOM_STAGE,NOM_STAGIAIRE,PRENOM_STAGIAIRE,EMAIL1_STAGIAIRE,NUMERO_DE_PORTABLE,CLUB_STAGIAIRE,..."></textarea>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-primary" onclick="importCsv()">Importer les stagiaires</button>
+        </div>
+        <div id="import-result" style="font-size:13px;color:var(--ink-soft);"></div>
+      </div>
+    </div>
+    <div class="subview" id="sub-import-paiements">
+      <div class="card">
+        <p style="font-size:13.5px;color:var(--ink-soft);margin-top:0;">Colle ici le CSV exporté de Kalisport (onglet "Récap paiements"). Les paiements sont rapprochés des stagiaires par nom + prénom — importe d'abord les stagiaires si ce n'est pas déjà fait.</p>
+        <textarea class="csv" id="csv-paiements-input" placeholder="ID_PAIEMENT,OBJET - STAGIAIRE,EMETTEUR,MODE PAIEMENT,MONTANT,BANQUE,PAYE,ETAT,DATE PAIEMENT,DATE ENCAISSEMENT,NUMERO FACTURE,..."></textarea>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-primary" onclick="importPaiementsCsv()">Importer les paiements</button>
+        </div>
+        <div id="import-paiements-result" style="font-size:13px;color:var(--ink-soft);"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL NOUVELLE SESSION -->
+<div class="modal-bg" id="modal-session">
+  <div class="modal">
+    <h3>Nouvelle session</h3>
+    <div class="field">
+      <label>Type</label>
+      <select id="f-type"><option>DETB</option><option>Brevet Fédéral</option></select>
+    </div>
+    <div class="field">
+      <label>Nom de la session</label>
+      <input id="f-nom" placeholder="DETB - CS1 - AISNE - TERGNIER - Session Février 2025-26">
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Date début</label><input id="f-debut" type="date"></div>
+      <div class="field"><label>Date fin</label><input id="f-fin" type="date"></div>
+    </div>
+    <div class="field"><label>Lieu</label><input id="f-lieu"></div>
+    <div class="field-row">
+      <div class="field"><label>Formateur — nom</label><input id="f-form-nom"></div>
+      <div class="field"><label>Formateur — prénom</label><input id="f-form-prenom"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Email formateur</label><input id="f-form-email"></div>
+      <div class="field"><label>Lien tableau de bord Teach Up</label><input id="f-teachup"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="saveNewSession()">Créer la session</button>
+      <button class="btn-ghost" onclick="closeModal()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ====== CONFIGURATION ======
+const API_URL = 'https://script.google.com/macros/s/AKfycbzx_yE_nMLFxLIG28tydeuFq2ZIwndHCgieNyepw9KLFqLesEchi4CBwS8VEblGISpGbA/exec'; // déploiement Code.gs en WebApp
+
+// ====== ÉTAT ======
+let sessions = [];
+let currentSession = null;
+let currentStagiaires = [];
+
+// ====== APPEL API (GET + payload encodé, pattern CORS-safe) ======
+async function api(action, payload = {}) {
+  const url = `${API_URL}?action=${action}&payload=${encodeURIComponent(JSON.stringify(payload))}`;
+  const res = await fetch(url);
+  return res.json();
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ====== NAVIGATION ======
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  if (name === 'dashboard') loadSessions();
+}
+function switchSub(name) {
+  document.querySelectorAll('.subtab').forEach(t => t.classList.toggle('active', t.dataset.sub === name));
+  document.querySelectorAll('.subview').forEach(v => v.classList.remove('active'));
+  document.getElementById('sub-' + name).classList.add('active');
+  if (name === 'repas') renderRepas();
+  if (name === 'tel') renderTel();
+  if (name === 'bilan') renderBilan();
+  if (name === 'stagiaires') renderStagiaires();
+}
+
+// ====== DASHBOARD ======
+async function loadSessions() {
+  document.getElementById('sessions-grid').innerHTML = '<div class="empty">Chargement…</div>';
+  const data = await api('getSessions');
+  sessions = Array.isArray(data) ? data : [];
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const totalStag = sessions.reduce((s, x) => s + (Number(x.nb_stagiaires) || 0), 0);
+  document.getElementById('global-stats').innerHTML = `
+    <div class="stat"><div class="num">${sessions.length}</div><div class="lbl">Sessions actives</div></div>
+    <div class="stat"><div class="num">${totalStag}</div><div class="lbl">Stagiaires au total</div></div>
+  `;
+  const grid = document.getElementById('sessions-grid');
+  if (sessions.length === 0) {
+    grid.innerHTML = '<div class="empty">Aucune session pour l\\'instant. Crée ta première session DETB ou Brevet Fédéral.</div>';
+    return;
+  }
+  grid.innerHTML = sessions.map(s => `
+    <div class="session-card" onclick="openSession('${s.id}')">
+      <span class="type ${s.type === 'Brevet Fédéral' ? 'bf' : ''}">${s.type}</span>
+      <h3>${s.nom}</h3>
+      <div class="meta">${s.formateur_prenom || ''} ${s.formateur_nom || ''} · ${s.nb_stagiaires} stagiaire(s)</div>
+      <div class="status-row">
+        ${pill('Convocation', s.statut_convocation)}
+        ${pill('Repas', s.statut_repas)}
+        ${pill('Émargement', s.statut_emargement)}
+        ${pill('Diplômes', s.statut_diplomes)}
+      </div>
+    </div>
+  `).join('');
+}
+function pill(label, status) {
+  const cls = status === 'Fait' ? 'done' : (status === 'En cours' ? 'warn' : '');
+  return `<span class="pill ${cls}">${label}</span>`;
+}
+
+// ====== NOUVELLE SESSION ======
+function openNewSession() { document.getElementById('modal-session').classList.add('active'); }
+function closeModal() { document.getElementById('modal-session').classList.remove('active'); }
+
+async function saveNewSession() {
+  const fields = {
+    type: document.getElementById('f-type').value,
+    nom: document.getElementById('f-nom').value,
+    date_debut: document.getElementById('f-debut').value,
+    date_fin: document.getElementById('f-fin').value,
+    lieu: document.getElementById('f-lieu').value,
+    formateur_nom: document.getElementById('f-form-nom').value,
+    formateur_prenom: document.getElementById('f-form-prenom').value,
+    formateur_email: document.getElementById('f-form-email').value,
+    teachup_lien: document.getElementById('f-teachup').value
+  };
+  if (!fields.nom) { toast('Le nom de la session est requis'); return; }
+  await api('createSession', fields);
+  closeModal();
+  toast('Session créée');
+  loadSessions();
+}
+
+// ====== DETAIL SESSION ======
+async function openSession(id) {
+  switchView('detail');
+  document.getElementById('detail-title').textContent = 'Chargement…';
+  const data = await api('getSession', { id });
+  currentSession = data.session;
+  currentStagiaires = data.stagiaires || [];
+  document.getElementById('detail-title').textContent = currentSession.nom;
+  document.getElementById('detail-sub').textContent =
+    `${currentSession.type} · ${currentSession.formateur_prenom || ''} ${currentSession.formateur_nom || ''} · ${currentStagiaires.length} stagiaire(s)`;
+  switchSub('stagiaires');
+}
+
+function renderStagiaires() {
+  if (currentStagiaires.length === 0) {
+    document.getElementById('stagiaires-table').innerHTML = '<div class="empty">Aucun stagiaire importé. Va dans l\\'onglet "Importer".</div>';
+    return;
+  }
+  document.getElementById('stagiaires-table').innerHTML = `
+    <table><thead><tr><th>Nom</th><th>Prénom</th><th>Club</th><th>Email</th><th>Téléphone</th><th>Repas</th><th>Paiement</th></tr></thead>
+    <tbody>${currentStagiaires.map(s => `
+      <tr><td>${s.nom}</td><td>${s.prenom}</td><td>${s.club || ''}</td><td>${s.email || ''}</td>
+      <td>${s.telephone || ''}</td><td>${s.repas || ''}</td><td>${s.paiement_statut || ''}</td></tr>
+    `).join('')}</tbody></table>`;
+}
+
+function renderRepas() {
+  const liste = currentStagiaires.filter(s => s.repas === 'Oui');
+  document.getElementById('repas-table').innerHTML = liste.length === 0
+    ? '<div class="empty">Aucun repas à prévoir.</div>'
+    : `<table><thead><tr><th>Nom</th><th>Prénom</th><th>Club</th></tr></thead>
+       <tbody>${liste.map(s => `<tr><td>${s.nom}</td><td>${s.prenom}</td><td>${s.club || ''}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function renderTel() {
+  document.getElementById('tel-table').innerHTML = `
+    <table><thead><tr><th>Stagiaire</th><th>Club</th><th>Téléphone</th></tr></thead>
+    <tbody>${currentStagiaires.map(s => `<tr><td>${s.nom} ${s.prenom}</td><td>${s.club || ''}</td><td>${s.telephone || ''}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function renderBilan() {
+  api('getBilan', { session_id: currentSession.id }).then(b => {
+    const sansPaiementHtml = b.nb_sans_paiement > 0
+      ? `<div class="card" style="border-color:var(--terra);">
+           <strong style="color:var(--terra);">${b.nb_sans_paiement} stagiaire(s) sans paiement rattaché</strong>
+           <ul style="margin:8px 0 0;padding-left:18px;font-size:13px;color:var(--ink-soft);">
+             ${b.sans_paiement.map(s => `<li>${s.nom} ${s.prenom}</li>`).join('')}
+           </ul>
+         </div>` : '';
+    const tablePaiements = b.paiements.length === 0 ? '<div class="empty">Aucun paiement importé.</div>' : `
+      <table><thead><tr><th>Stagiaire</th><th>Montant</th><th>Mode</th><th>État</th><th>Date paiement</th><th>N° facture</th></tr></thead>
+      <tbody>${b.paiements.map(p => `
+        <tr><td>${p.objet_stagiaire || ''}</td><td>${p.montant || 0} €</td><td>${p.mode || ''}</td>
+        <td>${p.etat || p.paye || ''}</td><td>${p.date_paiement || ''}</td><td>${p.numero_facture || ''}</td></tr>
+      `).join('')}</tbody></table>`;
+    document.getElementById('bilan-content').innerHTML = `
+      <div class="stat-row">
+        <div class="stat"><div class="num">${b.nb_stagiaires}</div><div class="lbl">Stagiaires</div></div>
+        <div class="stat"><div class="num">${b.nb_paiements}</div><div class="lbl">Paiements importés</div></div>
+        <div class="stat"><div class="num">${b.total_encaisse} €</div><div class="lbl">Encaissé</div></div>
+        <div class="stat"><div class="num">${b.total_tous_paiements} €</div><div class="lbl">Total tous paiements</div></div>
+      </div>
+      ${sansPaiementHtml}
+      ${tablePaiements}
+    `;
+  });
+}
+
+// ====== ÉMARGEMENT ======
+function renderEmargement() {
+  const raw = document.getElementById('emargement-dates').value.trim();
+  if (!raw) { toast('Indique au moins une date'); return; }
+  const dates = raw.split(',').map(d => d.trim()).filter(Boolean);
+  const rows = currentStagiaires.map(s => {
+    const em = s.emargement || {};
+    const cells = dates.map(d => {
+      const checkedAM = em[d + '_AM'] ? 'checked' : '';
+      const checkedPM = em[d + '_PM'] ? 'checked' : '';
+      return `<td>
+        <input type="checkbox" class="check" ${checkedAM} onchange="toggleEmargement('${s.id}','${d}_AM',this.checked)"> AM
+        <input type="checkbox" class="check" ${checkedPM} onchange="toggleEmargement('${s.id}','${d}_PM',this.checked)"> PM
+      </td>`;
+    }).join('');
+    return `<tr><td>${s.nom} ${s.prenom}</td>${cells}</tr>`;
+  }).join('');
+  document.getElementById('emargement-table').innerHTML = `
+    <table><thead><tr><th>Stagiaire</th>${dates.map(d => `<th>${d}</th>`).join('')}</tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+
+let emargementDebounce = {};
+function toggleEmargement(stagiaireId, key, value) {
+  const stag = currentStagiaires.find(s => s.id === stagiaireId);
+  stag.emargement = stag.emargement || {};
+  stag.emargement[key] = value;
+  clearTimeout(emargementDebounce[stagiaireId]);
+  emargementDebounce[stagiaireId] = setTimeout(() => {
+    api('updateEmargement', { id: stagiaireId, emargement: stag.emargement });
+    toast('Émargement enregistré');
+  }, 800);
+}
+
+// ====== IMPORT CSV KALISPORT ======
+// Mapping colonnes export Kalisport -> champs internes
+const CSV_MAPPING = {
+  'ID': 'kalisport_id',
+  'NOM_STAGIAIRE': 'nom',
+  'PRENOM_STAGIAIRE': 'prenom',
+  'SEXE_STAGIAIRE': 'sexe',
+  'EMAIL1_STAGIAIRE': 'email',
+  'NUMERO_DE_PORTABLE': 'telephone',
+  'CLUB_STAGIAIRE': 'club',
+  'NUMERO_CLUB_STAGIAIRE': 'numero_club',
+  'REPAS_LORS_DE_VOTRE_FORMATION_:': 'repas',
+  'MONTANT_A_PAYER': 'montant_a_payer',
+  'PAIEMENT': 'paiement_statut',
+  'MONTANT_PAIEMENT': 'montant_paiement',
+  'DATE_PAIEMENT': 'date_paiement'
+};
+
+function parseCsv(text) {
+  const lines = text.trim().split('\\n').filter(l => l.trim());
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  return lines.slice(1).map(line => {
+    const cells = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = cells[i] || '');
+    return obj;
+  });
+}
+
+async function importCsv() {
+  const text = document.getElementById('csv-input').value;
+  if (!text.trim()) { toast('Colle un CSV d\\'abord'); return; }
+  const rawRows = parseCsv(text);
+  const mapped = rawRows.map(row => {
+    const obj = {};
+    Object.keys(CSV_MAPPING).forEach(csvCol => {
+      obj[CSV_MAPPING[csvCol]] = row[csvCol] !== undefined ? row[csvCol] : '';
+    });
+    obj.repas = obj.repas === 'Inclure les repas' ? 'Oui' : 'Non';
+    obj.civilite = '';
+    return obj;
+  });
+  document.getElementById('import-result').textContent = 'Import en cours…';
+  const res = await api('importStagiaires', { session_id: currentSession.id, stagiaires: mapped });
+  document.getElementById('import-result').textContent = `${res.imported} stagiaire(s) importé(s).`;
+  toast('Import terminé');
+  openSession(currentSession.id);
+}
+
+// Mapping colonnes export Kalisport "Récap paiements" -> champs internes
+const CSV_PAIEMENTS_MAPPING = {
+  'ID_PAIEMENT': 'id_paiement_kalisport',
+  'OBJET - STAGIAIRE': 'objet_stagiaire',
+  'EMETTEUR': 'emetteur',
+  'MODE\nPAIEMENT': 'mode',
+  'MONTANT': 'montant',
+  'BANQUE': 'banque',
+  'PAYE': 'paye',
+  'ETAT': 'etat',
+  'DATE\nPAIEMENT': 'date_paiement',
+  'DATE\nENCAISSEMENT': 'date_encaissement',
+  'NUMERO\nFACTURE': 'numero_facture'
+};
+
+async function importPaiementsCsv() {
+  const text = document.getElementById('csv-paiements-input').value;
+  if (!text.trim()) { toast('Colle un CSV d\\'abord'); return; }
+  const rawRows = parseCsv(text);
+  const mapped = rawRows.map(row => {
+    const obj = {};
+    Object.keys(CSV_PAIEMENTS_MAPPING).forEach(csvCol => {
+      const cleanCol = csvCol.replace(/\\n/g, ' ').trim();
+      const found = Object.keys(row).find(k => k.replace(/\\n/g, ' ').trim() === cleanCol);
+      obj[CSV_PAIEMENTS_MAPPING[csvCol]] = found ? row[found] : '';
+    });
+    return obj;
+  });
+  document.getElementById('import-paiements-result').textContent = 'Import en cours…';
+  const res = await api('importPaiements', { session_id: currentSession.id, paiements: mapped });
+  document.getElementById('import-paiements-result').textContent =
+    `${res.imported} paiement(s) importé(s) — ${res.matched} rattaché(s) à un stagiaire, ${res.unmatched} non rattaché(s) (vérifie l'orthographe des noms).`;
+  toast('Import des paiements terminé');
+}
+
+// ====== INIT ======
+loadSessions();
+</script>
+</body>
+</html>
