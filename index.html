@@ -190,7 +190,7 @@
 
 <script>
 // ====== CONFIGURATION ======
-const API_URL = 'https://script.google.com/macros/s/AKfycbzx_yE_nMLFxLIG28tydeuFq2ZIwndHCgieNyepw9KLFqLesEchi4CBwS8VEblGISpGbA/exec'; // déploiement Code.gs en WebApp
+const API_URL = '1_xmPZpOrQj2RzX2p-YGlNPlP1HvfJEZhZH0eodG_6Fc'; // déploiement Code.gs en WebApp
 
 // ====== ÉTAT ======
 let sessions = [];
@@ -434,7 +434,7 @@ async function importCsv() {
   });
   document.getElementById('import-result').textContent = 'Import en cours…';
   const res = await api('importStagiaires', { session_id: currentSession.id, stagiaires: mapped });
-  document.getElementById('import-result').textContent = `${res.imported} stagiaire(s) importé(s).`;
+  document.getElementById('import-result').textContent = `${res.created} créé(s), ${res.updated} mis à jour.`;
   toast('Import terminé');
   openSession(currentSession.id);
 }
@@ -470,7 +470,7 @@ async function importPaiementsCsv() {
   document.getElementById('import-paiements-result').textContent = 'Import en cours…';
   const res = await api('importPaiements', { session_id: currentSession.id, paiements: mapped });
   document.getElementById('import-paiements-result').textContent =
-    `${res.imported} paiement(s) importé(s) — ${res.matched} rattaché(s) à un stagiaire, ${res.unmatched} non rattaché(s) (vérifie l'orthographe des noms).`;
+    `${res.imported} paiement(s) importé(s) — ${res.matched_by_id} rattaché(s) par numéro d'inscription, ${res.matched_by_name} par nom (à vérifier), ${res.unmatched} non rattaché(s).`;
   toast('Import des paiements terminé');
 }
 
