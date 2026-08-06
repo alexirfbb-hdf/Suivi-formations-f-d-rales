@@ -4,72 +4,73 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Suivi Formations Fédérales — IRFBB HDF</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{--sand:#F4F0E8;--sand-deep:#EAE3D5;--sage:#8FA38B;--sage-deep:#6E8169;--ink:#33312C;--ink-soft:#6B675E;--terra:#C17A56;--line:#DDD5C5;--white:#FFFEFB;}
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--sand);color:var(--ink);font-family:'Inter',sans-serif;}
-  h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;margin:0;}
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 32px;border-bottom:1px solid var(--line);background:var(--white);}
-  .topbar h1{font-size:22px;}.topbar .sub{color:var(--ink-soft);font-size:13px;margin-top:2px;}
-  .tabs{display:flex;gap:6px;padding:14px 32px 0;background:var(--white);}
-  .tab{padding:10px 18px;border-radius:10px 10px 0 0;cursor:pointer;font-size:14px;color:var(--ink-soft);border:1px solid transparent;}
-  .tab.active{background:var(--sand);color:var(--ink);font-weight:600;border-color:var(--line);border-bottom-color:var(--sand);}
-  main{padding:28px 32px 60px;max-width:1300px;margin:0 auto;}
-  .view{display:none;}.view.active{display:block;}
-  .card{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px;}
-  .grid-sessions{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
-  .session-card{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:.15s;}
-  .session-card:hover{border-color:var(--sage);box-shadow:0 4px 16px rgba(110,129,105,.12);}
-  .session-card .type{display:inline-block;font-size:11px;text-transform:uppercase;background:var(--sage);color:#fff;padding:3px 9px;border-radius:20px;margin-bottom:8px;}
-  .session-card .type.bf{background:var(--terra);}
-  .session-card h3{font-size:16px;line-height:1.3;margin-bottom:6px;}
-  .session-card .meta{color:var(--ink-soft);font-size:12.5px;margin-bottom:10px;}
-  .status-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
-  .pill{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--sand-deep);color:var(--ink-soft);}
-  .pill.done{background:var(--sage);color:#fff;}.pill.warn{background:var(--terra);color:#fff;}
-  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:9px;padding:10px 16px;font-size:13.5px;font-weight:600;}
-  .btn-primary{background:var(--sage-deep);color:#fff;}.btn-primary:hover{background:#5c6e58;}
-  .btn-secondary{background:var(--terra);color:#fff;}.btn-secondary:hover{background:#a96540;}
-  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}.btn-ghost:hover{border-color:var(--sage);}
-  .btn-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
-  input,select,textarea{font-family:'Inter',sans-serif;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13.5px;background:var(--white);width:100%;}
-  label{font-size:12.5px;color:var(--ink-soft);display:block;margin-bottom:4px;}
-  .field{margin-bottom:14px;}.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-  table{width:100%;border-collapse:collapse;font-size:13px;}
-  th{text-align:left;color:var(--ink-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;}
-  td{padding:8px 10px;border-bottom:1px solid var(--sand-deep);vertical-align:middle;}
-  tr:hover td{background:var(--sand);}
-  .check{width:16px;height:16px;accent-color:var(--sage-deep);}
-  .badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:10px;}
-  .badge.oui{background:var(--sage);color:#fff;}.badge.non{background:var(--sand-deep);color:var(--ink-soft);}
-  .subtabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
-  .subtab{padding:8px 14px;font-size:13px;color:var(--ink-soft);cursor:pointer;border-bottom:2px solid transparent;}
-  .subtab.active{color:var(--ink);font-weight:600;border-color:var(--sage-deep);}
-  .subview{display:none;}.subview.active{display:block;}
-  .back-link{color:var(--ink-soft);font-size:13px;cursor:pointer;margin-bottom:14px;display:inline-block;}
-  .empty{text-align:center;color:var(--ink-soft);padding:50px 20px;}
-  .stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
-  .stat{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:100px;}
-  .stat .num{font-family:'Playfair Display',serif;font-size:26px;color:var(--sage-deep);}
-  .stat .lbl{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
-  .modal-bg{display:none;position:fixed;inset:0;background:rgba(51,49,44,.45);align-items:center;justify-content:center;z-index:50;}
-  .modal-bg.active{display:flex;}
-  .modal{background:var(--white);border-radius:16px;padding:26px;width:560px;max-width:96vw;max-height:88vh;overflow:auto;}
-  .modal h3{margin-bottom:16px;}
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:30px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:100;}
-  .toast.show{opacity:1;}
-  textarea.csv{min-height:90px;font-family:monospace;font-size:11.5px;}
-  .info-box{background:var(--sand);border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--ink-soft);margin-bottom:14px;}
-  .regime{font-size:11px;color:var(--terra);font-style:italic;margin-top:2px;}
-  .scroll-x{overflow-x:auto;}
+:root{--sand:#F4F0E8;--sand-d:#EAE3D5;--sage:#8FA38B;--sage-d:#6E8169;--ink:#33312C;--ink-s:#6B675E;--terra:#C17A56;--line:#DDD5C5;--white:#FFFEFB;--ok:#6E8169;--warn:#C17A56;}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--sand);color:var(--ink);font-family:'Inter',sans-serif;font-size:14px;}
+h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;margin:0;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--line);background:var(--white);}
+.topbar h1{font-size:20px;}.sub{color:var(--ink-s);font-size:12px;margin-top:2px;}
+.tabs{display:flex;gap:4px;padding:12px 28px 0;background:var(--white);}
+.tab{padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--ink-s);border:1px solid transparent;}
+.tab.active{background:var(--sand);color:var(--ink);font-weight:600;border-color:var(--line);border-bottom-color:var(--sand);}
+main{padding:24px 28px 60px;max-width:1300px;margin:0 auto;}
+.view{display:none;}.view.active{display:block;}
+.card{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
+.scard{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;transition:.15s;}
+.scard:hover{border-color:var(--sage);box-shadow:0 3px 12px rgba(110,129,105,.1);}
+.badge-type{display:inline-block;font-size:10px;text-transform:uppercase;background:var(--sage);color:#fff;padding:2px 8px;border-radius:20px;margin-bottom:6px;}
+.badge-type.bf{background:var(--terra);}
+.scard h3{font-size:15px;margin-bottom:4px;}
+.scard .meta{color:var(--ink-s);font-size:12px;margin-bottom:8px;}
+.pills{display:flex;gap:5px;flex-wrap:wrap;}
+.pill{font-size:10px;padding:2px 7px;border-radius:20px;background:var(--sand-d);color:var(--ink-s);}
+.pill.ok{background:var(--sage);color:#fff;}.pill.warn{background:var(--terra);color:#fff;}
+btn,button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;}
+.btn-p{background:var(--sage-d);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-p:hover{background:#5c6e58;}
+.btn-s{background:var(--terra);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-g{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-g:hover{border-color:var(--sage);}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+input,select,textarea{font-family:'Inter',sans-serif;border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-size:13px;background:var(--white);width:100%;}
+label{font-size:12px;color:var(--ink-s);display:block;margin-bottom:3px;}
+.field{margin-bottom:12px;}.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{text-align:left;color:var(--ink-s);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;padding:7px 9px;border-bottom:1px solid var(--line);white-space:nowrap;}
+td{padding:7px 9px;border-bottom:1px solid var(--sand-d);vertical-align:middle;}
+tr:hover td{background:var(--sand);}
+.chk{width:15px;height:15px;accent-color:var(--sage-d);}
+.subtabs{display:flex;gap:3px;margin-bottom:14px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+.stab{padding:7px 12px;font-size:12.5px;color:var(--ink-s);cursor:pointer;border-bottom:2px solid transparent;}
+.stab.active{color:var(--ink);font-weight:600;border-color:var(--sage-d);}
+.subview{display:none;}.subview.active{display:block;}
+.back{color:var(--ink-s);font-size:13px;cursor:pointer;margin-bottom:12px;display:inline-block;}
+.empty{text-align:center;color:var(--ink-s);padding:40px 20px;}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.stat{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:12px 16px;min-width:90px;}
+.stat .n{font-family:'Playfair Display',serif;font-size:24px;color:var(--sage-d);}
+.stat .l{font-size:10px;color:var(--ink-s);text-transform:uppercase;letter-spacing:.03em;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(51,49,44,.4);align-items:center;justify-content:center;z-index:50;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--white);border-radius:14px;padding:22px;width:560px;max-width:94vw;max-height:88vh;overflow:auto;}
+.modal h3{margin-bottom:14px;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:28px;font-size:12.5px;opacity:0;transition:.25s;pointer-events:none;z-index:100;}
+.toast.show{opacity:1;}
+textarea.csv{min-height:80px;font-family:monospace;font-size:11px;}
+.info{background:var(--sand);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--ink-s);margin-bottom:12px;}
+.regime{font-size:11px;color:var(--terra);font-style:italic;margin-top:2px;}
+.scroll{overflow-x:auto;}
+hr.sep{border:none;border-top:1px solid var(--line);margin:14px 0;}
+select.inline{width:auto;font-size:11.5px;padding:3px 6px;border-radius:6px;}
 </style>
 </head>
 <body>
 <div class="topbar">
   <div><h1>Suivi Formations Fédérales</h1><div class="sub">DETB · Brevet Fédéral — IRFBB Hauts-de-France</div></div>
-  <button class="btn-primary" onclick="openNewSession()">+ Nouvelle session</button>
+  <button class="btn-p" onclick="openNewSession()">+ Nouvelle session</button>
 </div>
 <div class="tabs">
   <div class="tab active" data-view="dashboard" onclick="switchView('dashboard')">Sessions</div>
@@ -80,965 +81,735 @@
 
 <!-- DASHBOARD -->
 <div class="view active" id="view-dashboard">
-  <div class="stat-row" id="global-stats"></div>
-  <div class="grid-sessions" id="sessions-grid"></div>
+  <div class="stats" id="global-stats"></div>
+  <div class="grid" id="sessions-grid"></div>
 </div>
 
 <!-- PLANNING -->
 <div class="view" id="view-planning">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
-    <h2 style="font-size:20px;">Planning des formations</h2>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+    <h2 style="font-size:18px;">Planning des formations</h2>
     <div style="display:flex;gap:8px;">
-      <select id="planning-filtre-type" onchange="renderPlanning()" style="width:auto;font-size:13px;padding:6px 10px;">
-        <option value="">Tous les types</option>
-        <option>DETB</option>
-        <option>Brevet Fédéral Enfants</option>
-        <option>Brevet Fédéral Jeunes</option>
-        <option>Brevet Fédéral Adultes</option>
+      <select id="plan-type" class="inline" onchange="renderPlanning()">
+        <option value="">Tous types</option>
+        <option>DETB</option><option>Brevet Fédéral Enfants</option>
+        <option>Brevet Fédéral Jeunes</option><option>Brevet Fédéral Adultes</option>
       </select>
-      <select id="planning-filtre-statut" onchange="renderPlanning()" style="width:auto;font-size:13px;padding:6px 10px;">
+      <select id="plan-statut" class="inline" onchange="renderPlanning()">
         <option value="">Tous statuts</option>
-        <option>À venir</option>
-        <option>En cours</option>
-        <option>Terminé</option>
+        <option>À venir</option><option>En cours</option><option>Terminé</option>
       </select>
     </div>
   </div>
-  <div style="overflow-x:auto;">
-    <table><thead><tr>
-      <th>Réf.</th><th>Type</th><th>Secteur</th><th>Lieu</th>
-      <th>Fin inscription</th><th>Date début</th><th>Date fin</th>
-      <th>Formateur</th><th>Contact</th><th>Statut</th><th></th>
-    </tr></thead><tbody id="planning-body"></tbody></table>
-  </div>
+  <div class="scroll"><table><thead><tr>
+    <th>Réf.</th><th>Type</th><th>Secteur</th><th>Lieu</th>
+    <th>Fin inscription</th><th>Début</th><th>Fin</th>
+    <th>Formateur</th><th>Email / Tél.</th><th>Statut</th><th>Stag.</th>
+  </tr></thead><tbody id="plan-body"></tbody></table></div>
 </div>
 
-<!-- ANNUAIRE FORMATEURS -->
+<!-- ANNUAIRE -->
 <div class="view" id="view-annuaire">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-    <h2 style="font-size:20px;">Annuaire formateurs</h2>
-    <button class="btn-primary" onclick="openAnnuaireForm()">+ Ajouter</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <h2 style="font-size:18px;">Annuaire formateurs</h2>
+    <button class="btn-p" onclick="openAddFormateur()">+ Ajouter</button>
   </div>
-  <div id="annuaire-table"></div>
+  <div id="annuaire-content"></div>
 </div>
 
 <!-- DETAIL SESSION -->
 <div class="view" id="view-detail">
-  <span class="back-link" onclick="switchView('dashboard')">← Retour aux sessions</span>
-  <h2 id="detail-title" style="font-size:22px;margin-bottom:4px;"></h2>
-  <div id="detail-sub" style="color:var(--ink-soft);font-size:13px;margin-bottom:18px;"></div>
+  <span class="back" onclick="switchView('dashboard')">← Sessions</span>
+  <h2 id="det-title" style="font-size:20px;margin-bottom:3px;"></h2>
+  <div id="det-sub" style="color:var(--ink-s);font-size:12.5px;margin-bottom:16px;"></div>
   <div class="subtabs">
-    <div class="subtab active" data-sub="stagiaires" onclick="switchSub('stagiaires')">Stagiaires</div>
-    <div class="subtab" data-sub="repas" onclick="switchSub('repas')">Liste repas</div>
-    <div class="subtab" data-sub="tel" onclick="switchSub('tel')">Liste tél.</div>
-    <div class="subtab" data-sub="mails" onclick="switchSub('mails')">Envoi mails</div>
-    <div class="subtab" data-sub="import" onclick="switchSub('import')">Importer (Kalisport)</div>
+    <div class="stab active" data-s="stag" onclick="switchSub('stag')">Stagiaires</div>
+    <div class="stab" data-s="repas" onclick="switchSub('repas')">Repas</div>
+    <div class="stab" data-s="tel" onclick="switchSub('tel')">Tél.</div>
+    <div class="stab" data-s="mails" onclick="switchSub('mails')">Envoi mails</div>
+    <div class="stab" data-s="import" onclick="switchSub('import')">Importer</div>
   </div>
-  <div class="subview active" id="sub-stagiaires"><div id="stagiaires-table"></div></div>
-  <div class="subview" id="sub-repas"><div id="repas-table"></div></div>
-  <div class="subview" id="sub-tel"><div id="tel-table"></div></div>
+  <div class="subview active" id="sub-stag"><div id="stag-content"></div></div>
+  <div class="subview" id="sub-repas"><div id="repas-content"></div></div>
+  <div class="subview" id="sub-tel"><div id="tel-content"></div></div>
 
   <div class="subview" id="sub-mails">
+    <!-- KALISPORT -->
     <div class="card">
-      <h3 style="font-size:16px;margin-bottom:6px;">Informations formation → formateur <span style="font-size:12px;font-weight:400;color:var(--ink-soft)">(J-7 avant la formation)</span></h3>
-      <div class="info-box">Envoie au formateur le lien direct vers sa session dans l'app (liste stagiaires, repas, téléphones) + les infos visio et Teach Up. Plus besoin de liens Google Sheets séparés.</div>
+      <h3 style="font-size:15px;margin-bottom:8px;">Ouverture session Kalisport</h3>
       <div class="field-row">
-        <div class="field"><label>Date & horaire visio</label><input id="mail-date-visio" placeholder="Lundi 10 mars à 18h00"></div>
-        <div class="field"><label>Lien visio</label><input id="mail-lien-visio"></div>
+        <div class="field"><label>Lien session Kalisport</label><input id="m-kal-session"></div>
+        <div class="field"><label>Lien formulaire inscription</label><input id="m-kal-form"></div>
       </div>
-      <div class="field"><label>Identifiants connexion visio</label><input id="mail-id-visio"></div>
-      <div class="btn-row">
-        <button class="btn-primary" onclick="envoyerMailFormateur()">Envoyer au formateur</button>
-        <button class="btn-ghost" onclick="aperçuMail()">Aperçu</button>
-        <button class="btn-ghost" onclick="testMail('formateur')">📧 Mail test</button>
+      <div class="field-row">
+        <div class="field"><label>Parcours BF Enfants</label><input id="m-kal-enf"></div>
+        <div class="field"><label>Parcours BF Jeunes</label><input id="m-kal-jeu"></div>
       </div>
-      <div id="mail-formateur-result" style="font-size:13px;color:var(--ink-soft);"></div>
+      <div class="field"><label>Parcours BF Adultes</label><input id="m-kal-adu"></div>
+      <div class="btn-row"><button class="btn-s" onclick="sendKalisport()">Envoyer au formateur</button><button class="btn-g" onclick="testM('kalisport')">📧 Test</button></div>
+      <div id="r-kal" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
-
+    <!-- RELANCE PAIEMENT -->
     <div class="card">
-      <h3 style="font-size:16px;margin-bottom:6px;">Ouverture session Kalisport → formateur</h3>
-      <div class="info-box">Informe le formateur que la session est ouverte sur Kalisport et lui transmet le lien d'inscription.</div>
+      <h3 style="font-size:15px;margin-bottom:8px;">Relance paiement</h3>
+      <div class="info">Coche les stagiaires à relancer. Les non-payés sont pré-cochés.</div>
+      <div class="field"><label>Lien de paiement Kalisport</label><input id="m-rel-lien"></div>
       <div class="field-row">
-        <div class="field"><label>Lien session Kalisport</label><input id="mail-kalisport-session"></div>
-        <div class="field"><label>Lien formulaire inscription</label><input id="mail-kalisport-formulaire"></div>
+        <div class="field"><label>Date début formation</label><input id="m-rel-date" placeholder="15 mars 2026"></div>
+        <div class="field"><label>Message complémentaire (optionnel)</label><input id="m-rel-comp"></div>
       </div>
-      <div class="field-row">
-        <div class="field"><label>Parcours BF Enfants</label><input id="mail-parcours-enfants"></div>
-        <div class="field"><label>Parcours BF Jeunes</label><input id="mail-parcours-jeunes"></div>
-      </div>
-      <div class="field"><label>Parcours BF Adultes</label><input id="mail-parcours-adultes"></div>
+      <div id="rel-liste" style="margin:10px 0;"></div>
       <div class="btn-row">
-        <button class="btn-secondary" onclick="envoyerMailKalisport()">Envoyer au formateur</button>
-        <button class="btn-ghost" onclick="testMail('kalisport')">📧 Mail test</button>
+        <button class="btn-s" onclick="sendRelance()">Envoyer aux sélectionnés</button>
+        <button class="btn-g" onclick="toutCocher(true)">Tout cocher</button>
+        <button class="btn-g" onclick="toutCocher(false)">Tout décocher</button>
+        <button class="btn-g" onclick="testM('relance')">📧 Test</button>
       </div>
-      <div id="mail-kalisport-result" style="font-size:13px;color:var(--ink-soft);"></div>
+      <div id="r-rel" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
-
+    <!-- CONVOCATION -->
     <div class="card">
-      <h3 style="font-size:16px;margin-bottom:6px;">Relance paiement <span style="font-size:12px;font-weight:400;color:var(--ink-soft)">— sélection manuelle</span></h3>
-      <div class="info-box">Coche les stagiaires à relancer. Les stagiaires sans paiement confirmé sont pré-cochés par défaut.</div>
-      <div class="field"><label>Lien de paiement Kalisport</label>
-        <input id="relance-lien" placeholder="https://www.kalisport.com/..."></div>
+      <h3 style="font-size:15px;margin-bottom:8px;">Convocation stagiaires <span style="font-size:11px;font-weight:400;color:var(--ink-s)">(J-7 — mail complet personnalisé)</span></h3>
       <div class="field-row">
-        <div class="field"><label>Date de début de la formation</label>
-          <input id="relance-date-debut" placeholder="15 mars 2026"></div>
-        <div class="field"><label>Message complémentaire <span style="font-weight:400">(optionnel)</span></label>
-          <input id="relance-complement" placeholder="ex: En cas de difficulté, contactez-moi."></div>
+        <div class="field"><label>Lieu</label><input id="m-cv-lieu"></div>
+        <div class="field"><label>Dates globales</label><input id="m-cv-dates" placeholder="du 17 oct. 2025 au 14 fév. 2026"></div>
       </div>
-      <div id="relance-liste" style="margin:12px 0;"></div>
+      <div class="field"><label>Lien replay visio (optionnel)</label><input id="m-cv-replay" placeholder="https://..."></div>
+      <div class="field"><label>Programme — une ligne par étape</label>
+        <textarea id="m-cv-prog" style="min-height:90px;font-size:12px;" placeholder="Visio — vendredi 17 octobre de 19h à 20h — Distanciel&#10;Samedi 25 octobre de 9h à 17h — SALLE XYZ, VILLE — Repas prévu"></textarea></div>
+      <div class="field"><label>Infos accès (une ligne par moyen)</label>
+        <textarea id="m-cv-acces" style="min-height:60px;font-size:12px;" placeholder="En voiture : parking à proximité&#10;En train : gare de..."></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Matériel à prévoir</label><input id="m-cv-mat" placeholder="Tenue sportive, prise de notes"></div>
+        <div class="field"><label>Tél. formateur (si différent)</label><input id="m-cv-tel"></div>
+      </div>
+      <div class="field"><label>Lien Facebook covoiturage (optionnel)</label><input id="m-cv-fb"></div>
+      <div class="field"><label>Message complémentaire (optionnel)</label><input id="m-cv-comp"></div>
       <div class="btn-row">
-        <button class="btn-secondary" onclick="envoyerRelances()">Envoyer aux sélectionnés</button>
-        <button class="btn-ghost" onclick="toutCocher(true)">Tout cocher</button>
-        <button class="btn-ghost" onclick="toutCocher(false)">Tout décocher</button>
-        <button class="btn-ghost" onclick="testMail('relance')">📧 Mail test</button>
+        <button class="btn-p" onclick="sendConvoc()">Envoyer à tous les stagiaires</button>
+        <button class="btn-g" onclick="aperçuConvoc()">Aperçu</button>
+        <button class="btn-g" onclick="testM('convoc')">📧 Test</button>
       </div>
-      <div id="relance-result" style="font-size:13px;color:var(--ink-soft);"></div>
+      <div id="r-cv" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
-
+    <!-- INFOS FORMATEUR -->
     <div class="card">
-      <h3 style="font-size:16px;margin-bottom:6px;">Convocation stagiaires <span style="font-size:12px;font-weight:400;color:var(--ink-soft)">(J-7 — mail complet, pas de pièce jointe)</span></h3>
-      <div class="info-box">La convocation est envoyée directement dans le corps du mail, personnalisée pour chaque stagiaire (Madame/Monsieur, Nom, Club).</div>
+      <h3 style="font-size:15px;margin-bottom:8px;">Informations stage → formateur <span style="font-size:11px;font-weight:400;color:var(--ink-s)">(J-7)</span></h3>
+      <div class="info">Envoie au formateur le lien vers son espace dans l'app + infos visio et Teach Up.</div>
       <div class="field-row">
-        <div class="field"><label>Lieu de la formation</label><input id="conv-lieu" placeholder="SALLE DE SWAEN 529 Rue Du Banc Vert, 59640 DUNKERQUE"></div>
-        <div class="field"><label>Dates globales (début → fin)</label><input id="conv-dates-globales" placeholder="du vendredi 17 octobre 2025 au samedi 14 février 2026"></div>
+        <div class="field"><label>Date & horaire visio</label><input id="m-fo-date" placeholder="Lundi 10 mars à 18h00"></div>
+        <div class="field"><label>Lien visio</label><input id="m-fo-lien"></div>
       </div>
-      <div class="field"><label>Lien replay visioconférence <span style="font-weight:400">(optionnel)</span></label>
-        <input id="conv-replay" placeholder="https://..."></div>
-      <div class="field"><label>Programme complet <span style="font-weight:400">— une ligne par étape</span></label>
-        <textarea id="conv-programme" style="min-height:110px;font-size:13px;" placeholder="Visioconférence — vendredi 17 octobre 2025 de 19h00 à 20h00 (RDV à 19h00) — Distanciel&#10;Samedi 25 octobre 2025 de 09h00 à 17h00 (RDV à 08h30) — SALLE DE SWAEN, DUNKERQUE — Repas prévu&#10;Samedi 10 janvier 2026 de 09h00 à 17h00 (RDV à 08h30) — SALLE DE SWAEN, DUNKERQUE — Repas prévu"></textarea></div>
-      <div class="field"><label>Infos accès <span style="font-weight:400">(transports, parking…)</span></label>
-        <textarea id="conv-acces" style="min-height:70px;font-size:13px;" placeholder="En voiture : possibilité de se garer à proximité ou dans l'enceinte de la salle. Parking handicapé sur site.&#10;En train : gare de Dunkerque"></textarea></div>
-      <div class="field"><label>Matériel à prévoir</label>
-        <input id="conv-materiel" placeholder="Matériel de prise de notes et tenue sportive"></div>
-      <div class="field-row">
-        <div class="field"><label>Téléphone formateur</label><input id="conv-form-tel" placeholder="06 81 36 48 02"></div>
-        <div class="field"><label>Lien groupe Facebook covoiturage <span style="font-weight:400">(optionnel)</span></label>
-          <input id="conv-facebook" placeholder="https://facebook.com/groups/..."></div>
-      </div>
-      <div class="field"><label>Message complémentaire <span style="font-weight:400">(optionnel)</span></label>
-        <input id="conv-complement" placeholder="ex: Cette convocation est valable pour l'ensemble des présentiels."></div>
+      <div class="field"><label>Identifiants connexion visio</label><input id="m-fo-id"></div>
       <div class="btn-row">
-        <button class="btn-primary" onclick="envoyerConvocations()">Envoyer à tous les stagiaires</button>
-        <button class="btn-ghost" onclick="aperçuConvocation()">Aperçu</button>
-        <button class="btn-ghost" onclick="testMail('convocation')">📧 Mail test</button>
+        <button class="btn-p" onclick="sendFormateur()">Envoyer au formateur</button>
+        <button class="btn-g" onclick="aperçuFormateur()">Aperçu</button>
+        <button class="btn-g" onclick="testM('formateur')">📧 Test</button>
       </div>
-      <div id="conv-result" style="font-size:13px;color:var(--ink-soft);"></div>
+      <div id="r-fo" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
-
+    <!-- ATTESTATIONS -->
     <div class="card">
-      <h3 style="font-size:16px;margin-bottom:6px;">Génération des attestations PDF</h3>
-      <div class="info-box">Génère les attestations pour les stagiaires validés. Renseigne les IDs Google Drive du template et du dossier de destination.</div>
+      <h3 style="font-size:15px;margin-bottom:8px;">Génération attestations PDF</h3>
       <div class="field-row">
-        <div class="field"><label>ID template Google Doc</label><input id="pdf-template-id" placeholder="1aC2-jVj_S9vx3ECdRY2--..."></div>
-        <div class="field"><label>ID dossier Drive destination</label><input id="pdf-folder-id" placeholder="1hTN3WIGo36sV4jq..."></div>
+        <div class="field"><label>ID template Google Doc</label><input id="m-pdf-tpl" placeholder="1aC2-jVj_..."></div>
+        <div class="field"><label>ID dossier Drive destination</label><input id="m-pdf-dir" placeholder="1hTN3WIGo..."></div>
       </div>
-      <div class="field"><label>Préfixe nom fichier</label><input id="pdf-nom-document" placeholder="Brevet Fédéral Enfants - 2025-26"></div>
-      <div class="btn-row">
-        <button class="btn-secondary" onclick="genererPDF()">Générer les attestations</button>
-      </div>
-      <div id="pdf-result" style="font-size:13px;color:var(--ink-soft);"></div>
+      <div class="field"><label>Préfixe nom fichier</label><input id="m-pdf-nom" placeholder="Brevet Fédéral Enfants - 2025-26"></div>
+      <div class="btn-row"><button class="btn-s" onclick="genPDF()">Générer les attestations</button></div>
+      <div id="r-pdf" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
   </div>
 
   <div class="subview" id="sub-import">
     <div class="card">
-      <p style="font-size:13.5px;color:var(--ink-soft);margin-top:0;">Colle ici le CSV de Kalisport (onglet "Liste des participants"). Commence bien par la ligne d'en-têtes : ID, NOM_STAGE, NOM_STAGIAIRE…</p>
-      <textarea class="csv" id="csv-input" placeholder="ID,NOM_STAGE,CATEGORIE_STAGE,NOM_STAGIAIRE,PRENOM_STAGIAIRE,..."></textarea>
-      <div class="btn-row" style="margin-top:12px;">
-        <button class="btn-primary" onclick="importCsv()">Importer</button>
+      <p style="font-size:13px;color:var(--ink-s);margin-top:0;">Colle le CSV Kalisport (onglet "Liste des participants"). La ligne d'en-têtes doit commencer par ID, NOM_STAGE…</p>
+      <textarea class="csv" id="csv-in" placeholder="ID,NOM_STAGE,NOM_STAGIAIRE,PRENOM_STAGIAIRE,..."></textarea>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-p" onclick="importCSV()">Importer</button>
       </div>
-      <div id="import-result" style="font-size:13px;color:var(--ink-soft);"></div>
+      <div id="r-import" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
   </div>
 </div>
+
 </main>
 
 <!-- MODAL NOUVELLE SESSION -->
 <div class="modal-bg" id="modal-session">
-  <div class="modal" style="width:620px;">
+  <div class="modal" style="width:600px;">
     <h3>Nouvelle session</h3>
     <div class="field-row">
-      <div class="field"><label>Code Kalisport</label>
-        <input id="f-code" placeholder="BFJ12, BFE3, BFA1…"></div>
+      <div class="field"><label>Code Kalisport</label><input id="f-code" placeholder="BFJ12, BFE3…"></div>
       <div class="field"><label>Type</label>
-        <select id="f-type"><option>DETB</option><option>Brevet Fédéral Enfants</option><option>Brevet Fédéral Jeunes</option><option>Brevet Fédéral Adultes</option></select></div>
+        <select id="f-type"><option>DETB</option><option>Brevet Fédéral Enfants</option><option>Brevet Fédéral Jeunes</option><option>Brevet Fédéral Adultes</option></select>
+      </div>
     </div>
-    <div class="field"><label>Nom de la session</label>
-      <input id="f-nom" placeholder="Brevet Fédéral Enfants - BFE3 PETITE SYNTHE - 2025-26"></div>
+    <div class="field"><label>Nom de la session</label><input id="f-nom" placeholder="Brevet Fédéral Enfants - BFE3 PETITE SYNTHE - 2025-26"></div>
     <div class="field-row">
-      <div class="field"><label>Secteur / Département</label><input id="f-secteur" placeholder="OISE, AISNE, NORD…"></div>
+      <div class="field"><label>Secteur</label><input id="f-secteur" placeholder="OISE, AISNE…"></div>
       <div class="field"><label>Statut</label>
-        <select id="f-statut"><option>À venir</option><option>En cours</option><option>Terminé</option></select></div>
+        <select id="f-statut"><option>À venir</option><option>En cours</option><option>Terminé</option></select>
+      </div>
     </div>
     <div class="field-row">
       <div class="field"><label>Date début</label><input id="f-debut" type="date"></div>
       <div class="field"><label>Date fin</label><input id="f-fin" type="date"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Date de fin d'inscription</label><input id="f-fin-inscription" type="date"></div>
-      <div class="field"><label>Date 1er présentiel <span style="font-weight:400;color:var(--terra);">← pour l'envoi auto J-7</span></label>
-        <input id="f-premier-presentiel" type="date"></div>
+      <div class="field"><label>Fin inscription</label><input id="f-finins" type="date"></div>
+      <div class="field"><label>Lieu</label><input id="f-lieu"></div>
     </div>
-    <div class="field"><label>Lieu</label><input id="f-lieu"></div>
-    <hr style="margin:12px 0;border-color:var(--line);">
-    <p style="font-size:12px;color:var(--ink-soft);margin:0 0 10px;">Formateur — <span id="annuaire-hint" style="color:var(--sage-deep);cursor:pointer;" onclick="ouvrirAnnuaire()">choisir depuis l'annuaire</span></p>
+    <hr class="sep">
+    <p style="font-size:12px;color:var(--ink-s);margin:0 0 8px;">Formateur — <span style="color:var(--sage-d);cursor:pointer;" onclick="openAnnuaire()">choisir depuis l'annuaire</span></p>
     <div class="field-row">
-      <div class="field"><label>Civilité</label>
-        <select id="f-civ"><option>Monsieur</option><option>Madame</option></select></div>
-      <div class="field"><label>Nom</label><input id="f-form-nom"></div>
+      <div class="field"><label>Civilité</label><select id="f-civ"><option>Monsieur</option><option>Madame</option></select></div>
+      <div class="field"><label>Nom</label><input id="f-nom-fo"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Prénom</label><input id="f-form-prenom"></div>
-      <div class="field"><label>Téléphone</label><input id="f-form-tel" placeholder="06 XX XX XX XX"></div>
+      <div class="field"><label>Prénom</label><input id="f-pre-fo"></div>
+      <div class="field"><label>Téléphone</label><input id="f-tel-fo" placeholder="06 XX XX XX XX"></div>
     </div>
-    <div class="field"><label>Email</label><input id="f-form-email"></div>
+    <div class="field"><label>Email</label><input id="f-email-fo"></div>
     <div class="field-row">
-      <div class="field"><label>Identifiant Teach Up</label><input id="f-teachup-id"></div>
-      <div class="field"><label>Lien tableau de bord Teach Up</label><input id="f-teachup"></div>
+      <div class="field"><label>Identifiant Teach Up</label><input id="f-tup-id"></div>
+      <div class="field"><label>Lien tableau de bord Teach Up</label><input id="f-tup-lien"></div>
     </div>
     <div class="btn-row">
-      <button class="btn-primary" onclick="saveNewSession()">Créer</button>
-      <button class="btn-ghost" onclick="closeModals()">Annuler</button>
+      <button class="btn-p" onclick="saveSession()">Créer</button>
+      <button class="btn-g" onclick="closeAll()">Annuler</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL ANNUAIRE FORMATEURS -->
+<!-- MODAL ANNUAIRE (sélection) -->
 <div class="modal-bg" id="modal-annuaire">
   <div class="modal">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <h3>Annuaire formateurs</h3>
-      <button class="btn-ghost" style="padding:6px 12px;" onclick="closeModals()">✕</button>
+      <button class="btn-g" style="padding:5px 10px;" onclick="closeAll()">✕</button>
     </div>
-    <div id="annuaire-liste"></div>
-    <hr style="margin:14px 0;border-color:var(--line);">
-    <p style="font-size:13px;font-weight:600;margin-bottom:10px;">Ajouter un nouveau formateur</p>
+    <div id="ann-select-content"></div>
+    <hr class="sep">
+    <p style="font-size:12.5px;font-weight:600;margin-bottom:8px;">Nouveau formateur</p>
     <div class="field-row">
-      <div class="field"><label>Civilité</label>
-        <select id="ann-civ"><option>Monsieur</option><option>Madame</option></select></div>
+      <div class="field"><label>Civilité</label><select id="ann-civ"><option>Monsieur</option><option>Madame</option></select></div>
       <div class="field"><label>Nom</label><input id="ann-nom"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Prénom</label><input id="ann-prenom"></div>
+      <div class="field"><label>Prénom</label><input id="ann-pre"></div>
       <div class="field"><label>Téléphone</label><input id="ann-tel"></div>
     </div>
     <div class="field"><label>Email</label><input id="ann-email"></div>
-    <div class="btn-row" style="margin-top:10px;">
-      <button class="btn-primary" onclick="ajouterFormateur()">Ajouter à l'annuaire</button>
-    </div>
+    <div class="btn-row"><button class="btn-p" onclick="addFormateur()">Ajouter à l'annuaire</button></div>
   </div>
 </div>
 
-<!-- MODAL APERCU MAIL -->
+<!-- MODAL APERÇU -->
 <div class="modal-bg" id="modal-apercu">
-  <div class="modal" style="width:680px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h3>Aperçu mail formateur</h3>
-      <button class="btn-ghost" style="padding:6px 12px;" onclick="closeModals()">✕</button>
+  <div class="modal" style="width:660px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h3 id="apercu-title">Aperçu</h3>
+      <button class="btn-g" style="padding:5px 10px;" onclick="closeAll()">✕</button>
     </div>
-    <div id="apercu-content" style="border:1px solid var(--line);border-radius:10px;padding:20px;font-size:13px;line-height:1.6;"></div>
+    <div id="apercu-body" style="border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px;line-height:1.6;max-height:65vh;overflow:auto;"></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+
 <script>
 const API_URL = 'COLLE_ICI_TON_URL_APPS_SCRIPT';
-const APP_URL = window.location.href.split('#')[0]; // URL de base de l'app
+const APP_URL = window.location.href.split('#')[0];
+const ME = 'agodart@hdfbasket.org';
 
-let sessions=[], currentSession=null, currentStagiaires=[];
+let sessions = [], formateurs = [], currentSession = null, currentStag = [];
 
-async function api(action,payload={}){
-  const url=`${API_URL}?action=${action}&payload=${encodeURIComponent(JSON.stringify(payload))}`;
-  const res=await fetch(url); return res.json();
+// ======== UTILS ========
+async function api(action, payload) {
+  payload = payload || {};
+  const url = API_URL + '?action=' + action + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+  const res = await fetch(url);
+  return res.json();
 }
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
-
-function sessionUrl(id){ return `${APP_URL}#${id}`; }
-
-function switchView(name){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('view-'+name).classList.add('active');
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===name));
-  if(name==='dashboard'){ window.location.hash=''; loadSessions(); }
-  if(name==='planning'){ window.location.hash=''; renderPlanning(); }
-  if(name==='annuaire'){ window.location.hash=''; loadAnnuaire(); }
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
 }
-function switchSub(name){
-  document.querySelectorAll('.subtab').forEach(t=>t.classList.toggle('active',t.dataset.sub===name));
-  document.querySelectorAll('.subview').forEach(v=>v.classList.remove('active'));
-  document.getElementById('sub-'+name).classList.add('active');
-  if(name==='repas')renderRepas();
-  if(name==='tel')renderTel();
-  if(name==='stagiaires')renderStagiaires();
-  if(name==='mails'){prefillMails();renderRelanceListe();}
+function sUrl(id) { return APP_URL + '#' + id; }
+function closeAll() {
+  document.querySelectorAll('.modal-bg').forEach(function(m) { m.classList.remove('open'); });
 }
 
-async function loadSessions(){
-  document.getElementById('sessions-grid').innerHTML='<div class="empty">Chargement…</div>';
-  const data=await api('getSessions');
-  sessions=Array.isArray(data)?data:[];
-  renderDashboard();
+// ======== NAVIGATION ========
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.view === name); });
+  document.getElementById('view-' + name).classList.add('active');
+  if (name === 'dashboard') { window.location.hash = ''; loadSessions(); }
+  if (name === 'planning') { window.location.hash = ''; renderPlanning(); }
+  if (name === 'annuaire') { window.location.hash = ''; loadAnnuaire(); }
 }
-function renderDashboard(){
-  const total=sessions.reduce((s,x)=>s+(Number(x.nb_stagiaires)||0),0);
-  const repas=sessions.reduce((s,x)=>s+(Number(x.nb_repas)||0),0);
-  document.getElementById('global-stats').innerHTML=`
-    <div class="stat"><div class="num">${sessions.length}</div><div class="lbl">Sessions</div></div>
-    <div class="stat"><div class="num">${total}</div><div class="lbl">Stagiaires</div></div>
-    <div class="stat"><div class="num">${repas}</div><div class="lbl">Repas</div></div>`;
-  const grid=document.getElementById('sessions-grid');
-  if(!sessions.length){grid.innerHTML='<div class="empty">Aucune session. Crée ta première session DETB ou Brevet Fédéral.</div>';return;}
-  grid.innerHTML=sessions.map(s=>`
-    <div class="session-card" onclick="openSession('${s.id}')">
-      <span class="type ${s.type==='Brevet Fédéral'?'bf':''}">${s.type}</span>
-      <h3>${s.nom}</h3>
-      <div class="meta">${s.formateur_civilite||''} ${s.formateur_prenom||''} ${s.formateur_nom||''} · ${s.nb_stagiaires||0} stagiaire(s) · ${s.nb_repas||0} repas</div>
-      <div class="status-row">
-        ${pill('Info Kalisport',s.statut_mail_kalisport)}
-        ${pill('Convocation',s.statut_convocation)}
-        ${pill('Infos formateur',s.statut_mail_formateur)}
-        ${pill('Attestations',s.statut_diplomes)}
-      </div>
-    </div>`).join('');
-}
-function pill(label,status){
-  const cls=status==='Envoyé'?'done':(status==='En cours'?'warn':'');
-  return `<span class="pill ${cls}">${label}</span>`;
+function switchSub(name) {
+  document.querySelectorAll('.stab').forEach(function(t) { t.classList.toggle('active', t.dataset.s === name); });
+  document.querySelectorAll('.subview').forEach(function(v) { v.classList.remove('active'); });
+  document.getElementById('sub-' + name).classList.add('active');
+  if (name === 'stag') renderStag();
+  if (name === 'repas') renderRepas();
+  if (name === 'tel') renderTel();
+  if (name === 'mails') { prefill(); renderRelListe(); }
 }
 
-function openNewSession(){document.getElementById('modal-session').classList.add('active');}
-function closeModals(){document.querySelectorAll('.modal-bg').forEach(m=>m.classList.remove('active'));}
-
-async function saveNewSession(){
-  const fields={
-    code_kalisport:document.getElementById('f-code').value,
-    type:document.getElementById('f-type').value,
-    nom:document.getElementById('f-nom').value,
-    secteur:document.getElementById('f-secteur').value,
-    statut_stage:document.getElementById('f-statut').value,
-    date_debut:document.getElementById('f-debut').value,
-    date_fin:document.getElementById('f-fin').value,
-    date_fin_inscription:document.getElementById('f-fin-inscription').value,
-    lieu:document.getElementById('f-lieu').value,
-    formateur_civilite:document.getElementById('f-civ').value,
-    formateur_nom:document.getElementById('f-form-nom').value,
-    formateur_prenom:document.getElementById('f-form-prenom').value,
-    formateur_email:document.getElementById('f-form-email').value,
-    formateur_telephone:document.getElementById('f-form-tel').value,
-    teachup_id:document.getElementById('f-teachup-id').value,
-    teachup_lien:document.getElementById('f-teachup').value
-  };
-  if(!fields.nom){toast('Le nom est requis');return;}
-  await api('createSession',fields);
-  if(fields.formateur_nom && fields.formateur_email){
-    if(confirm(`Enregistrer ${fields.formateur_civilite} ${fields.formateur_nom} dans l'annuaire ?`)){
-      await api('ajouterFormateur',{
-        civilite:fields.formateur_civilite, nom:fields.formateur_nom,
-        prenom:fields.formateur_prenom, email:fields.formateur_email,
-        telephone:fields.formateur_telephone
-      });
-    }
-  }
-  closeModals();toast('Session créée');loadSessions();
+// ======== DASHBOARD ========
+async function loadSessions() {
+  document.getElementById('sessions-grid').innerHTML = '<div class="empty">Chargement…</div>';
+  var data = await api('getSessions');
+  sessions = Array.isArray(data) ? data : [];
+  var total = sessions.reduce(function(s, x) { return s + (Number(x.nb_stagiaires) || 0); }, 0);
+  var repas = sessions.reduce(function(s, x) { return s + (Number(x.nb_repas) || 0); }, 0);
+  document.getElementById('global-stats').innerHTML =
+    '<div class="stat"><div class="n">' + sessions.length + '</div><div class="l">Sessions</div></div>' +
+    '<div class="stat"><div class="n">' + total + '</div><div class="l">Stagiaires</div></div>' +
+    '<div class="stat"><div class="n">' + repas + '</div><div class="l">Repas</div></div>';
+  var g = document.getElementById('sessions-grid');
+  if (!sessions.length) { g.innerHTML = '<div class="empty">Aucune session. Crée ta première session.</div>'; return; }
+  g.innerHTML = sessions.map(function(s) {
+    var t = s.type || '';
+    var bf = t.indexOf('Brevet') > -1;
+    return '<div class="scard" onclick="openSession(\'' + s.id + '\')">' +
+      '<span class="badge-type' + (bf ? ' bf' : '') + '">' + (s.code_kalisport || t) + '</span>' +
+      '<h3>' + s.nom + '</h3>' +
+      '<div class="meta">' + (s.formateur_civilite || '') + ' ' + (s.formateur_nom || '') + ' · ' + (s.nb_stagiaires || 0) + ' stag. · ' + (s.nb_repas || 0) + ' repas</div>' +
+      '<div class="pills">' +
+      pill('Kalisport', s.statut_mail_kalisport) +
+      pill('Convoc.', s.statut_convocation) +
+      pill('Formateur', s.statut_mail_formateur) +
+      pill('Attestations', s.statut_diplomes) +
+      '</div></div>';
+  }).join('');
+}
+function pill(l, v) {
+  var cls = v === 'Envoyé' ? 'ok' : '';
+  return '<span class="pill ' + cls + '">' + l + '</span>';
 }
 
-// ====== PLANNING ======
-function renderPlanning(){
-  const typeF=document.getElementById('planning-filtre-type').value;
-  const statutF=document.getElementById('planning-filtre-statut').value;
-  const liste=sessions.filter(s=>
-    (!typeF||s.type===typeF)&&
-    (!statutF||s.statut_stage===statutF)
-  );
-  const statutColor={
-    'À venir':'background:#e8f0fe;color:#1a56db;',
-    'En cours':'background:#fef9c3;color:#b45309;',
-    'Terminé':'background:#dcfce7;color:#166534;'
-  };
-  const rows=liste.map(s=>`<tr onclick="openSession('${s.id}')" style="cursor:pointer;">
-    <td><strong>${s.code_kalisport||'—'}</strong></td>
-    <td>${s.type||''}</td>
-    <td>${s.secteur||''}</td>
-    <td>${s.lieu||''}</td>
-    <td>${s.date_fin_inscription||''}</td>
-    <td>${s.date_debut||''}</td>
-    <td>${s.date_fin||''}</td>
-    <td>${s.formateur_civilite||''} ${s.formateur_nom||''} ${s.formateur_prenom||''}</td>
-    <td>${s.formateur_email||''}<br><small>${s.formateur_telephone||''}</small></td>
-    <td><span style="font-size:11px;padding:2px 8px;border-radius:10px;${statutColor[s.statut_stage]||'background:var(--sand-deep);color:var(--ink-soft);'}">${s.statut_stage||'—'}</span></td>
-    <td>${s.nb_stagiaires||0} stag.</td>
-  </tr>`).join('');
-  document.getElementById('planning-body').innerHTML = rows ||
-    '<tr><td colspan="11" style="text-align:center;color:var(--ink-soft);padding:30px;">Aucune session</td></tr>';
+// ======== PLANNING ========
+function renderPlanning() {
+  var tf = document.getElementById('plan-type').value;
+  var sf = document.getElementById('plan-statut').value;
+  var sc = { 'À venir': 'background:#e8f0fe;color:#1a56db;', 'En cours': 'background:#fef9c3;color:#b45309;', 'Terminé': 'background:#dcfce7;color:#166534;' };
+  var rows = sessions.filter(function(s) {
+    return (!tf || s.type === tf) && (!sf || s.statut_stage === sf);
+  }).map(function(s) {
+    return '<tr onclick="openSession(\'' + s.id + '\')" style="cursor:pointer;">' +
+      '<td><strong>' + (s.code_kalisport || '—') + '</strong></td>' +
+      '<td>' + (s.type || '') + '</td><td>' + (s.secteur || '') + '</td><td>' + (s.lieu || '') + '</td>' +
+      '<td>' + (s.date_fin_inscription || '') + '</td><td>' + (s.date_debut || '') + '</td><td>' + (s.date_fin || '') + '</td>' +
+      '<td>' + (s.formateur_civilite || '') + ' ' + (s.formateur_nom || '') + '</td>' +
+      '<td>' + (s.formateur_email || '') + '<br><small>' + (s.formateur_telephone || '') + '</small></td>' +
+      '<td><span style="font-size:10px;padding:2px 7px;border-radius:10px;' + (sc[s.statut_stage] || '') + '">' + (s.statut_stage || '—') + '</span></td>' +
+      '<td>' + (s.nb_stagiaires || 0) + '</td></tr>';
+  }).join('');
+  document.getElementById('plan-body').innerHTML = rows || '<tr><td colspan="11" style="text-align:center;color:var(--ink-s);padding:24px;">Aucune session</td></tr>';
 }
 
-// ====== ANNUAIRE FORMATEURS ======
-let formateurs=[];
-async function loadAnnuaire(){
-  const data=await api('getFormateurs');
-  formateurs=Array.isArray(data)?data:[];
-  renderAnnuaire();
+// ======== ANNUAIRE ========
+async function loadAnnuaire() {
+  var data = await api('getFormateurs');
+  formateurs = Array.isArray(data) ? data : [];
+  var html = formateurs.length ? '<div class="scroll"><table><thead><tr><th>Civ.</th><th>Nom</th><th>Prénom</th><th>Email</th><th>Téléphone</th></tr></thead><tbody>' +
+    formateurs.map(function(f) {
+      return '<tr><td>' + (f.civilite || '') + '</td><td><strong>' + (f.nom || '') + '</strong></td><td>' + (f.prenom || '') + '</td><td>' + (f.email || '') + '</td><td>' + (f.telephone || '') + '</td></tr>';
+    }).join('') + '</tbody></table></div>' : '<div class="empty">Aucun formateur.</div>';
+  document.getElementById('annuaire-content').innerHTML = html;
 }
-function renderAnnuaire(){
-  if(!formateurs.length){
-    document.getElementById('annuaire-table').innerHTML='<div class="empty">Aucun formateur dans l\'annuaire.</div>';
-    return;
-  }
-  const rows=formateurs.map(f=>`<tr>
-    <td>${f.civilite||''}</td><td><strong>${f.nom||''}</strong></td><td>${f.prenom||''}</td>
-    <td>${f.email||''}</td><td>${f.telephone||''}</td>
-    <td><button class="btn-ghost" style="font-size:12px;padding:4px 8px;" onclick="selectionnerFormateur('${f.id}')">Utiliser</button></td>
-  </tr>`).join('');
-  document.getElementById('annuaire-table').innerHTML=`
-    <div class="scroll-x"><table><thead><tr>
-      <th>Civ.</th><th>Nom</th><th>Prénom</th><th>Email</th><th>Téléphone</th><th></th>
-    </tr></thead><tbody>${rows}</tbody></table></div>`;
+function openAddFormateur() { loadAnnuaire(); document.getElementById('modal-annuaire').classList.add('open'); }
+function openAnnuaire() {
+  var html = formateurs.length ? '<div class="scroll"><table><thead><tr><th>Nom</th><th>Email</th><th></th></tr></thead><tbody>' +
+    formateurs.map(function(f) {
+      return '<tr><td>' + (f.civilite || '') + ' <strong>' + (f.nom || '') + '</strong> ' + (f.prenom || '') + '</td><td>' + (f.email || '') + '</td>' +
+        '<td><button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="pickFormateur(\'' + f.id + '\')">Choisir</button></td></tr>';
+    }).join('') + '</tbody></table></div>' : '<p style="font-size:13px;color:var(--ink-s);">Annuaire vide. Ajoute des formateurs ci-dessous.</p>';
+  document.getElementById('ann-select-content').innerHTML = html;
+  document.getElementById('modal-annuaire').classList.add('open');
 }
-function openAnnuaireForm(){ document.getElementById('modal-annuaire').classList.add('active'); loadAnnuaire(); }
-function ouvrirAnnuaire(){
-  document.getElementById('modal-annuaire').classList.add('active');
-  loadAnnuaire();
-}
-function selectionnerFormateur(id){
-  const f=formateurs.find(x=>x.id===id);
-  if(!f)return;
-  document.getElementById('f-civ').value=f.civilite||'Monsieur';
-  document.getElementById('f-form-nom').value=f.nom||'';
-  document.getElementById('f-form-prenom').value=f.prenom||'';
-  document.getElementById('f-form-email').value=f.email||'';
-  document.getElementById('f-form-tel').value=f.telephone||'';
-  document.getElementById('modal-annuaire').classList.remove('active');
+function pickFormateur(id) {
+  var f = formateurs.find(function(x) { return x.id === id; });
+  if (!f) return;
+  document.getElementById('f-civ').value = f.civilite || 'Monsieur';
+  document.getElementById('f-nom-fo').value = f.nom || '';
+  document.getElementById('f-pre-fo').value = f.prenom || '';
+  document.getElementById('f-email-fo').value = f.email || '';
+  document.getElementById('f-tel-fo').value = f.telephone || '';
+  closeAll();
   toast('Formateur sélectionné');
 }
-async function ajouterFormateur(){
-  const fields={
-    civilite:document.getElementById('ann-civ').value,
-    nom:document.getElementById('ann-nom').value,
-    prenom:document.getElementById('ann-prenom').value,
-    email:document.getElementById('ann-email').value,
-    telephone:document.getElementById('ann-tel').value
+async function addFormateur() {
+  var fields = {
+    civilite: document.getElementById('ann-civ').value,
+    nom: document.getElementById('ann-nom').value,
+    prenom: document.getElementById('ann-pre').value,
+    email: document.getElementById('ann-email').value,
+    telephone: document.getElementById('ann-tel').value
   };
-  if(!fields.nom){toast('Nom requis');return;}
-  await api('ajouterFormateur',fields);
-  toast('Formateur ajouté à l\'annuaire');
+  if (!fields.nom) { toast('Nom requis'); return; }
+  await api('ajouterFormateur', fields);
+  toast("Formateur ajouté");
   loadAnnuaire();
 }
 
-// ====== DÉCISION ADMISSION ======
-async function updateDecision(id, val){
-  await api('updateStagiaire',{id,fields:{decision_attestation:val}});
-  const s=currentStagiaires.find(x=>x.id===id);
-  if(s)s.decision_attestation=val;
-  const labels={'ATTESTATION VALIDEE':'✓ Admis','NON ADMIS':'✕ Non admis','':`En attente`};
-  toast(labels[val]||val);
+// ======== NOUVELLE SESSION ========
+function openNewSession() {
+  loadAnnuaire();
+  document.getElementById('modal-session').classList.add('open');
 }
+async function saveSession() {
+  var fields = {
+    code_kalisport: document.getElementById('f-code').value,
+    type: document.getElementById('f-type').value,
+    nom: document.getElementById('f-nom').value,
+    secteur: document.getElementById('f-secteur').value,
+    statut_stage: document.getElementById('f-statut').value,
+    date_debut: document.getElementById('f-debut').value,
+    date_fin: document.getElementById('f-fin').value,
+    date_fin_inscription: document.getElementById('f-finins').value,
+    lieu: document.getElementById('f-lieu').value,
+    formateur_civilite: document.getElementById('f-civ').value,
+    formateur_nom: document.getElementById('f-nom-fo').value,
+    formateur_prenom: document.getElementById('f-pre-fo').value,
+    formateur_email: document.getElementById('f-email-fo').value,
+    formateur_telephone: document.getElementById('f-tel-fo').value,
+    teachup_id: document.getElementById('f-tup-id').value,
+    teachup_lien: document.getElementById('f-tup-lien').value
+  };
+  if (!fields.nom) { toast('Le nom est requis'); return; }
+  await api('createSession', fields);
+  if (fields.formateur_nom && fields.formateur_email) {
+    if (confirm('Enregistrer ' + fields.formateur_civilite + ' ' + fields.formateur_nom + ' dans l\'annuaire ?')) {
+      await api('ajouterFormateur', { civilite: fields.formateur_civilite, nom: fields.formateur_nom, prenom: fields.formateur_prenom, email: fields.formateur_email, telephone: fields.formateur_telephone });
+    }
+  }
+  closeAll();
+  toast('Session créée');
+  loadSessions();
+}
+
+// ======== DETAIL SESSION ========
+async function openSession(id) {
   window.location.hash = id;
   switchView('detail');
-  document.getElementById('detail-title').textContent='Chargement…';
-  const data=await api('getSession',{id});
-  currentSession=data.session;
-  currentStagiaires=data.stagiaires||[];
-  document.getElementById('detail-title').textContent=currentSession.nom;
-  document.getElementById('detail-sub').textContent=
-    `${currentSession.type} · ${currentSession.formateur_civilite||''} ${currentSession.formateur_prenom||''} ${currentSession.formateur_nom||''} · ${currentStagiaires.length} stagiaire(s)`;
-  switchSub('stagiaires');
+  document.getElementById('det-title').textContent = 'Chargement…';
+  var data = await api('getSession', { id: id });
+  currentSession = data.session;
+  currentStag = data.stagiaires || [];
+  document.getElementById('det-title').textContent = currentSession.nom;
+  document.getElementById('det-sub').textContent = (currentSession.type || '') + ' · ' + (currentSession.code_kalisport || '') + ' · ' + (currentSession.formateur_civilite || '') + ' ' + (currentSession.formateur_nom || '') + ' · ' + currentStag.length + ' stagiaire(s)';
+  switchSub('stag');
 }
 
-function renderStagiaires(){
-  if(!currentStagiaires.length){document.getElementById('stagiaires-table').innerHTML='<div class="empty">Aucun stagiaire importé. Va dans "Importer".</div>';return;}
-  const showAnnules = document.getElementById('toggle-annules')?.checked || false;
-  const visibles = currentStagiaires.filter(s => showAnnules || (s.statut !== 'Annulé' && s.statut !== 'Reporté'));
-  const actifs = currentStagiaires.filter(s => s.statut !== 'Annulé');
-  const annules = currentStagiaires.filter(s => s.statut === 'Annulé');
-  const reportes = currentStagiaires.filter(s => s.statut === 'Reporté');
-  const m=actifs.filter(s=>s.sexe==='Masculin'||s.sexe==='M').length;
-  const f=actifs.filter(s=>s.sexe==='Féminin'||s.sexe==='F').length;
-  const r=actifs.filter(s=>s.repas==='Oui').length;
-  const p=actifs.filter(s=>(s.paiement_statut||'').toUpperCase()==='OK').length;
-  const rows=visibles.map(s=>{
-    const paye = (s.paiement_statut||'').toUpperCase()==='OK';
-    const annule = s.statut === 'Annulé';
-    return `<tr style="${annule?'opacity:.45;background:#fff0f0;':''}">
-      <td><strong>${s.nom||''}</strong>${annule?' <span style="font-size:10px;color:var(--terra);background:#fde;padding:1px 5px;border-radius:8px;">ANNULÉ</span>':''}</td>
-      <td>${s.prenom||''}</td>
-      <td>${s.sexe||''}</td><td>${s.age||''}</td><td>${s.licence||''}</td>
-      <td>${s.club||''}</td><td>${s.email||''}</td><td>${s.telephone||''}</td>
-      <td><span class="badge ${s.repas==='Oui'?'oui':'non'}">${s.repas||'Non'}</span>
-        ${s.regime_alimentaire?`<div class="regime">⚠ ${s.regime_alimentaire}</div>`:''}</td>
-      <td style="text-align:center;">
-        <input type="checkbox" class="check" ${paye?'checked':''} ${annule?'disabled':''}
-          onchange="updatePaiement('${s.id}',this.checked)">
-      </td>
-      <td>${s.role_structure||''}</td>
-      <td>
-        <select onchange="updateDecision('${s.id}',this.value)"
-          style="font-size:11.5px;padding:3px 6px;border-radius:6px;width:auto;border:1px solid var(--line);
-          color:${s.decision_attestation==='ATTESTATION VALIDEE'?'var(--ok)':s.decision_attestation==='NON ADMIS'?'var(--terra)':'var(--ink-soft)'};">
-          <option value="" ${!s.decision_attestation||s.decision_attestation===''?'selected':''}>En attente</option>
-          <option value="ATTESTATION VALIDEE" ${s.decision_attestation==='ATTESTATION VALIDEE'?'selected':''}>✓ Admis</option>
-          <option value="NON ADMIS" ${s.decision_attestation==='NON ADMIS'?'selected':''}>✕ Non admis</option>
-        </select>
-      </td>
-      <td>
-        <select onchange="updateStatut('${s.id}',this.value)"
-          style="font-size:11.5px;padding:3px 6px;border-radius:6px;width:auto;
-          border:1px solid var(--line);
-          color:${annule?'var(--terra)':s.statut==='Reporté'?'#b07d00':'var(--ok)'};">
-          <option value="Inscrit" ${!s.statut||s.statut==='Inscrit'?'selected':''}>✓ Inscrit</option>
-          <option value="Reporté" ${s.statut==='Reporté'?'selected':''}>⟳ Reporté</option>
-          <option value="Annulé" ${annule?'selected':''}>✕ Annulé</option>
-        </select>
-      </td>
-      <td>
-        <input type="text" value="${s.note||''}"
-          placeholder="Note libre…"
-          style="font-size:11.5px;padding:4px 7px;border-radius:6px;width:160px;border:1px solid var(--line);"
-          onblur="updateNote('${s.id}',this.value)"
-          onkeydown="if(event.key==='Enter')this.blur()">
-      </td>
-    </tr>`;}).join('');
-  document.getElementById('stagiaires-table').innerHTML=`
-    <div class="stat-row">
-      <div class="stat"><div class="num">${actifs.length}</div><div class="lbl">Actifs</div></div>
-      <div class="stat"><div class="num">${m}</div><div class="lbl">Masculin</div></div>
-      <div class="stat"><div class="num">${f}</div><div class="lbl">Féminin</div></div>
-      <div class="stat"><div class="num">${r}</div><div class="lbl">Repas</div></div>
-      <div class="stat"><div class="num">${p}</div><div class="lbl">Payés</div></div>
-      <div class="stat"><div class="num" style="color:var(--terra);">${actifs.length-p}</div><div class="lbl">Non payés</div></div>
-      ${annules.length||reportes.length?`
-        <div class="stat"><div class="num" style="color:#b07d00;">${reportes.length}</div><div class="lbl">Reportés</div></div>
-        <div class="stat"><div class="num" style="color:#bbb;">${annules.length}</div><div class="lbl">Annulés</div></div>`:''}
-    </div>
-    <div class="btn-row" style="margin-bottom:10px;">
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--ink-soft);">
-        <input type="checkbox" id="toggle-annules" onchange="renderStagiaires()" ${showAnnules?'checked':''}>
-        Afficher reportés/annulés${(annules.length+reportes.length)?' ('+(annules.length+reportes.length)+')':''}
-      </label>
-    </div>
-    <div class="scroll-x"><table><thead><tr>
-      <th>Nom</th><th>Prénom</th><th>Sexe</th><th>Âge</th><th>Licence</th>
-      <th>Club</th><th>Email</th><th>Téléphone</th><th>Repas</th>
-      <th style="text-align:center;">Payé ✓</th>
-      <th>Décision</th><th>Rôle structure</th><th>Statut</th><th>Note</th>
-    </tr></thead><tbody>${rows}</tbody></table></div>
-    <p style="font-size:12px;color:var(--ink-soft);margin-top:10px;">Les annulés sont exclus des listes repas, téléphone et envois de mails.</p>`;
+// ======== STAGIAIRES ========
+function actifs() { return currentStag.filter(function(s) { return s.statut !== 'Annulé' && s.statut !== 'Reporté'; }); }
+
+function renderStag() {
+  var all = currentStag;
+  if (!all.length) { document.getElementById('stag-content').innerHTML = '<div class="empty">Aucun stagiaire. Utilise l\'onglet Importer.</div>'; return; }
+  var showA = document.getElementById('toggle-ann') ? document.getElementById('toggle-ann').checked : false;
+  var visible = all.filter(function(s) { return showA || (s.statut !== 'Annulé' && s.statut !== 'Reporté'); });
+  var act = actifs();
+  var m = act.filter(function(s) { return s.sexe === 'Masculin'; }).length;
+  var f = act.filter(function(s) { return s.sexe === 'Féminin'; }).length;
+  var r = act.filter(function(s) { return s.repas === 'Oui'; }).length;
+  var p = act.filter(function(s) { return (s.paiement_statut || '').toUpperCase() === 'OK'; }).length;
+  var ann = all.filter(function(s) { return s.statut === 'Annulé'; });
+  var rep = all.filter(function(s) { return s.statut === 'Reporté'; });
+  var rows = visible.map(function(s) {
+    var isAnn = s.statut === 'Annulé';
+    var isRep = s.statut === 'Reporté';
+    var paye = (s.paiement_statut || '').toUpperCase() === 'OK';
+    var dec = s.decision_attestation || '';
+    var decColor = dec === 'ATTESTATION VALIDEE' ? 'var(--ok)' : (dec === 'NON ADMIS' ? 'var(--warn)' : 'var(--ink-s)');
+    return '<tr style="' + (isAnn || isRep ? 'opacity:.4;' : '') + '">' +
+      '<td><strong>' + (s.nom || '') + '</strong>' + (isAnn ? ' <span style="font-size:9px;background:#fde;color:var(--terra);padding:1px 4px;border-radius:6px;">ANNULÉ</span>' : '') + (isRep ? ' <span style="font-size:9px;background:#fef3c7;color:#b45309;padding:1px 4px;border-radius:6px;">REPORTÉ</span>' : '') + '</td>' +
+      '<td>' + (s.prenom || '') + '</td><td>' + (s.sexe || '') + '</td><td>' + (s.age || '') + '</td>' +
+      '<td>' + (s.licence || '') + '</td><td>' + (s.club || '') + '</td><td>' + (s.email || '') + '</td><td>' + (s.telephone || '') + '</td>' +
+      '<td><span style="font-size:10px;padding:2px 6px;border-radius:10px;background:' + (s.repas === 'Oui' ? 'var(--sage);color:#fff' : 'var(--sand-d);color:var(--ink-s)') + ';">' + (s.repas || 'Non') + '</span>' +
+      (s.regime_alimentaire ? '<div class="regime">⚠ ' + s.regime_alimentaire + '</div>' : '') + '</td>' +
+      '<td style="text-align:center;"><input type="checkbox" class="chk" ' + (paye ? 'checked' : '') + ' ' + (isAnn ? 'disabled' : '') + ' onchange="updPaiement(\'' + s.id + '\',this.checked)"></td>' +
+      '<td><select class="inline" style="color:' + decColor + ';" onchange="updDecision(\'' + s.id + '\',this.value)">' +
+        '<option value="" ' + (!dec ? 'selected' : '') + '>En attente</option>' +
+        '<option value="ATTESTATION VALIDEE" ' + (dec === 'ATTESTATION VALIDEE' ? 'selected' : '') + '>✓ Admis</option>' +
+        '<option value="NON ADMIS" ' + (dec === 'NON ADMIS' ? 'selected' : '') + '>✕ Non admis</option>' +
+      '</select></td>' +
+      '<td><select class="inline" style="color:' + (isAnn ? 'var(--terra)' : isRep ? '#b45309' : 'var(--ok)') + ';" onchange="updStatut(\'' + s.id + '\',this.value)">' +
+        '<option value="Inscrit" ' + (!s.statut || s.statut === 'Inscrit' ? 'selected' : '') + '>✓ Inscrit</option>' +
+        '<option value="Reporté" ' + (s.statut === 'Reporté' ? 'selected' : '') + '>⟳ Reporté</option>' +
+        '<option value="Annulé" ' + (s.statut === 'Annulé' ? 'selected' : '') + '>✕ Annulé</option>' +
+      '</select></td>' +
+      '<td><input type="text" value="' + (s.note || '').replace(/"/g, '&quot;') + '" placeholder="Note…" style="font-size:11px;padding:3px 6px;width:140px;" onblur="updNote(\'' + s.id + '\',this.value)" onkeydown="if(event.key===\'Enter\')this.blur()"></td>' +
+      '</tr>';
+  }).join('');
+  document.getElementById('stag-content').innerHTML =
+    '<div class="stats">' +
+    '<div class="stat"><div class="n">' + act.length + '</div><div class="l">Actifs</div></div>' +
+    '<div class="stat"><div class="n">' + m + '</div><div class="l">Masc.</div></div>' +
+    '<div class="stat"><div class="n">' + f + '</div><div class="l">Fém.</div></div>' +
+    '<div class="stat"><div class="n">' + r + '</div><div class="l">Repas</div></div>' +
+    '<div class="stat"><div class="n">' + p + '</div><div class="l">Payés</div></div>' +
+    '<div class="stat"><div class="n" style="color:var(--terra);">' + (act.length - p) + '</div><div class="l">Non payés</div></div>' +
+    (ann.length || rep.length ? '<div class="stat"><div class="n" style="color:#b45309;">' + rep.length + '</div><div class="l">Reportés</div></div><div class="stat"><div class="n" style="color:#bbb;">' + ann.length + '</div><div class="l">Annulés</div></div>' : '') +
+    '</div>' +
+    '<label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;color:var(--ink-s);margin-bottom:10px;"><input type="checkbox" id="toggle-ann" onchange="renderStag()" ' + (showA ? 'checked' : '') + '>Afficher annulés/reportés</label>' +
+    '<div class="scroll"><table><thead><tr><th>Nom</th><th>Prénom</th><th>Sexe</th><th>Âge</th><th>Licence</th><th>Club</th><th>Email</th><th>Tél.</th><th>Repas</th><th style="text-align:center;">Payé</th><th>Décision</th><th>Statut</th><th>Note</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p style="font-size:11px;color:var(--ink-s);margin-top:8px;">Payé, Décision et Statut sont enregistrés en temps réel.</p>';
 }
 
-function actifs(){ return currentStagiaires.filter(s => s.statut !== 'Annulé' && s.statut !== 'Reporté'); }
-
-function renderRepas(){
-  const liste = actifs();
-  if(!liste.length){document.getElementById('repas-table').innerHTML='<div class="empty">Aucun stagiaire actif.</div>';return;}
-  const nb=liste.filter(s=>s.repas==='Oui').length;
-  const rows=liste.map(s=>`<tr>
-    <td><strong>${s.nom||''}</strong></td><td>${s.prenom||''}</td><td>${s.club||''}</td>
-    <td style="text-align:center;">
-      <input type="checkbox" class="check" ${s.repas==='Oui'?'checked':''}
-        onchange="updateRepas('${s.id}',this.checked)">
-    </td>
-    <td>${s.regime_alimentaire?`<span class="regime">⚠ ${s.regime_alimentaire}</span>`:''}</td>
-  </tr>`).join('');
-  document.getElementById('repas-table').innerHTML=`
-    <div class="stat-row" style="margin-bottom:12px;">
-      <div class="stat"><div class="num">${nb}</div><div class="lbl">Repas sur ${liste.length}</div></div>
-    </div>
-    <div class="scroll-x"><table><thead><tr>
-      <th>Nom</th><th>Prénom</th><th>Club</th><th style="text-align:center;">Repas ✓</th><th>Régime particulier</th>
-    </tr></thead><tbody>${rows}</tbody></table></div>
-    <p style="font-size:12px;color:var(--ink-soft);margin-top:10px;">La case reflète le choix Kalisport. Décochable manuellement si nécessaire.</p>`;
+function renderRepas() {
+  var l = actifs();
+  if (!l.length) { document.getElementById('repas-content').innerHTML = '<div class="empty">Aucun stagiaire actif.</div>'; return; }
+  var nb = l.filter(function(s) { return s.repas === 'Oui'; }).length;
+  var rows = l.map(function(s) {
+    return '<tr><td><strong>' + (s.nom || '') + '</strong></td><td>' + (s.prenom || '') + '</td><td>' + (s.club || '') + '</td>' +
+      '<td style="text-align:center;"><input type="checkbox" class="chk" ' + (s.repas === 'Oui' ? 'checked' : '') + ' onchange="updRepas(\'' + s.id + '\',this.checked)"></td>' +
+      '<td>' + (s.regime_alimentaire ? '<span class="regime">⚠ ' + s.regime_alimentaire + '</span>' : '') + '</td></tr>';
+  }).join('');
+  document.getElementById('repas-content').innerHTML =
+    '<div class="stats" style="margin-bottom:10px;"><div class="stat"><div class="n">' + nb + '</div><div class="l">Repas sur ' + l.length + '</div></div></div>' +
+    '<div class="scroll"><table><thead><tr><th>Nom</th><th>Prénom</th><th>Club</th><th style="text-align:center;">Repas ✓</th><th>Régime</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-async function updateStatut(id, statut){
-  await api('updateStagiaire',{id, fields:{statut}});
-  const s = currentStagiaires.find(x=>x.id===id);
-  if(s) s.statut = statut;
-  renderStagiaires();
-  const labels = {Inscrit:'✓ Réinscrit',Reporté:'⟳ Reporté sur une autre session',Annulé:'✕ Annulé'};
-  toast(labels[statut]||statut);
+function renderTel() {
+  var l = actifs();
+  if (!l.length) { document.getElementById('tel-content').innerHTML = '<div class="empty">Aucun stagiaire actif.</div>'; return; }
+  var rows = l.map(function(s) {
+    return '<tr><td><strong>' + (s.nom || '') + '</strong> ' + (s.prenom || '') + '</td><td>' + (s.club || '') + '</td><td>' + (s.telephone || '') + '</td><td>' + (s.email || '') + '</td></tr>';
+  }).join('');
+  document.getElementById('tel-content').innerHTML = '<div class="scroll"><table><thead><tr><th>Stagiaire</th><th>Club</th><th>Téléphone</th><th>Email</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-async function updateNote(id, note){
-  await api('updateStagiaire',{id, fields:{note}});
-  const s = currentStagiaires.find(x=>x.id===id);
-  if(s) s.note = note;
+// ======== MISES À JOUR STAGIAIRES ========
+async function updPaiement(id, val) {
+  var s = currentStag.find(function(x) { return x.id === id; });
+  if (s) s.paiement_statut = val ? 'OK' : '';
+  await api('updateStagiaire', { id: id, fields: { paiement_statut: val ? 'OK' : '' } });
+  toast(val ? 'Paiement confirmé' : 'Paiement retiré');
+}
+async function updDecision(id, val) {
+  var s = currentStag.find(function(x) { return x.id === id; });
+  if (s) s.decision_attestation = val;
+  await api('updateStagiaire', { id: id, fields: { decision_attestation: val } });
+  toast(val === 'ATTESTATION VALIDEE' ? 'Admis' : val === 'NON ADMIS' ? 'Non admis' : 'En attente');
+}
+async function updStatut(id, val) {
+  var s = currentStag.find(function(x) { return x.id === id; });
+  if (s) s.statut = val;
+  await api('updateStagiaire', { id: id, fields: { statut: val } });
+  renderStag();
+  toast(val);
+}
+async function updNote(id, val) {
+  var s = currentStag.find(function(x) { return x.id === id; });
+  if (s) s.note = val;
+  await api('updateStagiaire', { id: id, fields: { note: val } });
   toast('Note enregistrée');
 }
-
-async function updatePaiement(id, val){
-  const statut = val ? 'OK' : '';
-  await api('updateStagiaire',{id, fields:{paiement_statut: statut}});
-  const s = currentStagiaires.find(x=>x.id===id);
-  if(s) s.paiement_statut = statut;
-  // Recharge les stats sans re-render complet (juste les compteurs)
-  const p = currentStagiaires.filter(s=>(s.paiement_statut||'').toUpperCase()==='OK').length;
-  toast(val ? '✓ Paiement confirmé' : 'Paiement retiré');
+async function updRepas(id, val) {
+  var s = currentStag.find(function(x) { return x.id === id; });
+  if (s) s.repas = val ? 'Oui' : 'Non';
+  await api('updateStagiaire', { id: id, fields: { repas: val ? 'Oui' : 'Non' } });
+  toast(val ? 'Repas ajouté' : 'Repas retiré');
 }
 
-async function updateRepas(id,val){
-  await api('updateStagiaire',{id,fields:{repas:val?'Oui':'Non'}});
-  const s=currentStagiaires.find(x=>x.id===id);
-  if(s)s.repas=val?'Oui':'Non';
-  toast(val?'Repas ajouté':'Repas retiré');
+// ======== MAILS ========
+function prefill() {
+  if (!currentSession) return;
+  var s = currentSession;
+  if (s.lieu) document.getElementById('m-cv-lieu').value = s.lieu;
+  if (s.formateur_telephone) document.getElementById('m-cv-tel').value = s.formateur_telephone;
+  if (s.mail_date_visio) document.getElementById('m-fo-date').value = s.mail_date_visio;
+  if (s.mail_lien_visio) document.getElementById('m-fo-lien').value = s.mail_lien_visio;
+  if (s.mail_id_visio) document.getElementById('m-fo-id').value = s.mail_id_visio;
+  if (s.mail_session_kalisport) document.getElementById('m-kal-session').value = s.mail_session_kalisport;
+  if (s.mail_formulaire) document.getElementById('m-kal-form').value = s.mail_formulaire;
+  if (s.mail_parcours_enfants) document.getElementById('m-kal-enf').value = s.mail_parcours_enfants;
+  if (s.mail_parcours_jeunes) document.getElementById('m-kal-jeu').value = s.mail_parcours_jeunes;
+  if (s.mail_parcours_adultes) document.getElementById('m-kal-adu').value = s.mail_parcours_adultes;
 }
 
-function renderTel(){
-  const liste = actifs();
-  if(!liste.length){document.getElementById('tel-table').innerHTML='<div class="empty">Aucun stagiaire actif.</div>';return;}
-  const rows=liste.map(s=>`<tr>
-    <td><strong>${s.nom||''}</strong> ${s.prenom||''}</td>
-    <td>${s.club||''}</td><td>${s.telephone||''}</td><td>${s.email||''}</td>
-  </tr>`).join('');
-  document.getElementById('tel-table').innerHTML=`
-    <div class="scroll-x"><table><thead><tr>
-      <th>Stagiaire</th><th>Club</th><th>Téléphone</th><th>Email</th>
-    </tr></thead><tbody>${rows}</tbody></table></div>`;
+async function sendKalisport() {
+  var p = { session_id: currentSession.id, session_kalisport: document.getElementById('m-kal-session').value, formulaire: document.getElementById('m-kal-form').value, parcours_enfants: document.getElementById('m-kal-enf').value, parcours_jeunes: document.getElementById('m-kal-jeu').value, parcours_adultes: document.getElementById('m-kal-adu').value };
+  document.getElementById('r-kal').textContent = 'Envoi…';
+  var res = await api('envoyerMailKalisport', p);
+  document.getElementById('r-kal').textContent = res.success ? ('Envoyé à ' + currentSession.formateur_email) : ('Erreur: ' + res.error);
+  if (res.success) { toast('Mail envoyé'); await api('updateSession', { id: currentSession.id, fields: { statut_mail_kalisport: 'Envoyé', mail_session_kalisport: p.session_kalisport, mail_formulaire: p.formulaire, mail_parcours_enfants: p.parcours_enfants, mail_parcours_jeunes: p.parcours_jeunes, mail_parcours_adultes: p.parcours_adultes } }); }
 }
 
-function prefillMails(){
-  if(!currentSession)return;
-  if(currentSession.mail_date_visio)document.getElementById('mail-date-visio').value=currentSession.mail_date_visio;
-  if(currentSession.mail_lien_visio)document.getElementById('mail-lien-visio').value=currentSession.mail_lien_visio;
-  if(currentSession.mail_id_visio)document.getElementById('mail-id-visio').value=currentSession.mail_id_visio;
-  if(currentSession.lieu)document.getElementById('conv-lieu').value=currentSession.lieu;
-  if(currentSession.formateur_telephone)document.getElementById('conv-form-tel').value=currentSession.formateur_telephone;
-  if(currentSession.mail_session_kalisport)document.getElementById('mail-kalisport-session').value=currentSession.mail_session_kalisport;
-  if(currentSession.mail_formulaire)document.getElementById('mail-kalisport-formulaire').value=currentSession.mail_formulaire;
-  if(currentSession.mail_parcours_enfants)document.getElementById('mail-parcours-enfants').value=currentSession.mail_parcours_enfants;
-  if(currentSession.mail_parcours_jeunes)document.getElementById('mail-parcours-jeunes').value=currentSession.mail_parcours_jeunes;
-  if(currentSession.mail_parcours_adultes)document.getElementById('mail-parcours-adultes').value=currentSession.mail_parcours_adultes;
-}
-
-async function envoyerMailFormateur(){
-  if(!currentSession)return;
-  const links={
-    date_visio:document.getElementById('mail-date-visio').value,
-    lien_visio:document.getElementById('mail-lien-visio').value,
-    id_visio:document.getElementById('mail-id-visio').value,
-    lien_app:sessionUrl(currentSession.id)
-  };
-  document.getElementById('mail-formateur-result').textContent='Envoi en cours…';
-  const res=await api('envoyerMailFormateur',{session_id:currentSession.id,...links});
-  if(res.success){
-    document.getElementById('mail-formateur-result').textContent=`✓ Envoyé à ${currentSession.formateur_email}`;
-    toast('Mail envoyé');
-    await api('updateSession',{id:currentSession.id,fields:{
-      statut_mail_formateur:'Envoyé',
-      mail_date_visio:links.date_visio,
-      mail_lien_visio:links.lien_visio,
-      mail_id_visio:links.id_visio
-    }});
-  } else {
-    document.getElementById('mail-formateur-result').textContent='Erreur : '+(res.error||'inconnue');
-  }
-}
-
-function aperçuMail(){
-  if(!currentSession)return;
-  const s=currentSession;
-  const ml=url=>url?`<a href="${url}" style="color:#0059a9;font-weight:bold;">Ouvrir le lien</a>`:'(lien manquant)';
-  const lienApp=sessionUrl(s.id);
-  document.getElementById('apercu-content').innerHTML=`
-    <p>Bonjour <strong>${s.formateur_civilite||''} ${s.formateur_nom||''}</strong>,</p>
-    <p>Vous trouverez ci-dessous les informations pour votre intervention dans <strong>${s.nom}</strong>.</p>
-    <p><strong>Accès à votre espace formation :</strong><br>
-      <a href="${lienApp}" style="color:#0059a9;font-weight:bold;">Accéder à la liste des stagiaires, repas et contacts</a><br>
-      <small style="color:#888;">${lienApp}</small></p>
-    <hr style="margin:12px 0;border-color:#ddd;">
-    <p><strong>Visio :</strong> ${document.getElementById('mail-date-visio').value||'—'}</p>
-    <p><strong>Identifiants :</strong> ${document.getElementById('mail-id-visio').value||'—'}</p>
-    <p><strong>Lien :</strong> ${ml(document.getElementById('mail-lien-visio').value)}</p>
-    <hr style="margin:12px 0;border-color:#ddd;">
-    <p><strong>Identifiant Teach Up :</strong> ${s.teachup_id||''}</p>
-    <p><strong>Tableau de bord :</strong> ${ml(s.teachup_lien)}</p>`;
-  document.getElementById('modal-apercu').classList.add('active');
-}
-
-async function envoyerMailKalisport(){
-  if(!currentSession)return;
-  const payload={
-    session_id:currentSession.id,
-    session_kalisport:document.getElementById('mail-kalisport-session').value,
-    formulaire:document.getElementById('mail-kalisport-formulaire').value,
-    parcours_enfants:document.getElementById('mail-parcours-enfants').value,
-    parcours_jeunes:document.getElementById('mail-parcours-jeunes').value,
-    parcours_adultes:document.getElementById('mail-parcours-adultes').value
-  };
-  document.getElementById('mail-kalisport-result').textContent='Envoi en cours…';
-  const res=await api('envoyerMailKalisport',payload);
-  if(res.success){
-    document.getElementById('mail-kalisport-result').textContent=`✓ Envoyé à ${currentSession.formateur_email}`;
-    toast('Mail envoyé');
-    await api('updateSession',{id:currentSession.id,fields:{
-      statut_mail_kalisport:'Envoyé',
-      mail_session_kalisport:payload.session_kalisport,
-      mail_formulaire:payload.formulaire,
-      mail_parcours_enfants:payload.parcours_enfants,
-      mail_parcours_jeunes:payload.parcours_jeunes,
-      mail_parcours_adultes:payload.parcours_adultes
-    }});
-  } else {
-    document.getElementById('mail-kalisport-result').textContent='Erreur : '+(res.error||'inconnue');
-  }
-}
-
-// ====== MAIL TEST ======
-const TEST_EMAIL = 'agodart@hdfbasket.org';
-
-async function testMail(type){
-  if(!currentSession){ toast('Ouvre une session d\'abord'); return; }
-  if(!confirm(`Envoyer un mail test à ${TEST_EMAIL} ?`)) return;
-  let payload = { session_id: currentSession.id, test: true, test_email: TEST_EMAIL };
-
-  if(type === 'formateur'){
-    Object.assign(payload, {
-      date_visio: document.getElementById('mail-date-visio').value,
-      lien_visio: document.getElementById('mail-lien-visio').value,
-      id_visio: document.getElementById('mail-id-visio').value,
-      lien_app: sessionUrl(currentSession.id)
-    });
-    const res = await api('envoyerMailFormateur', payload);
-    toast(res.success ? `✓ Mail test envoyé à ${TEST_EMAIL}` : 'Erreur : ' + res.error);
-  }
-  else if(type === 'kalisport'){
-    Object.assign(payload, {
-      session_kalisport: document.getElementById('mail-kalisport-session').value,
-      formulaire: document.getElementById('mail-kalisport-formulaire').value,
-      parcours_enfants: document.getElementById('mail-parcours-enfants').value,
-      parcours_jeunes: document.getElementById('mail-parcours-jeunes').value,
-      parcours_adultes: document.getElementById('mail-parcours-adultes').value
-    });
-    const res = await api('envoyerMailKalisport', payload);
-    toast(res.success ? `✓ Mail test envoyé à ${TEST_EMAIL}` : 'Erreur : ' + res.error);
-  }
-  else if(type === 'convocation'){
-    Object.assign(payload, {
-      lieu: document.getElementById('conv-lieu').value,
-      dates_globales: document.getElementById('conv-dates-globales').value,
-      replay: document.getElementById('conv-replay').value,
-      programme: document.getElementById('conv-programme').value,
-      acces: document.getElementById('conv-acces').value,
-      materiel: document.getElementById('conv-materiel').value,
-      form_tel: document.getElementById('conv-form-tel').value,
-      facebook: document.getElementById('conv-facebook').value,
-      complement: document.getElementById('conv-complement').value
-    });
-    const res = await api('envoyerConvocations', payload);
-    toast(res.success ? `✓ Mail test envoyé à ${TEST_EMAIL}` : 'Erreur : ' + res.error);
-  }
-  else if(type === 'relance'){
-    Object.assign(payload, {
-      stagiaire_ids: ['TEST'],
-      lien_paiement: document.getElementById('relance-lien').value,
-      date_debut: document.getElementById('relance-date-debut').value,
-      complement: document.getElementById('relance-complement').value
-    });
-    const res = await api('envoyerRelancePaiement', payload);
-    toast(res.success ? `✓ Mail test envoyé à ${TEST_EMAIL}` : 'Erreur : ' + res.error);
-  }
-}
-
-function renderRelanceListe(){
-  const liste = actifs().filter(s => s.email);
-  if(!liste.length){
-    document.getElementById('relance-liste').innerHTML='<div class="empty" style="padding:16px;">Aucun stagiaire actif avec email.</div>';
-    return;
-  }
-  const rows = liste.map(s => {
-    const nonPaye = (s.paiement_statut||'').toUpperCase() !== 'OK';
-    return `<tr>
-      <td style="text-align:center;">
-        <input type="checkbox" class="check relance-check" data-id="${s.id}"
-          ${nonPaye ? 'checked' : ''}>
-      </td>
-      <td><strong>${s.nom}</strong> ${s.prenom}</td>
-      <td>${s.club||''}</td>
-      <td>${s.email}</td>
-      <td style="font-size:12px;color:${nonPaye?'var(--terra)':'var(--ok)'};">
-        ${s.paiement_statut||'—'}
-      </td>
-    </tr>`;
+function renderRelListe() {
+  var l = actifs().filter(function(s) { return s.email; });
+  if (!l.length) { document.getElementById('rel-liste').innerHTML = '<div class="empty" style="padding:12px;">Aucun stagiaire actif avec email.</div>'; return; }
+  var nonP = l.filter(function(s) { return (s.paiement_statut || '').toUpperCase() !== 'OK'; }).length;
+  var rows = l.map(function(s) {
+    var np = (s.paiement_statut || '').toUpperCase() !== 'OK';
+    return '<tr><td style="text-align:center;"><input type="checkbox" class="chk rel-chk" data-id="' + s.id + '" ' + (np ? 'checked' : '') + '></td><td><strong>' + (s.nom || '') + '</strong> ' + (s.prenom || '') + '</td><td>' + (s.club || '') + '</td><td>' + (s.email || '') + '</td><td style="font-size:11px;color:' + (np ? 'var(--terra)' : 'var(--ok)') + ';">' + (s.paiement_statut || '—') + '</td></tr>';
   }).join('');
-  const sans = liste.filter(s=>(s.paiement_statut||'').toUpperCase()!=='OK').length;
-  document.getElementById('relance-liste').innerHTML=`
-    <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;">
-      ${sans} non payé(s) pré-coché(s) · ${liste.length} stagiaires actifs avec email
-    </div>
-    <div class="scroll-x"><table>
-      <thead><tr><th style="width:36px;text-align:center;">✓</th><th>Stagiaire</th><th>Club</th><th>Email</th><th>Statut paiement</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>`;
+  document.getElementById('rel-liste').innerHTML = '<p style="font-size:11.5px;color:var(--ink-s);margin-bottom:6px;">' + nonP + ' non payé(s) pré-coché(s)</p><div class="scroll"><table><thead><tr><th style="width:32px;text-align:center;">✓</th><th>Stagiaire</th><th>Club</th><th>Email</th><th>Statut</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+function toutCocher(v) { document.querySelectorAll('.rel-chk').forEach(function(c) { c.checked = v; }); }
+
+async function sendRelance() {
+  var ids = Array.from(document.querySelectorAll('.rel-chk:checked')).map(function(c) { return c.dataset.id; });
+  if (!ids.length) { toast('Aucun stagiaire sélectionné'); return; }
+  var lien = document.getElementById('m-rel-lien').value;
+  if (!lien) { toast('Renseigne le lien de paiement'); return; }
+  if (!confirm('Envoyer la relance à ' + ids.length + ' stagiaire(s) ?')) return;
+  document.getElementById('r-rel').textContent = 'Envoi…';
+  var res = await api('envoyerRelancePaiement', { session_id: currentSession.id, stagiaire_ids: ids, lien_paiement: lien, date_debut: document.getElementById('m-rel-date').value, complement: document.getElementById('m-rel-comp').value });
+  document.getElementById('r-rel').textContent = res.success ? (res.sent + ' envoyé(s)') : ('Erreur: ' + res.error);
+  if (res.success) toast('Relances envoyées');
 }
 
-function toutCocher(val){
-  document.querySelectorAll('.relance-check').forEach(cb => cb.checked = val);
+async function sendConvoc() {
+  var nb = actifs().filter(function(s) { return s.email; }).length;
+  if (!nb) { toast('Aucun stagiaire actif avec email'); return; }
+  if (!confirm('Envoyer la convocation à ' + nb + ' stagiaire(s) ?')) return;
+  var p = { session_id: currentSession.id, lieu: document.getElementById('m-cv-lieu').value, dates_globales: document.getElementById('m-cv-dates').value, replay: document.getElementById('m-cv-replay').value, programme: document.getElementById('m-cv-prog').value, acces: document.getElementById('m-cv-acces').value, materiel: document.getElementById('m-cv-mat').value, form_tel: document.getElementById('m-cv-tel').value, facebook: document.getElementById('m-cv-fb').value, complement: document.getElementById('m-cv-comp').value };
+  document.getElementById('r-cv').textContent = 'Envoi…';
+  var res = await api('envoyerConvocations', p);
+  document.getElementById('r-cv').textContent = res.success ? (res.sent + ' envoyée(s)') : ('Erreur: ' + res.error);
+  if (res.success) { toast('Convocations envoyées'); await api('updateSession', { id: currentSession.id, fields: { statut_convocation: 'Envoyé' } }); }
 }
 
-async function envoyerRelances(){
-  const cochés = [...document.querySelectorAll('.relance-check:checked')].map(cb => cb.dataset.id);
-  if(!cochés.length){toast('Aucun stagiaire sélectionné');return;}
-  const lien = document.getElementById('relance-lien').value;
-  if(!lien){toast('Renseigne le lien de paiement');return;}
-  if(!confirm(`Envoyer la relance à ${cochés.length} stagiaire(s) ?`))return;
-  const payload = {
-    session_id: currentSession.id,
-    stagiaire_ids: cochés,
-    lien_paiement: lien,
-    date_debut: document.getElementById('relance-date-debut').value,
-    complement: document.getElementById('relance-complement').value
-  };
-  document.getElementById('relance-result').textContent = 'Envoi en cours…';
-  const res = await api('envoyerRelancePaiement', payload);
-  if(res.success){
-    document.getElementById('relance-result').textContent =
-      `✓ ${res.sent} relance(s) envoyée(s)${res.errors ? ` · ${res.errors} erreur(s)` : ''}`;
-    toast('Relances envoyées');
-  } else {
-    document.getElementById('relance-result').textContent = 'Erreur : ' + (res.error||'inconnue');
+function aperçuConvoc() {
+  var s = currentSession;
+  var replay = document.getElementById('m-cv-replay').value;
+  var prog = (document.getElementById('m-cv-prog').value || '').split('\n').filter(function(l) { return l.trim(); });
+  var acces = (document.getElementById('m-cv-acces').value || '').split('\n').filter(function(l) { return l.trim(); });
+  document.getElementById('apercu-title').textContent = 'Aperçu convocation';
+  document.getElementById('apercu-body').innerHTML =
+    '<p style="color:#008000;font-weight:bold;text-align:center;">Institut Régional de Formation du Basketball — Hauts-de-France</p>' +
+    '<p><strong>Madame / Monsieur [NOM STAGIAIRE]</strong><br>[Club]</p>' +
+    '<h3 style="text-align:center;text-decoration:underline;font-size:16px;">CONVOCATION</h3>' +
+    '<h4 style="text-align:center;">' + s.nom + '</h4>' +
+    '<p>Madame, Monsieur,<br>Nous avons le plaisir de vous confirmer votre inscription à la formation <strong>' + s.nom + '</strong>. Celle-ci se déroulera <strong>' + (document.getElementById('m-cv-dates').value || '…') + '</strong>.</p>' +
+    (replay ? '<p>Replay visio : <a href="' + replay + '" style="color:#0059a9;">cliquez ici</a></p>' : '') +
+    (s.teachup_lien ? '<p>Module e-learning : <a href="' + s.teachup_lien + '" style="color:#0059a9;">' + s.teachup_lien + '</a></p>' : '') +
+    (prog.length ? '<h4>Déroulement</h4><ol>' + prog.map(function(l) { return '<li>' + l + '</li>'; }).join('') + '</ol>' : '') +
+    (acces.length ? '<p><u>Accès :</u></p><ul>' + acces.map(function(l) { return '<li>' + l + '</li>'; }).join('') + '</ul>' : '') +
+    '<p><strong>Alexandra GODART</strong> — 03 20 16 93 75 — agodart@hdfbasket.org</p>';
+  document.getElementById('modal-apercu').classList.add('open');
+}
+
+async function sendFormateur() {
+  var p = { session_id: currentSession.id, date_visio: document.getElementById('m-fo-date').value, lien_visio: document.getElementById('m-fo-lien').value, id_visio: document.getElementById('m-fo-id').value, lien_app: sUrl(currentSession.id) };
+  document.getElementById('r-fo').textContent = 'Envoi…';
+  var res = await api('envoyerMailFormateur', p);
+  document.getElementById('r-fo').textContent = res.success ? ('Envoyé à ' + currentSession.formateur_email) : ('Erreur: ' + res.error);
+  if (res.success) { toast('Mail envoyé'); await api('updateSession', { id: currentSession.id, fields: { statut_mail_formateur: 'Envoyé', mail_date_visio: p.date_visio, mail_lien_visio: p.lien_visio, mail_id_visio: p.id_visio } }); }
+}
+
+function aperçuFormateur() {
+  var s = currentSession;
+  document.getElementById('apercu-title').textContent = 'Aperçu mail formateur';
+  document.getElementById('apercu-body').innerHTML =
+    '<p>Bonjour <strong>' + (s.formateur_civilite || '') + ' ' + (s.formateur_nom || '') + '</strong>,</p>' +
+    '<p>Informations pour votre intervention dans <strong>' + s.nom + '</strong>.</p>' +
+    '<div style="background:#f0f7f0;border:1px solid #c3dbc3;border-radius:8px;padding:12px;margin:12px 0;"><strong>Votre espace formation :</strong><br><a href="' + sUrl(s.id) + '" style="color:#0059a9;font-weight:bold;">' + sUrl(s.id) + '</a></div>' +
+    '<p><strong>Visio :</strong> ' + (document.getElementById('m-fo-date').value || '—') + '</p>' +
+    '<p><strong>Identifiants :</strong> ' + (document.getElementById('m-fo-id').value || '—') + '</p>' +
+    '<p><strong>Teach Up :</strong> ' + (s.teachup_id || '') + '</p>' +
+    '<p><strong>Alexandra GODART</strong> — agodart@hdfbasket.org</p>';
+  document.getElementById('modal-apercu').classList.add('open');
+}
+
+async function genPDF() {
+  var p = { session_id: currentSession.id, template_id: document.getElementById('m-pdf-tpl').value, folder_id: document.getElementById('m-pdf-dir').value, nom_document: document.getElementById('m-pdf-nom').value };
+  if (!p.template_id || !p.folder_id) { toast('ID template et dossier requis'); return; }
+  document.getElementById('r-pdf').textContent = 'Génération…';
+  var res = await api('genererAttestations', p);
+  document.getElementById('r-pdf').textContent = res.success ? (res.generated + ' attestation(s) générée(s)') : ('Erreur: ' + res.error);
+  if (res.success) { toast('Attestations générées'); await api('updateSession', { id: currentSession.id, fields: { statut_diplomes: 'Envoyé' } }); }
+}
+
+async function testM(type) {
+  if (!currentSession) { toast('Ouvre une session'); return; }
+  if (!confirm('Envoyer un mail test à ' + ME + ' ?')) return;
+  var p = { session_id: currentSession.id, test: true, test_email: ME };
+  var res;
+  if (type === 'formateur') {
+    p.date_visio = document.getElementById('m-fo-date').value;
+    p.lien_visio = document.getElementById('m-fo-lien').value;
+    p.id_visio = document.getElementById('m-fo-id').value;
+    p.lien_app = sUrl(currentSession.id);
+    res = await api('envoyerMailFormateur', p);
+  } else if (type === 'kalisport') {
+    p.session_kalisport = document.getElementById('m-kal-session').value;
+    p.formulaire = document.getElementById('m-kal-form').value;
+    p.parcours_enfants = document.getElementById('m-kal-enf').value;
+    res = await api('envoyerMailKalisport', p);
+  } else if (type === 'convoc') {
+    p.lieu = document.getElementById('m-cv-lieu').value;
+    p.dates_globales = document.getElementById('m-cv-dates').value;
+    p.replay = document.getElementById('m-cv-replay').value;
+    p.programme = document.getElementById('m-cv-prog').value;
+    p.acces = document.getElementById('m-cv-acces').value;
+    p.materiel = document.getElementById('m-cv-mat').value;
+    p.form_tel = document.getElementById('m-cv-tel').value;
+    p.facebook = document.getElementById('m-cv-fb').value;
+    p.complement = document.getElementById('m-cv-comp').value;
+    res = await api('envoyerConvocations', p);
+  } else if (type === 'relance') {
+    p.stagiaire_ids = ['TEST'];
+    p.lien_paiement = document.getElementById('m-rel-lien').value;
+    p.date_debut = document.getElementById('m-rel-date').value;
+    res = await api('envoyerRelancePaiement', p);
   }
+  toast(res && res.success ? ('Test envoyé à ' + ME) : ('Erreur: ' + (res && res.error)));
 }
 
-async function envoyerConvocations(){
-  if(!currentSession)return;
-  const nbStag=actifs().filter(s=>s.email).length;
-  if(!nbStag){toast('Aucun stagiaire actif avec email');return;}
-  if(!confirm(`Envoyer la convocation à ${nbStag} stagiaire(s) ?`))return;
-  const payload={
-    session_id:currentSession.id,
-    lieu:document.getElementById('conv-lieu').value,
-    dates_globales:document.getElementById('conv-dates-globales').value,
-    replay:document.getElementById('conv-replay').value,
-    programme:document.getElementById('conv-programme').value,
-    acces:document.getElementById('conv-acces').value,
-    materiel:document.getElementById('conv-materiel').value,
-    form_tel:document.getElementById('conv-form-tel').value,
-    facebook:document.getElementById('conv-facebook').value,
-    complement:document.getElementById('conv-complement').value
-  };
-  document.getElementById('conv-result').textContent='Envoi en cours…';
-  const res=await api('envoyerConvocations',payload);
-  if(res.success){
-    document.getElementById('conv-result').textContent=`✓ ${res.sent} convocation(s) envoyée(s)${res.errors?' · '+res.errors+' erreur(s)':''}`;
-    toast('Convocations envoyées');
-    await api('updateSession',{id:currentSession.id,fields:{
-      statut_convocation:'Envoyé',
-      conv_lieu:payload.lieu,
-      conv_dates_globales:payload.dates_globales,
-      conv_replay:payload.replay,
-      conv_programme:payload.programme,
-      conv_acces:payload.acces,
-      conv_materiel:payload.materiel,
-      conv_facebook:payload.facebook,
-      conv_complement:payload.complement
-    }});
-  } else {
-    document.getElementById('conv-result').textContent='Erreur : '+(res.error||'inconnue');
+// ======== IMPORT CSV ========
+var CSV_MAP = { 'ID': 'kalisport_id', 'NOM_STAGIAIRE': 'nom', 'PRENOM_STAGIAIRE': 'prenom', 'SEXE_STAGIAIRE': 'sexe', 'DATE_NAISSANCE_STAGIAIRE': 'date_naissance', 'AGE_STAGIAIRE': 'age', 'LICENCE_STAGIAIRE': 'licence', 'EMAIL1_STAGIAIRE': 'email', 'EMAIL_PAIEMENT_STAGIAIRE': 'email_paiement', 'CLUB_STAGIAIRE': 'club', 'NUMERO_CLUB_STAGIAIRE': 'numero_club', 'NUMERO_DE_PORTABLE': 'telephone', 'AUTORISATION_PARENTALE_STAGIAIRE': 'autorisation_parentale', 'CATEGORIE_NIVEAU_COACHE': 'categorie_niveau', 'EXPERIENCE': 'experience', 'ROLE_DANS_LA_STRUCTURE': 'role_structure', 'AVEZ_VOUS_UN_REGIME_ALIMENTAIRE_PARTICULIER_?': 'regime_alimentaire', 'AVEZ_VOUS_UNE_SITUATION_PARTICULIERE_:_HANDICAP_?': 'situation_handicap', 'REPAS_LORS_DE_VOTRE_FORMATION_:': 'repas' };
+
+function parseCSV(text) {
+  var lines = text.trim().split('\n').filter(function(l) { return l.trim(); });
+  var hi = 0;
+  for (var i = 0; i < Math.min(6, lines.length); i++) {
+    if (lines[i].toUpperCase().indexOf('NOM_STAGIAIRE') > -1) { hi = i; break; }
   }
-}
-
-function aperçuConvocation(){
-  if(!currentSession)return;
-  const s=currentSession;
-  const prog=(document.getElementById('conv-programme').value||'').split('\n').filter(l=>l.trim());
-  const acces=(document.getElementById('conv-acces').value||'').split('\n').filter(l=>l.trim());
-  const replay=document.getElementById('conv-replay').value;
-  const facebook=document.getElementById('conv-facebook').value;
-  document.getElementById('apercu-content').innerHTML=`
-    <div style="text-align:center;margin-bottom:14px;">
-      <strong style="color:#008000;">Institut Régional de Formation du Basketball — Hauts-de-France</strong>
-    </div>
-    <p><strong>Madame, Monsieur, [NOM STAGIAIRE]</strong><br>[Club]</p>
-    <h3 style="text-align:center;text-decoration:underline;">CONVOCATION</h3>
-    <h4 style="text-align:center;">${s.nom}</h4>
-    <p>Madame, Monsieur,</p>
-    <p>Nous avons le plaisir de vous confirmer votre inscription à la formation <strong>${s.nom}</strong>. Celle-ci se déroulera <strong>${document.getElementById('conv-dates-globales').value||'…'}</strong>.</p>
-    ${replay?`<p>Pour ceux qui n'auraient pas pu assister à la visioconférence, voici le replay : <a href="${replay}" style="color:#0059a9;font-weight:bold;">cliquez ici</a></p>`:''}
-    ${s.teachup_lien?`<p>Un module e-learning est à suivre avant le premier présentiel.<br>Merci de vous inscrire à l'adresse suivante : <a href="${s.teachup_lien}" style="color:#0059a9;">${s.teachup_lien}</a></p>`:''}
-    ${prog.length?`<h4>Déroulement de la formation</h4><ol>${prog.map(l=>`<li>${l}</li>`).join('')}</ol>`:''}
-    ${document.getElementById('conv-complement').value?`<p><em>${document.getElementById('conv-complement').value}</em></p>`:''}
-    ${acces.length?`<p><u>Vous pouvez vous y rendre :</u></p><ul>${acces.map(l=>`<li>${l}</li>`).join('')}</ul>`:''}
-    ${document.getElementById('conv-materiel').value?`<p><u>Matériel à prévoir :</u> ${document.getElementById('conv-materiel').value}</p>`:''}
-    <p>Cette formation sera assurée par ${s.formateur_civilite||''} ${s.formateur_nom||''} ${s.formateur_prenom||''}${s.formateur_email?' ('+s.formateur_email:''}${document.getElementById('conv-form-tel').value?' - '+document.getElementById('conv-form-tel').value:''}${s.formateur_email?')':''}.</p>
-    ${facebook?`<p>N'hésitez pas à consulter le groupe Facebook covoiturage : <a href="${facebook}" style="color:#0059a9;">CLIQUER ICI</a></p>`:''}
-    <p>En cas d'empêchement, merci de prévenir votre formateur et de nous adresser un mail à : agodart@hdfbasket.org</p>
-    <p>Très bonne formation à vous !<br>Cordialement,</p>
-    <p><strong>Alexandra GODART</strong><br>Coordinatrice des actions de formation — IRFBB Hauts-de-France</p>`;
-  document.getElementById('modal-apercu').classList.add('active');
-}
-async function genererPDF(){
-  const payload={
-    session_id:currentSession.id,
-    template_id:document.getElementById('pdf-template-id').value,
-    folder_id:document.getElementById('pdf-folder-id').value,
-    nom_document:document.getElementById('pdf-nom-document').value
-  };
-  if(!payload.template_id||!payload.folder_id){toast('Renseigne l\'ID template et dossier Drive');return;}
-  document.getElementById('pdf-result').textContent='Génération en cours… (peut prendre quelques secondes)';
-  const res=await api('genererAttestations',payload);
-  if(res.success){
-    document.getElementById('pdf-result').textContent=`✓ ${res.generated} attestation(s) générée(s) dans le dossier Drive`;
-    toast('Attestations générées');
-    await api('updateSession',{id:currentSession.id,fields:{statut_diplomes:'Envoyé'}});
-  } else {
-    document.getElementById('pdf-result').textContent='Erreur : '+(res.error||'inconnue');
-  }
-}
-
-// CSV IMPORT — mapping colonnes réelles Kalisport
-const CSV_MAP={
-  'ID':'kalisport_id','NOM_STAGIAIRE':'nom','PRENOM_STAGIAIRE':'prenom',
-  'SEXE_STAGIAIRE':'sexe','DATE_NAISSANCE_STAGIAIRE':'date_naissance',
-  'AGE_STAGIAIRE':'age','LICENCE_STAGIAIRE':'licence',
-  'EMAIL1_STAGIAIRE':'email','EMAIL_PAIEMENT_STAGIAIRE':'email_paiement',
-  'CLUB_STAGIAIRE':'club','NUMERO_CLUB_STAGIAIRE':'numero_club',
-  'NUMERO_DE_PORTABLE':'telephone',
-  'AUTORISATION_PARENTALE_STAGIAIRE':'autorisation_parentale',
-  'CATEGORIE_NIVEAU_COACHE':'categorie_niveau',
-  'EXPERIENCE':'experience','ROLE_DANS_LA_STRUCTURE':'role_structure',
-  'AVEZ_VOUS_UN_REGIME_ALIMENTAIRE_PARTICULIER_?':'regime_alimentaire',
-  'AVEZ_VOUS_UNE_SITUATION_PARTICULIERE_:_HANDICAP_?':'situation_handicap',
-  'REPAS_LORS_DE_VOTRE_FORMATION_:':'repas'
-};
-
-function parseCsv(text){
-  const lines=text.trim().split('\n').filter(l=>l.trim());
-  let hi=0;
-  for(let i=0;i<Math.min(6,lines.length);i++){
-    if(lines[i].toUpperCase().includes('NOM_STAGIAIRE')){hi=i;break;}
-  }
-  const headers=lines[hi].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
-  return lines.slice(hi+1).filter(l=>l.trim()).map(line=>{
-    const cells=line.split(',').map(c=>c.trim().replace(/^"|"$/g,''));
-    const obj={};
-    headers.forEach((h,i)=>obj[h]=cells[i]||'');
+  var headers = lines[hi].split(',').map(function(h) { return h.trim().replace(/^"|"$/g, ''); });
+  return lines.slice(hi + 1).filter(function(l) { return l.trim(); }).map(function(line) {
+    var cells = line.split(',').map(function(c) { return c.trim().replace(/^"|"$/g, ''); });
+    var obj = {};
+    headers.forEach(function(h, i) { obj[h] = cells[i] || ''; });
     return obj;
   });
 }
 
-async function importCsv(){
-  const text=document.getElementById('csv-input').value;
-  if(!text.trim()){toast('Colle un CSV d\'abord');return;}
-  const rawRows=parseCsv(text);
-  const mapped=rawRows.filter(r=>r['ID']||r['NOM_STAGIAIRE']).map(row=>{
-    const obj={};
-    Object.entries(CSV_MAP).forEach(([csv,field])=>{
-      const found=Object.keys(row).find(k=>k.trim().toUpperCase()===csv.toUpperCase());
-      obj[field]=found?row[found]:'';
+async function importCSV() {
+  var text = document.getElementById('csv-in').value;
+  if (!text.trim()) { toast('Colle un CSV'); return; }
+  var raw = parseCSV(text);
+  var mapped = raw.filter(function(r) { return r['ID'] || r['NOM_STAGIAIRE']; }).map(function(row) {
+    var obj = {};
+    Object.keys(CSV_MAP).forEach(function(k) {
+      var found = Object.keys(row).find(function(rk) { return rk.trim().toUpperCase() === k.toUpperCase(); });
+      obj[CSV_MAP[k]] = found ? row[found] : '';
     });
-    const rv=(obj.repas||'').toLowerCase();
-    obj.repas=rv.includes('inclure')||rv==='oui'?'Oui':'Non';
+    var rv = (obj.repas || '').toLowerCase();
+    obj.repas = rv.indexOf('inclure') > -1 || rv === 'oui' ? 'Oui' : 'Non';
     return obj;
   });
-  document.getElementById('import-result').textContent='Import en cours…';
-  const res=await api('importStagiaires',{session_id:currentSession.id,stagiaires:mapped});
-  document.getElementById('import-result').textContent=`${res.created} créé(s), ${res.updated} mis à jour.`;
+  document.getElementById('r-import').textContent = 'Import…';
+  var res = await api('importStagiaires', { session_id: currentSession.id, stagiaires: mapped });
+  document.getElementById('r-import').textContent = (res.created || 0) + ' créé(s), ' + (res.updated || 0) + ' mis à jour.';
   toast('Import terminé');
   openSession(currentSession.id);
 }
 
-// ====== INIT avec deep linking ======
-async function init(){
-  const hash=window.location.hash.replace('#','');
-  if(hash && hash.startsWith('S')){
+// ======== INIT ========
+async function init() {
+  var hash = window.location.hash.replace('#', '');
+  if (hash && hash.charAt(0) === 'S') {
     await openSession(hash);
   } else {
     loadSessions();
