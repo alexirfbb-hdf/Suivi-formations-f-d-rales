@@ -319,7 +319,7 @@ select.inline{width:auto;font-size:11.5px;padding:3px 6px;border-radius:6px;}
 <div class="toast" id="toast"></div>
 
 <script>
-const API_URL = 'COLLE_ICI_TON_URL_APPS_SCRIPT';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzx_yE_nMLFxLIG28tydeuFq2ZIwndHCgieNyepw9KLFqLesEchi4CBwS8VEblGISpGbA/exec';
 const APP_URL = window.location.href.split('#')[0];
 const ME = 'agodart@hdfbasket.org';
 
@@ -466,6 +466,7 @@ function openNewSession() {
   document.getElementById('modal-session').classList.add('open');
 }
 async function saveSession() {
+  var btn = document.querySelector('#modal-session .btn-p');
   var fields = {
     code_kalisport: document.getElementById('f-code').value,
     type: document.getElementById('f-type').value,
@@ -485,15 +486,25 @@ async function saveSession() {
     teachup_lien: document.getElementById('f-tup-lien').value
   };
   if (!fields.nom) { toast('Le nom est requis'); return; }
-  await api('createSession', fields);
-  if (fields.formateur_nom && fields.formateur_email) {
-    if (confirm('Enregistrer ' + fields.formateur_civilite + ' ' + fields.formateur_nom + ' dans l\'annuaire ?')) {
-      await api('ajouterFormateur', { civilite: fields.formateur_civilite, nom: fields.formateur_nom, prenom: fields.formateur_prenom, email: fields.formateur_email, telephone: fields.formateur_telephone });
+  btn.textContent = 'Création…';
+  btn.disabled = true;
+  try {
+    var res = await api('createSession', fields);
+    if (res.error) throw new Error(res.error);
+    if (fields.formateur_nom && fields.formateur_email) {
+      if (confirm('Enregistrer ' + fields.formateur_civilite + ' ' + fields.formateur_nom + ' dans l\'annuaire ?')) {
+        await api('ajouterFormateur', { civilite: fields.formateur_civilite, nom: fields.formateur_nom, prenom: fields.formateur_prenom, email: fields.formateur_email, telephone: fields.formateur_telephone });
+      }
     }
+    closeAll();
+    toast('Session créée');
+    loadSessions();
+  } catch(e) {
+    alert('Erreur lors de la création : ' + e.message + '\n\nVérifie que le Script est bien déployé et que l\'onglet Sessions existe dans le Sheet.');
+  } finally {
+    btn.textContent = 'Créer';
+    btn.disabled = false;
   }
-  closeAll();
-  toast('Session créée');
-  loadSessions();
 }
 
 // ======== DETAIL SESSION ========
@@ -501,12 +512,18 @@ async function openSession(id) {
   window.location.hash = id;
   switchView('detail');
   document.getElementById('det-title').textContent = 'Chargement…';
-  var data = await api('getSession', { id: id });
-  currentSession = data.session;
-  currentStag = data.stagiaires || [];
-  document.getElementById('det-title').textContent = currentSession.nom;
-  document.getElementById('det-sub').textContent = (currentSession.type || '') + ' · ' + (currentSession.code_kalisport || '') + ' · ' + (currentSession.formateur_civilite || '') + ' ' + (currentSession.formateur_nom || '') + ' · ' + currentStag.length + ' stagiaire(s)';
-  switchSub('stag');
+  try {
+    var data = await api('getSession', { id: id });
+    if (data.error) throw new Error(data.error);
+    currentSession = data.session;
+    currentStag = data.stagiaires || [];
+    document.getElementById('det-title').textContent = currentSession.nom;
+    document.getElementById('det-sub').textContent = (currentSession.type || '') + ' · ' + (currentSession.code_kalisport || '') + ' · ' + (currentSession.formateur_civilite || '') + ' ' + (currentSession.formateur_nom || '') + ' · ' + currentStag.length + ' stagiaire(s)';
+    switchSub('stag');
+  } catch(e) {
+    document.getElementById('det-title').textContent = 'Erreur';
+    document.getElementById('det-sub').textContent = e.message;
+  }
 }
 
 // ======== STAGIAIRES ========
