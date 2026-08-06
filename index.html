@@ -411,26 +411,6 @@ function closeModals(){document.querySelectorAll('.modal-bg').forEach(m=>m.class
 
 async function saveNewSession(){
   const fields={
-    type:document.getElementById('f-type').value,
-    nom:document.getElementById('f-nom').value,
-    date_debut:document.getElementById('f-debut').value,
-    date_fin:document.getElementById('f-fin').value,
-    lieu:document.getElementById('f-lieu').value,
-    formateur_civilite:document.getElementById('f-civ').value,
-    formateur_nom:document.getElementById('f-form-nom').value,
-    formateur_prenom:document.getElementById('f-form-prenom').value,
-    formateur_email:document.getElementById('f-form-email').value,
-    formateur_telephone:document.getElementById('f-form-tel').value,
-    teachup_id:document.getElementById('f-teachup-id').value,
-    teachup_lien:document.getElementById('f-teachup').value
-  };
-  if(!fields.nom){toast('Le nom est requis');return;}
-  await api('createSession',fields);
-  closeModals();toast('Session créée');loadSessions();
-}
-
-async function saveNewSession(){
-  const fields={
     code_kalisport:document.getElementById('f-code').value,
     type:document.getElementById('f-type').value,
     nom:document.getElementById('f-nom').value,
@@ -439,7 +419,6 @@ async function saveNewSession(){
     date_debut:document.getElementById('f-debut').value,
     date_fin:document.getElementById('f-fin').value,
     date_fin_inscription:document.getElementById('f-fin-inscription').value,
-    date_premier_presentiel:document.getElementById('f-premier-presentiel').value,
     lieu:document.getElementById('f-lieu').value,
     formateur_civilite:document.getElementById('f-civ').value,
     formateur_nom:document.getElementById('f-form-nom').value,
@@ -717,26 +696,16 @@ function renderTel(){
 
 function prefillMails(){
   if(!currentSession)return;
-  // Pré-remplit depuis les données de la session si déjà renseignées
   if(currentSession.mail_date_visio)document.getElementById('mail-date-visio').value=currentSession.mail_date_visio;
   if(currentSession.mail_lien_visio)document.getElementById('mail-lien-visio').value=currentSession.mail_lien_visio;
   if(currentSession.mail_id_visio)document.getElementById('mail-id-visio').value=currentSession.mail_id_visio;
-  if(currentSession.mail_listing_repas)document.getElementById('mail-listing-repas').value=currentSession.mail_listing_repas;
-  if(currentSession.mail_convocation)document.getElementById('mail-convocation').value=currentSession.mail_convocation;
-  if(currentSession.mail_liste_stag)document.getElementById('mail-liste-stag').value=currentSession.mail_liste_stag;
-  if(currentSession.mail_infos_stag)document.getElementById('mail-infos-stag').value=currentSession.mail_infos_stag;
-  if(currentSession.mail_emargement)document.getElementById('mail-emargement').value=currentSession.mail_emargement;
-  // Convocation stagiaires — pré-remplissage depuis la session
   if(currentSession.lieu)document.getElementById('conv-lieu').value=currentSession.lieu;
   if(currentSession.formateur_telephone)document.getElementById('conv-form-tel').value=currentSession.formateur_telephone;
-  // Champs mail Kalisport
   if(currentSession.mail_session_kalisport)document.getElementById('mail-kalisport-session').value=currentSession.mail_session_kalisport;
   if(currentSession.mail_formulaire)document.getElementById('mail-kalisport-formulaire').value=currentSession.mail_formulaire;
   if(currentSession.mail_parcours_enfants)document.getElementById('mail-parcours-enfants').value=currentSession.mail_parcours_enfants;
   if(currentSession.mail_parcours_jeunes)document.getElementById('mail-parcours-jeunes').value=currentSession.mail_parcours_jeunes;
   if(currentSession.mail_parcours_adultes)document.getElementById('mail-parcours-adultes').value=currentSession.mail_parcours_adultes;
-  if(currentSession.conv_date)document.getElementById('conv-date').value=currentSession.conv_date;
-  if(currentSession.conv_horaires)document.getElementById('conv-horaires').value=currentSession.conv_horaires;
 }
 
 async function envoyerMailFormateur(){
@@ -817,10 +786,7 @@ const TEST_EMAIL = 'agodart@hdfbasket.org';
 
 async function testMail(type){
   if(!currentSession){ toast('Ouvre une session d\'abord'); return; }
-  document.getElementById(`mail-${type==='kalisport'?'kalisport':type==='convocation'?'conv':type==='relance'?'relance':'formateur'}-result`) ;
-  const confirmMsg = `Envoyer un mail test à ${TEST_EMAIL} ?`;
-  if(!confirm(confirmMsg)) return;
-
+  if(!confirm(`Envoyer un mail test à ${TEST_EMAIL} ?`)) return;
   let payload = { session_id: currentSession.id, test: true, test_email: TEST_EMAIL };
 
   if(type === 'formateur'){
@@ -828,11 +794,7 @@ async function testMail(type){
       date_visio: document.getElementById('mail-date-visio').value,
       lien_visio: document.getElementById('mail-lien-visio').value,
       id_visio: document.getElementById('mail-id-visio').value,
-      listing_repas: document.getElementById('mail-listing-repas').value,
-      convocation: document.getElementById('mail-convocation').value,
-      liste_stagiaires: document.getElementById('mail-liste-stag').value,
-      infos_stagiaires: document.getElementById('mail-infos-stag').value,
-      emargement: document.getElementById('mail-emargement').value
+      lien_app: sessionUrl(currentSession.id)
     });
     const res = await api('envoyerMailFormateur', payload);
     toast(res.success ? `✓ Mail test envoyé à ${TEST_EMAIL}` : 'Erreur : ' + res.error);
@@ -850,9 +812,14 @@ async function testMail(type){
   }
   else if(type === 'convocation'){
     Object.assign(payload, {
-      date: document.getElementById('conv-date').value,
-      horaires: document.getElementById('conv-horaires').value,
       lieu: document.getElementById('conv-lieu').value,
+      dates_globales: document.getElementById('conv-dates-globales').value,
+      replay: document.getElementById('conv-replay').value,
+      programme: document.getElementById('conv-programme').value,
+      acces: document.getElementById('conv-acces').value,
+      materiel: document.getElementById('conv-materiel').value,
+      form_tel: document.getElementById('conv-form-tel').value,
+      facebook: document.getElementById('conv-facebook').value,
       complement: document.getElementById('conv-complement').value
     });
     const res = await api('envoyerConvocations', payload);
