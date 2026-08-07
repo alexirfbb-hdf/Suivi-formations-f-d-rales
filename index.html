@@ -202,12 +202,12 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <!-- OUVERTURE CLUBS -->
     <div class="card">
       <h3 style="font-size:14px;margin-bottom:8px;">📢 Communication ouverture aux clubs</h3>
-      <div class="info">Regroupe <strong>toutes les formations du même secteur</strong> dans un seul mail pour Christelle et Martin. Coche les sessions à inclure.</div>
+      <div class="info">Regroupe toutes les formations du même secteur en un seul mail pour Christelle et Martin. Coche les sessions à inclure.</div>
       <div class="field-row">
         <div class="field"><label>Email Christelle (secrétaire)</label><input id="m-clubs-christelle" value="christelle.delaey@hdfbasket.org"></div>
         <div class="field"><label>Email Martin (communication)</label><input id="m-clubs-martin" value="martin.weber@hdfbasket.org"></div>
       </div>
-      <div class="field"><label>Lien Planning BF (optionnel)</label><input id="m-clubs-planning" placeholder="https://..."></div>
+      <div class="field"><label>Lien d'inscription (commun à toutes les sessions du mail)</label><input id="m-clubs-inscription" placeholder="https://hautsdefrancebasketball.kalisport.com/..."></div>
       <div id="clubs-sessions-liste" style="margin:10px 0;"></div>
       <div class="btn-row">
         <button class="btn-s" onclick="sendClubs()">Envoyer à Christelle et Martin</button>
@@ -945,7 +945,7 @@ async function sendClubs() {
     sessions_ids: ids,
     christelle: document.getElementById('m-clubs-christelle').value,
     martin: document.getElementById('m-clubs-martin').value,
-    planning_lien: document.getElementById('m-clubs-planning').value
+    lien_inscription: document.getElementById('m-clubs-inscription').value
   };
   document.getElementById('r-clubs').textContent = 'Envoi…';
   var res = await api('envoyerMailClubs', p);
@@ -1089,7 +1089,7 @@ async function testM(type) {
   else if (type==='kalisport') { p.session_kalisport=document.getElementById('m-kal-session').value; p.formulaire=document.getElementById('m-kal-form').value; p.parcours_enfants=document.getElementById('m-kal-enf').value; res=await api('envoyerMailKalisport',p); }
   else if (type==='convoc') { p.lieu=document.getElementById('m-cv-lieu').value; p.dates_globales=document.getElementById('m-cv-dates').value; p.visio_type=document.getElementById('m-cv-visio-type').value; p.visio_date=document.getElementById('m-cv-visio-date').value; p.visio_lien=document.getElementById('m-cv-visio-lien').value; p.visio_replay=document.getElementById('m-cv-visio-replay').value; p.programme=document.getElementById('m-cv-prog').value; p.acces=document.getElementById('m-cv-acces').value; p.materiel=document.getElementById('m-cv-mat').value; p.facebook=document.getElementById('m-cv-fb').value; res=await api('envoyerConvocations',p); }
   else if (type==='relance') { p.stagiaires_avec_lien=[{id:'TEST',lien:'https://kalisport.test'}]; p.date_debut=document.getElementById('m-rel-date').value; res=await api('envoyerRelancePaiement',p); }
-  else if (type==='clubs') { p.sessions_ids=[currentSession.id]; p.christelle=document.getElementById('m-clubs-christelle').value; p.martin=document.getElementById('m-clubs-martin').value; p.planning_lien=document.getElementById('m-clubs-planning').value; res=await api('envoyerMailClubs',p); }
+  else if (type==='clubs') { p.sessions_ids=[currentSession.id]; p.christelle=document.getElementById('m-clubs-christelle').value; p.martin=document.getElementById('m-clubs-martin').value; p.lien_inscription=document.getElementById('m-clubs-inscription').value; res=await api('envoyerMailClubs',p); }
   else if (type==='qs') { p.type='envoi1'; p.lien_stag=document.getElementById('m-qs-stag').value; p.lien_form=document.getElementById('m-qs-form').value; res=await api('envoyerQuestionnaireSatisfaction',p); }
   toast(res&&res.success ? ('Test envoyé à '+ME) : ('Erreur: '+(res&&res.error||'inconnue')));
 }
