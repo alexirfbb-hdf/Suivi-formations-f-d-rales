@@ -54,6 +54,15 @@ tr:hover td{background:#f9f7f2;}
 .scroll{overflow-x:auto;}
 hr{border:none;border-top:1px solid var(--line);margin:12px 0;}
 select.sm{width:auto;font-size:11px;padding:2px 5px;border-radius:5px;}
+/* Couleurs décision admission */
+select.dec-admis{background:#dcfce7;color:#166534;border-color:#86efac;}
+select.dec-non-admis{background:#fee2e2;color:#991b1b;border-color:#fca5a5;}
+select.dec-attente{background:var(--sand-d);color:var(--ink-s);}
+select.dec-admis option, select.dec-non-admis option, select.dec-attente option{background:var(--white);color:var(--ink);}
+select.dec-admis option[value="ATTESTATION VALIDEE"]{background:#dcfce7;color:#166534;}
+select.dec-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;}
+select.dec-non-admis option[value="ATTESTATION VALIDEE"]{background:#dcfce7;color:#166534;}
+select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;}
 /* TABLEAU DE BORD */
 .tdb{font-size:11.5px;}
 .tdb th{font-size:10px;padding:5px 6px;position:sticky;top:0;z-index:1;}
@@ -79,6 +88,7 @@ select.sm{width:auto;font-size:11px;padding:2px 5px;border-radius:5px;}
   <div class="tab active" data-view="tdb" onclick="switchView('tdb')">Tableau de bord</div>
   <div class="tab" data-view="planning" onclick="switchView('planning')">Planning</div>
   <div class="tab" data-view="annuaire" onclick="switchView('annuaire')">Formateurs</div>
+  <div class="tab" data-view="config" onclick="switchView('config')">⚙ Config</div>
 </div>
 <main>
 
@@ -135,6 +145,43 @@ select.sm{width:auto;font-size:11px;padding:2px 5px;border-radius:5px;}
   <div id="annuaire-content"></div>
 </div>
 
+<!-- CONFIG -->
+<div class="view" id="view-config">
+  <h2 style="font-size:17px;margin-bottom:14px;">⚙ Configuration</h2>
+  <div class="card">
+    <h3 style="font-size:14px;margin-bottom:8px;">Liste des secteurs</h3>
+    <p style="font-size:12.5px;color:var(--ink-s);margin-top:0;">Ces secteurs apparaissent dans le formulaire de création de session et dans le filtre du tableau de bord.</p>
+    <div class="field">
+      <label>Secteurs (un par ligne)</label>
+      <textarea id="cfg-secteurs" style="min-height:160px;font-size:13px;" placeholder="OISE&#10;AISNE&#10;NORD&#10;PAS-DE-CALAIS&#10;HARDELOT&#10;DUNKERQUE&#10;LILLE&#10;VALENCIENNES"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn-p" onclick="saveSecteurs()">Enregistrer les secteurs</button>
+    </div>
+    <div id="r-cfg-secteurs" style="font-size:12px;color:var(--ink-s);"></div>
+  </div>
+  <div class="card">
+    <h3 style="font-size:14px;margin-bottom:8px;">Liens permanents Teach Up formateurs</h3>
+    <p style="font-size:12.5px;color:var(--ink-s);margin-top:0;">Sauvegardés une fois, pré-remplis automatiquement dans le mail d'ouverture Kalisport.</p>
+    <div class="field-row3">
+      <div class="field"><label>Parcours BF Enfants</label><input id="cfg-tup-enf" placeholder="https://ffbb.teachup.com/..."></div>
+      <div class="field"><label>Parcours BF Jeunes</label><input id="cfg-tup-jeu" placeholder="https://ffbb.teachup.com/..."></div>
+      <div class="field"><label>Parcours BF Adultes</label><input id="cfg-tup-adu" placeholder="https://ffbb.teachup.com/..."></div>
+    </div>
+    <div class="btn-row"><button class="btn-p" onclick="saveConfigTup()">Enregistrer</button></div>
+    <div id="r-cfg-tup" style="font-size:12px;color:var(--ink-s);"></div>
+  </div>
+  <div class="card">
+    <h3 style="font-size:14px;margin-bottom:8px;">Lien questionnaires de satisfaction</h3>
+    <div class="field-row">
+      <div class="field"><label>Lien questionnaire stagiaires</label><input id="cfg-qs-stag" placeholder="https://forms.gle/..."></div>
+      <div class="field"><label>Lien questionnaire formateurs</label><input id="cfg-qs-form" placeholder="https://forms.gle/..."></div>
+    </div>
+    <div class="btn-row"><button class="btn-p" onclick="saveConfigQS()">Enregistrer</button></div>
+    <div id="r-cfg-qs" style="font-size:12px;color:var(--ink-s);"></div>
+  </div>
+</div>
+
 <!-- DETAIL SESSION -->
 <div class="view" id="view-detail">
   <span class="back" onclick="switchView('tdb')">← Tableau de bord</span>
@@ -155,14 +202,17 @@ select.sm{width:auto;font-size:11px;padding:2px 5px;border-radius:5px;}
     <!-- OUVERTURE CLUBS -->
     <div class="card">
       <h3 style="font-size:14px;margin-bottom:8px;">📢 Communication ouverture aux clubs</h3>
-      <div class="info">Mail envoyé à Christelle (clubs du secteur) et Martin (site web) avec les infos de la session.</div>
+      <div class="info">Regroupe <strong>toutes les formations du même secteur</strong> dans un seul mail pour Christelle et Martin. Coche les sessions à inclure.</div>
       <div class="field-row">
         <div class="field"><label>Email Christelle (secrétaire)</label><input id="m-clubs-christelle" value="christelle.delaey@hdfbasket.org"></div>
         <div class="field"><label>Email Martin (communication)</label><input id="m-clubs-martin" value="martin.weber@hdfbasket.org"></div>
       </div>
-      <div class="field"><label>Secteur concerné (ex: HARDELOT)</label><input id="m-clubs-secteur"></div>
-      <div class="field"><label>Planning BF (lien)</label><input id="m-clubs-planning" placeholder="https://..."></div>
-      <div class="btn-row"><button class="btn-s" onclick="sendClubs()">Envoyer à Christelle et Martin</button><button class="btn-g" onclick="testM('clubs')">📧 Test</button></div>
+      <div class="field"><label>Lien Planning BF (optionnel)</label><input id="m-clubs-planning" placeholder="https://..."></div>
+      <div id="clubs-sessions-liste" style="margin:10px 0;"></div>
+      <div class="btn-row">
+        <button class="btn-s" onclick="sendClubs()">Envoyer à Christelle et Martin</button>
+        <button class="btn-g" onclick="testM('clubs')">📧 Test</button>
+      </div>
       <div id="r-clubs" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
 
@@ -314,7 +364,10 @@ select.sm{width:auto;font-size:11px;padding:2px 5px;border-radius:5px;}
     </div>
     <div class="field"><label>Nom complet de la session</label><input id="f-nom" placeholder="Brevet Fédéral Enfants - BFE3 PETITE SYNTHE - 2025-26"></div>
     <div class="field-row">
-      <div class="field"><label>Secteur / Département</label><input id="f-secteur" placeholder="OISE, AISNE, NORD…"></div>
+      <div class="field"><label>Secteur / Département</label>
+        <input id="f-secteur" list="secteurs-dl" placeholder="OISE, AISNE, NORD…">
+        <datalist id="secteurs-dl"></datalist>
+      </div>
       <div class="field"><label>Statut</label><select id="f-statut"><option>À venir</option><option>En cours</option><option>Terminé</option></select></div>
     </div>
     <div class="field-row">
@@ -404,6 +457,8 @@ var ME = 'agodart@hdfbasket.org';
 
 var sessions = [], formateurs = [], currentSession = null, currentStag = [];
 var virementSession = null;
+var configData = {}; // Cache config du sheet
+var secteursList = []; // Liste des secteurs paramétrables
 
 // === UTILS ===
 async function api(action, payload) {
@@ -434,6 +489,7 @@ function switchView(name) {
   if (name === 'tdb') { window.location.hash = ''; loadSessions(); }
   if (name === 'planning') { window.location.hash = ''; renderPlanning(); }
   if (name === 'annuaire') { window.location.hash = ''; loadAnnuaire(); }
+  if (name === 'config') { window.location.hash = ''; loadConfig(); }
 }
 function switchSub(name) {
   document.querySelectorAll('.stab').forEach(function(t) { t.classList.toggle('active', t.dataset.s === name); });
@@ -706,7 +762,7 @@ function renderStag() {
       '<td>'+(s.prenom||'')+'</td><td>'+(s.sexe||'')+'</td><td>'+(s.age||'')+'</td><td>'+(s.licence||'')+'</td><td>'+(s.club||'')+'</td><td>'+(s.email||'')+'</td><td>'+(s.telephone||'')+'</td>' +
       '<td><span style="font-size:10px;padding:1px 6px;border-radius:10px;background:'+(s.repas==='Oui'?'var(--sage);color:#fff':'var(--sand-d);color:var(--ink-s)')+';">'+(s.repas||'Non')+'</span>'+(s.regime_alimentaire?'<div class="regime">⚠ '+s.regime_alimentaire+'</div>':'')+'</td>' +
       '<td style="text-align:center;"><input type="checkbox" class="chk" '+(paye?'checked':'')+' '+(isAnn?'disabled':'')+' onchange="updPaiement(\''+s.id+'\',this.checked)"></td>' +
-      '<td><select class="sm" style="color:'+decCol+';" onchange="updDecision(\''+s.id+'\',this.value)">' +
+      '<td><select class="sm dec-' + (dec==='ATTESTATION VALIDEE'?'admis':dec==='NON ADMIS'?'non-admis':'attente') + '" onchange="updDecision(\''+s.id+'\',this.value,this)">' +
         '<option value="" '+(dec===''?'selected':'')+'>En attente</option>' +
         '<option value="ATTESTATION VALIDEE" '+(dec==='ATTESTATION VALIDEE'?'selected':'')+'>✓ Admis</option>' +
         '<option value="NON ADMIS" '+(dec==='NON ADMIS'?'selected':'')+'>✕ Non admis</option></select></td>' +
@@ -755,7 +811,15 @@ function renderTel() {
 
 // === UPDATES STAGIAIRES ===
 async function updPaiement(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.paiement_statut=val?'OK':''; await api('updateStagiaire',{id:id,fields:{paiement_statut:val?'OK':''}}); toast(val?'Paiement confirmé':'Retiré'); }
-async function updDecision(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.decision_attestation=val; await api('updateStagiaire',{id:id,fields:{decision_attestation:val}}); toast(val==='ATTESTATION VALIDEE'?'Admis':val==='NON ADMIS'?'Non admis':'En attente'); }
+async function updDecision(id, val, el) {
+  var s = currentStag.find(function(x) { return x.id === id; });
+  if (s) s.decision_attestation = val;
+  if (el) {
+    el.className = 'sm dec-' + (val==='ATTESTATION VALIDEE'?'admis':val==='NON ADMIS'?'non-admis':'attente');
+  }
+  await api('updateStagiaire', { id: id, fields: { decision_attestation: val } });
+  toast(val === 'ATTESTATION VALIDEE' ? '✓ Admis' : val === 'NON ADMIS' ? '✕ Non admis' : 'En attente');
+}
 async function updStatut(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.statut=val; await api('updateStagiaire',{id:id,fields:{statut:val}}); renderStag(); toast(val); }
 async function updNote(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.note=val; await api('updateStagiaire',{id:id,fields:{note:val}}); toast('Note enregistrée'); }
 async function updRepas(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.repas=val?'Oui':'Non'; await api('updateStagiaire',{id:id,fields:{repas:val?'Oui':'Non'}}); toast(val?'Repas ajouté':'Retiré'); }
@@ -772,20 +836,121 @@ function prefill() {
   if (s.mail_session_kalisport) document.getElementById('m-kal-session').value = s.mail_session_kalisport;
   if (s.mail_formulaire) document.getElementById('m-kal-form').value = s.mail_formulaire;
   if (s.mail_parcours_enfants) document.getElementById('m-kal-enf').value = s.mail_parcours_enfants;
+  else if (configData.tup_enfants) document.getElementById('m-kal-enf').value = configData.tup_enfants;
   if (s.mail_parcours_jeunes) document.getElementById('m-kal-jeu').value = s.mail_parcours_jeunes;
+  else if (configData.tup_jeunes) document.getElementById('m-kal-jeu').value = configData.tup_jeunes;
   if (s.mail_parcours_adultes) document.getElementById('m-kal-adu').value = s.mail_parcours_adultes;
-  if (s.secteur) document.getElementById('m-clubs-secteur').value = s.secteur;
+  else if (configData.tup_adultes) document.getElementById('m-kal-adu').value = configData.tup_adultes;
   if (s.lien_qs_stag) document.getElementById('m-qs-stag').value = s.lien_qs_stag;
+  else if (configData.qs_stag) document.getElementById('m-qs-stag').value = configData.qs_stag;
   if (s.lien_qs_form) document.getElementById('m-qs-form').value = s.lien_qs_form;
+  else if (configData.qs_form) document.getElementById('m-qs-form').value = configData.qs_form;
+  renderClubsListe();
 }
 
-// === MAIL CLUBS ===
+// === CONFIG ===
+async function loadConfig() {
+  var data = await api('getConfig');
+  configData = data || {};
+  // Secteurs
+  var sec = configData.secteurs || '';
+  document.getElementById('cfg-secteurs').value = sec;
+  secteursList = sec.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+  // Teach Up
+  if (configData.tup_enfants) document.getElementById('cfg-tup-enf').value = configData.tup_enfants;
+  if (configData.tup_jeunes) document.getElementById('cfg-tup-jeu').value = configData.tup_jeunes;
+  if (configData.tup_adultes) document.getElementById('cfg-tup-adu').value = configData.tup_adultes;
+  // QS
+  if (configData.qs_stag) document.getElementById('cfg-qs-stag').value = configData.qs_stag;
+  if (configData.qs_form) document.getElementById('cfg-qs-form').value = configData.qs_form;
+  // Mettre à jour le datalist du formulaire de session
+  updateSecteursDatalist();
+}
+
+function updateSecteursDatalist() {
+  var dl = document.getElementById('secteurs-dl');
+  if (!dl) return;
+  dl.innerHTML = secteursList.map(function(s){return '<option value="'+s+'"></option>';}).join('');
+}
+
+async function saveSecteurs() {
+  var val = document.getElementById('cfg-secteurs').value.trim();
+  var res = await api('setConfig', { cle: 'secteurs', valeur: val });
+  if (res.success) {
+    configData.secteurs = val;
+    secteursList = val.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+    updateSecteursDatalist();
+    document.getElementById('r-cfg-secteurs').textContent = '✓ Secteurs enregistrés (' + secteursList.length + ')';
+    toast('Secteurs sauvegardés');
+  } else {
+    document.getElementById('r-cfg-secteurs').textContent = 'Erreur: ' + (res.error||'');
+  }
+}
+
+async function saveConfigTup() {
+  var enf = document.getElementById('cfg-tup-enf').value;
+  var jeu = document.getElementById('cfg-tup-jeu').value;
+  var adu = document.getElementById('cfg-tup-adu').value;
+  await api('setConfig', { cle: 'tup_enfants', valeur: enf });
+  await api('setConfig', { cle: 'tup_jeunes', valeur: jeu });
+  await api('setConfig', { cle: 'tup_adultes', valeur: adu });
+  configData.tup_enfants = enf; configData.tup_jeunes = jeu; configData.tup_adultes = adu;
+  document.getElementById('r-cfg-tup').textContent = '✓ Liens Teach Up enregistrés';
+  toast('Enregistré');
+}
+
+async function saveConfigQS() {
+  var stag = document.getElementById('cfg-qs-stag').value;
+  var form = document.getElementById('cfg-qs-form').value;
+  await api('setConfig', { cle: 'qs_stag', valeur: stag });
+  await api('setConfig', { cle: 'qs_form', valeur: form });
+  configData.qs_stag = stag; configData.qs_form = form;
+  document.getElementById('r-cfg-qs').textContent = '✓ Liens questionnaires enregistrés';
+  toast('Enregistré');
+}
+
+// === MAIL CLUBS — groupé par secteur ===
+function renderClubsListe() {
+  // Afficher toutes les sessions du même secteur que la session courante
+  if (!currentSession) return;
+  var secteur = currentSession.secteur || '';
+  var meme = sessions.filter(function(s) {
+    return s.secteur === secteur && s.statut_stage !== 'Terminé';
+  });
+  if (!meme.length) {
+    document.getElementById('clubs-sessions-liste').innerHTML = '<p style="font-size:12px;color:var(--ink-s);">Aucune autre session dans le secteur ' + (secteur||'(non défini)') + '.</p>';
+    return;
+  }
+  var rows = meme.map(function(s) {
+    var isCurrent = s.id === currentSession.id;
+    return '<tr><td style="text-align:center;"><input type="checkbox" class="chk clubs-chk" data-id="'+s.id+'" '+(isCurrent?'checked':'')+' '+(isCurrent?'':'')+' checked></td>' +
+      '<td><strong>'+(s.code_kalisport||'—')+'</strong></td>' +
+      '<td>'+(s.type||'')+'</td>' +
+      '<td>'+fmtDate(s.date_debut)+'</td>' +
+      '<td>'+(s.lieu||'')+'</td>' +
+      '<td style="font-size:11px;color:var(--ink-s);">'+(s.date_fin_inscription?'Clôture: '+fmtDate(s.date_fin_inscription):'')+'</td></tr>';
+  }).join('');
+  document.getElementById('clubs-sessions-liste').innerHTML =
+    '<p style="font-size:12px;color:var(--ink-s);margin-bottom:6px;">Sessions du secteur <strong>'+(secteur||'non défini')+'</strong> — toutes cochées par défaut :</p>' +
+    '<div class="scroll"><table><thead><tr><th style="width:28px;">✓</th><th>Code</th><th>Type</th><th>Début</th><th>Lieu</th><th>Clôture</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
 async function sendClubs() {
-  var p = { session_id: currentSession.id, christelle: document.getElementById('m-clubs-christelle').value, martin: document.getElementById('m-clubs-martin').value, secteur: document.getElementById('m-clubs-secteur').value, planning_lien: document.getElementById('m-clubs-planning').value };
+  var ids = Array.from(document.querySelectorAll('.clubs-chk:checked')).map(function(c){return c.dataset.id;});
+  if (!ids.length) { toast('Aucune session sélectionnée'); return; }
+  var sessionsRetenues = sessions.filter(function(s){return ids.indexOf(s.id)>-1;});
+  if (!confirm('Envoyer ' + sessionsRetenues.length + ' formation(s) à Christelle et Martin ?')) return;
+  var p = {
+    session_id: currentSession.id,
+    sessions_ids: ids,
+    christelle: document.getElementById('m-clubs-christelle').value,
+    martin: document.getElementById('m-clubs-martin').value,
+    planning_lien: document.getElementById('m-clubs-planning').value
+  };
   document.getElementById('r-clubs').textContent = 'Envoi…';
   var res = await api('envoyerMailClubs', p);
-  document.getElementById('r-clubs').textContent = res.success ? 'Envoyé à Christelle et Martin' : ('Erreur: ' + (res.error||''));
-  if (res.success) { toast('Mail clubs envoyé'); await api('updateSession', {id:currentSession.id,fields:{statut_mail_clubs:'Envoyé'}}); }
+  document.getElementById('r-clubs').textContent = res.success ? ('Envoyé — ' + sessionsRetenues.length + ' formation(s) regroupées') : ('Erreur: '+(res.error||''));
+  if (res.success) toast('Mail clubs envoyé');
 }
 
 // === MAIL KALISPORT ===
@@ -924,7 +1089,7 @@ async function testM(type) {
   else if (type==='kalisport') { p.session_kalisport=document.getElementById('m-kal-session').value; p.formulaire=document.getElementById('m-kal-form').value; p.parcours_enfants=document.getElementById('m-kal-enf').value; res=await api('envoyerMailKalisport',p); }
   else if (type==='convoc') { p.lieu=document.getElementById('m-cv-lieu').value; p.dates_globales=document.getElementById('m-cv-dates').value; p.visio_type=document.getElementById('m-cv-visio-type').value; p.visio_date=document.getElementById('m-cv-visio-date').value; p.visio_lien=document.getElementById('m-cv-visio-lien').value; p.visio_replay=document.getElementById('m-cv-visio-replay').value; p.programme=document.getElementById('m-cv-prog').value; p.acces=document.getElementById('m-cv-acces').value; p.materiel=document.getElementById('m-cv-mat').value; p.facebook=document.getElementById('m-cv-fb').value; res=await api('envoyerConvocations',p); }
   else if (type==='relance') { p.stagiaires_avec_lien=[{id:'TEST',lien:'https://kalisport.test'}]; p.date_debut=document.getElementById('m-rel-date').value; res=await api('envoyerRelancePaiement',p); }
-  else if (type==='clubs') { p.christelle=document.getElementById('m-clubs-christelle').value; p.martin=document.getElementById('m-clubs-martin').value; p.secteur=document.getElementById('m-clubs-secteur').value; p.planning_lien=document.getElementById('m-clubs-planning').value; res=await api('envoyerMailClubs',p); }
+  else if (type==='clubs') { p.sessions_ids=[currentSession.id]; p.christelle=document.getElementById('m-clubs-christelle').value; p.martin=document.getElementById('m-clubs-martin').value; p.planning_lien=document.getElementById('m-clubs-planning').value; res=await api('envoyerMailClubs',p); }
   else if (type==='qs') { p.type='envoi1'; p.lien_stag=document.getElementById('m-qs-stag').value; p.lien_form=document.getElementById('m-qs-form').value; res=await api('envoyerQuestionnaireSatisfaction',p); }
   toast(res&&res.success ? ('Test envoyé à '+ME) : ('Erreur: '+(res&&res.error||'inconnue')));
 }
