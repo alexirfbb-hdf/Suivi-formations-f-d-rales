@@ -171,14 +171,8 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <div class="btn-row"><button class="btn-p" onclick="saveConfigTup()">Enregistrer</button></div>
     <div id="r-cfg-tup" style="font-size:12px;color:var(--ink-s);"></div>
   </div>
-  <div class="card">
-    <h3 style="font-size:14px;margin-bottom:8px;">Lien questionnaires de satisfaction</h3>
-    <div class="field-row">
-      <div class="field"><label>Lien questionnaire stagiaires</label><input id="cfg-qs-stag" placeholder="https://forms.gle/..."></div>
-      <div class="field"><label>Lien questionnaire formateurs</label><input id="cfg-qs-form" placeholder="https://forms.gle/..."></div>
-    </div>
-    <div class="btn-row"><button class="btn-p" onclick="saveConfigQS()">Enregistrer</button></div>
-    <div id="r-cfg-qs" style="font-size:12px;color:var(--ink-s);"></div>
+  <div class="card" style="background:var(--sand);border:1px dashed var(--line);">
+    <p style="font-size:12.5px;color:var(--ink-s);margin:0;">ℹ️ Les liens des questionnaires de satisfaction sont <strong>uniques par session</strong> — à renseigner dans l'onglet "Envoi mails" de chaque session (bloc "Questionnaire de satisfaction").</p>
   </div>
 </div>
 
@@ -841,10 +835,10 @@ function prefill() {
   else if (configData.tup_jeunes) document.getElementById('m-kal-jeu').value = configData.tup_jeunes;
   if (s.mail_parcours_adultes) document.getElementById('m-kal-adu').value = s.mail_parcours_adultes;
   else if (configData.tup_adultes) document.getElementById('m-kal-adu').value = configData.tup_adultes;
+  // QS : liens uniques par session, chargés depuis la session uniquement
   if (s.lien_qs_stag) document.getElementById('m-qs-stag').value = s.lien_qs_stag;
-  else if (configData.qs_stag) document.getElementById('m-qs-stag').value = configData.qs_stag;
   if (s.lien_qs_form) document.getElementById('m-qs-form').value = s.lien_qs_form;
-  else if (configData.qs_form) document.getElementById('m-qs-form').value = configData.qs_form;
+  if (s.date_dernier_presentiel) document.getElementById('m-qs-date').value = s.date_dernier_presentiel;
   renderClubsListe();
 }
 
@@ -852,18 +846,12 @@ function prefill() {
 async function loadConfig() {
   var data = await api('getConfig');
   configData = data || {};
-  // Secteurs
   var sec = configData.secteurs || '';
   document.getElementById('cfg-secteurs').value = sec;
   secteursList = sec.split('\n').map(function(s){return s.trim();}).filter(Boolean);
-  // Teach Up
   if (configData.tup_enfants) document.getElementById('cfg-tup-enf').value = configData.tup_enfants;
   if (configData.tup_jeunes) document.getElementById('cfg-tup-jeu').value = configData.tup_jeunes;
   if (configData.tup_adultes) document.getElementById('cfg-tup-adu').value = configData.tup_adultes;
-  // QS
-  if (configData.qs_stag) document.getElementById('cfg-qs-stag').value = configData.qs_stag;
-  if (configData.qs_form) document.getElementById('cfg-qs-form').value = configData.qs_form;
-  // Mettre à jour le datalist du formulaire de session
   updateSecteursDatalist();
 }
 
@@ -896,16 +884,6 @@ async function saveConfigTup() {
   await api('setConfig', { cle: 'tup_adultes', valeur: adu });
   configData.tup_enfants = enf; configData.tup_jeunes = jeu; configData.tup_adultes = adu;
   document.getElementById('r-cfg-tup').textContent = '✓ Liens Teach Up enregistrés';
-  toast('Enregistré');
-}
-
-async function saveConfigQS() {
-  var stag = document.getElementById('cfg-qs-stag').value;
-  var form = document.getElementById('cfg-qs-form').value;
-  await api('setConfig', { cle: 'qs_stag', valeur: stag });
-  await api('setConfig', { cle: 'qs_form', valeur: form });
-  configData.qs_stag = stag; configData.qs_form = form;
-  document.getElementById('r-cfg-qs').textContent = '✓ Liens questionnaires enregistrés';
   toast('Enregistré');
 }
 
@@ -1051,21 +1029,26 @@ function aperçuFormateur() {
 
 // === QUESTIONNAIRE SATISFACTION ===
 async function sendQS(type) {
-  var lienStag = document.getElementById('m-qs-stag').value;
-  var lienForm = document.getElementById('m-qs-form').value;
+  var lienStag = document.getElementById('m-qs-stag').value.trim();
+  var lienForm = document.getElementById('m-qs-form').value.trim();
   var dateDernier = document.getElementById('m-qs-date').value;
-  if (!lienStag && type === 'envoi1') { toast('Renseigne le lien questionnaire stagiaires'); return; }
-  var p = { session_id:currentSession.id, type:type, lien_stag:lienStag, lien_form:lienForm, date_dernier_presentiel:dateDernier };
+  if (!lienStag) { toast('Renseigne le lien questionnaire stagiaires — ce lien est unique pour cette session'); return; }
+  if (!lienForm) { toast('Renseigne le lien questionnaire formateur — ce lien est unique pour cette session'); return; }
+  var p = { session_id: currentSession.id, type: type, lien_stag: lienStag, lien_form: lienForm, date_dernier_presentiel: dateDernier };
   document.getElementById('r-qs').textContent = 'Envoi…';
   var res = await api('envoyerQuestionnaireSatisfaction', p);
-  document.getElementById('r-qs').textContent = res.success ? (res.sent_stag+' stag. + formateur contactés') : ('Erreur: '+(res.error||''));
   if (res.success) {
-    await api('updateSession',{id:currentSession.id,fields:{
-      lien_qs_stag:lienStag, lien_qs_form:lienForm,
-      statut_qs_envoi1: type==='envoi1'?'Envoyé':currentSession.statut_qs_envoi1,
-      statut_qs_relance: type==='relance'?'Envoyé':currentSession.statut_qs_relance
-    }});
-    toast('Questionnaire envoyé');
+    document.getElementById('r-qs').textContent = res.sent_stag + ' stagiaire(s) + formateur contactés';
+    // Sauvegarder les liens dans la session (uniques par session)
+    var fields = { lien_qs_stag: lienStag, lien_qs_form: lienForm };
+    if (dateDernier) fields.date_dernier_presentiel = dateDernier;
+    fields[type === 'envoi1' ? 'statut_qs_envoi1' : 'statut_qs_relance'] = 'Envoyé';
+    await api('updateSession', { id: currentSession.id, fields: fields });
+    currentSession.lien_qs_stag = lienStag;
+    currentSession.lien_qs_form = lienForm;
+    toast('Questionnaire envoyé et liens sauvegardés pour cette session');
+  } else {
+    document.getElementById('r-qs').textContent = 'Erreur: ' + (res.error || '');
   }
 }
 
