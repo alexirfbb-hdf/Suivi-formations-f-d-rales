@@ -110,9 +110,10 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
         <th>Payés</th><th>Admis</th>
         <th>Convoc.<br>Stag.</th><th>Convoc.<br>Form.</th>
         <th>QS Envoi 1</th><th>QS Relance</th>
-        <th>Diplômes</th><th>Doc salarié</th><th>Virement</th>
-        <th>Taux M</th><th>Taux F</th>
-        <th>Rém.</th><th>Observations</th><th>Statut</th><th></th>
+        <th>Diplômes</th><th>Doc<br>salarié</th><th>Virement</th>
+        <th>Taux ♂</th><th>Taux ♀</th>
+        <th>Rém.</th><th>Observations</th>
+        <th>Avancement</th><th></th>
       </tr>
     </thead><tbody id="tdb-body"></tbody></table>
   </div>
@@ -292,6 +293,10 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
         <div class="field"><label>Lien visio</label><input id="m-fo-lien"></div>
       </div>
       <div class="field"><label>Identifiants connexion</label><input id="m-fo-id"></div>
+      <div class="field">
+        <label>Lien Google Sheet suivi formateur (émargements, résultats)</label>
+        <input id="m-fo-suivi" placeholder="https://docs.google.com/spreadsheets/d/...">
+      </div>
       <div class="btn-row">
         <button class="btn-p" onclick="sendFormateur()">Envoyer au formateur</button>
         <button class="btn-g" onclick="aperçuFormateur()">Aperçu</button>
@@ -333,11 +338,32 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   </div><!-- fin sub-mails -->
 
   <div class="subview" id="sub-import">
+    <!-- Import stagiaires Kalisport -->
     <div class="card">
-      <p style="font-size:13px;color:var(--ink-s);margin-top:0;">Colle le CSV Kalisport "Liste des participants". La ligne d'en-têtes doit commencer par ID, NOM_STAGE…</p>
+      <h3 style="font-size:14px;margin-bottom:6px;">📥 Import liste Kalisport</h3>
+      <p style="font-size:12.5px;color:var(--ink-s);margin-top:0;">Colle le CSV Kalisport "Liste des participants". La ligne d'en-têtes doit commencer par ID, NOM_STAGE…</p>
       <textarea id="csv-in" style="min-height:70px;font-family:monospace;font-size:11px;" placeholder="ID,NOM_STAGE,NOM_STAGIAIRE,PRENOM_STAGIAIRE,..."></textarea>
       <div class="btn-row" style="margin-top:8px;"><button class="btn-p" onclick="importCSV()">Importer</button></div>
       <div id="r-import" style="font-size:12px;color:var(--ink-s);"></div>
+    </div>
+
+    <!-- Import résultats formateur -->
+    <div class="card">
+      <h3 style="font-size:14px;margin-bottom:6px;">🏆 Import résultats (admis / non admis)</h3>
+      <div class="info">
+        Exporte le Sheet de suivi formateur en CSV, colle-le ici.<br>
+        Le fichier doit contenir les colonnes : <strong>Nom</strong>, <strong>Prénom</strong>, <strong>Décision</strong><br>
+        Valeurs acceptées dans "Décision" : <code>Admis</code>, <code>Non admis</code>, <code>En attente</code>
+        <br><br>
+        <strong>Modèle de colonne "Décision" :</strong> <em>Admis / Non admis / En attente</em><br>
+        La correspondance se fait par Nom + Prénom.
+      </div>
+      <textarea id="csv-resultats" style="min-height:70px;font-family:monospace;font-size:11px;" placeholder="Nom,Prénom,Décision&#10;DUPONT,Marie,Admis&#10;MARTIN,Pierre,Non admis&#10;BERNARD,Sophie,Admis"></textarea>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="btn-p" onclick="importResultats()">Importer les résultats</button>
+        <button class="btn-g" onclick="telechargerModeleResultats()">📄 Télécharger le modèle CSV</button>
+      </div>
+      <div id="r-resultats" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
   </div>
 
@@ -389,6 +415,23 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <div class="field-row">
       <div class="field"><label>Identifiant Teach Up</label><input id="f-tup-id"></div>
       <div class="field"><label>Lien tableau de bord Teach Up</label><input id="f-tup-lien"></div>
+    </div>
+    <hr>
+    <p style="font-size:11.5px;color:var(--ink-s);margin:0 0 8px;">Formateur 2 (optionnel) — <span style="color:var(--sage-d);cursor:pointer;" onclick="openAnnuaire()">choisir depuis l'annuaire</span></p>
+    <div class="field-row">
+      <div class="field"><label>Civilité</label><select id="f-civ2"><option value="">—</option><option>Monsieur</option><option>Madame</option></select></div>
+      <div class="field"><label>Nom</label><input id="f-nom-fo2"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Prénom</label><input id="f-pre-fo2"></div>
+      <div class="field"><label>Téléphone</label><input id="f-tel-fo2"></div>
+    </div>
+    <div class="field"><label>Email</label><input id="f-email-fo2"></div>
+    <hr>
+    <p style="font-size:11.5px;color:var(--ink-s);margin:0 0 8px;">Suivi formateur</p>
+    <div class="field">
+      <label>Lien Google Sheet de suivi formateur (émargements, résultats…)</label>
+      <input id="f-suivi-fo" placeholder="https://docs.google.com/spreadsheets/d/...">
     </div>
     <hr>
     <p style="font-size:11.5px;color:var(--ink-s);margin:0 0 8px;">Suivi interne</p>
@@ -531,146 +574,116 @@ function renderTDB() {
     }
     return true;
   });
-  if (!liste.length) {
-    document.getElementById('tdb-body').innerHTML = '<tr><td colspan="18" class="empty">Aucune session.</td></tr>';
-    return;
-  }
+  if (!liste.length) { document.getElementById('tdb-body').innerHTML = '<tr><td colspan="18" class="empty">Aucune session.</td></tr>'; return; }
+
   document.getElementById('tdb-body').innerHTML = liste.map(function(s) {
     var nb = Number(s.nb_stagiaires) || 0;
     var payes = Number(s.nb_payes) || 0;
     var admis = Number(s.nb_admis) || 0;
-    var m = Number(s.nb_admis_m) || 0;
-    var f = Number(s.nb_admis_f) || 0;
-    // Payés badge
+    var nbM = Number(s.nb_m) || 0;
+    var nbF = Number(s.nb_f) || 0;
+    var admisM = Number(s.nb_admis_m) || 0;
+    var admisF = Number(s.nb_admis_f) || 0;
+
+    // Payés
     var payBadge = nb
       ? '<span class="badge '+(payes===nb?'ok':payes>0?'warn':'ko')+'">' + payes + '/' + nb + '</span>'
       : '<span class="badge neu">0</span>';
-    // Admis fraction (pas pourcentage)
+
+    // Admis total
     var admisBadge = nb
       ? '<span class="badge '+(admis===nb?'ok':admis>0?'warn':'ko')+'">' + admis + '/' + nb + '</span>'
       : '<span class="badge neu">—</span>';
-    // Taux réussite M/F en fraction
-    var txM = s.taux_reussite_m || '—';
-    var txF = s.taux_reussite_f || '—';
-    // Virements (peut être multi-lignes)
+
+    // Taux réussite M/F (admis/total par genre)
+    var txM = nbM > 0 ? admisM + '/' + nbM : '—';
+    var txF = nbF > 0 ? admisF + '/' + nbF : '—';
+    var txMColor = nbM > 0 ? (admisM === nbM ? '#166534' : admisM > 0 ? '#b45309' : '#991b1b') : 'var(--ink-s)';
+    var txFColor = nbF > 0 ? (admisF === nbF ? '#166534' : admisF > 0 ? '#b45309' : '#991b1b') : 'var(--ink-s)';
+
+    // Diplômes — menu déroulant
+    var dipVal = s.statut_diplomes || '';
+    var dipColor = dipVal === 'Complet' ? '#166534' : dipVal === 'Envoi partiel' ? '#b45309' : 'var(--ink-s)';
+    var dipSelect = '<select class="sm" style="color:'+dipColor+';background:transparent;border:none;" '
+      + 'onchange="event.stopPropagation();updDiplomes(this,\''+s.id+'\')" onclick="event.stopPropagation();">'
+      + '<option value="" '+(dipVal===''?'selected':'')+'>À faire</option>'
+      + '<option value="Envoi partiel" '+(dipVal==='Envoi partiel'?'selected':'')+'>Envoi partiel</option>'
+      + '<option value="Complet" '+(dipVal==='Complet'?'selected':'')+'>✓ Complet</option>'
+      + '</select>';
+
+    // Avancement admin (statut_admin) — À faire / Complet
+    var ava = s.statut_admin || '';
+    var avaSelect = '<select class="sm" style="color:'+(ava==='Complet'?'#166534':'var(--ink-s)')+';background:transparent;border:none;" '
+      + 'onchange="event.stopPropagation();updAvancement(this,\''+s.id+'\')" onclick="event.stopPropagation();">'
+      + '<option value="" '+(ava===''?'selected':'')+'>À faire</option>'
+      + '<option value="Complet" '+(ava==='Complet'?'selected':'')+'>✓ Complet</option>'
+      + '</select>';
+
+    // Virements
     var virList = (s.virement_info || '').split('|').map(function(v){return v.trim();}).filter(Boolean);
-    var virHtml = virList.length
-      ? virList.map(function(v){return '<div style="font-size:10.5px;">'+v+'</div>';}).join('')
-      : '';
-    virHtml += '<button class="tdb-action" onclick="event.stopPropagation();openVirement(\'' + s.id + '\')" title="Gérer les virements">+ vir.</button>';
-    // Statut badge
-    var stColors = {'À venir':'neu','En cours':'warn','Terminé':'ok','Archivé':'ko'};
-    var stBadge = s.statut_stage ? '<span class="badge '+(stColors[s.statut_stage]||'neu')+'">'+s.statut_stage+'</span>' : '';
-    // Nom cliquable vers Kalisport si lien disponible
+    var virHtml = virList.map(function(v){return '<div style="font-size:10.5px;white-space:nowrap;">'+v+'</div>';}).join('');
+    virHtml += '<button class="tdb-action" onclick="event.stopPropagation();openVirement(\''+s.id+'\')" title="Gérer les virements">+ vir.</button>';
+
+    // Nom cliquable
     var nomHtml = s.kalisport_lien
       ? '<a href="'+s.kalisport_lien+'" target="_blank" onclick="event.stopPropagation();" style="color:var(--sage-d);font-weight:600;text-decoration:none;">'+s.nom+'</a>'
       : '<strong>'+s.nom+'</strong>';
-    return '<tr onclick="openSession(\''+s.id+'\')" style="cursor:pointer;">' +
-      '<td><strong style="color:var(--sage-d);">'+(s.code_kalisport||'—')+'</strong></td>' +
-      '<td style="min-width:160px;">'+nomHtml+'<br><small style="color:var(--ink-s);">'+(s.secteur||'')+(s.date_debut?' · '+fmtDate(s.date_debut):'')+'</small></td>' +
-      '<td>'+(s.formateur_nom||'—')+'<br><small style="color:var(--ink-s);">'+(s.formateur_email||'')+'</small></td>' +
-      '<td>'+payBadge+'</td>' +
-      '<td>'+admisBadge+'</td>' +
-      '<td>'+badgeStat(s.statut_convocation)+'</td>' +
-      '<td>'+badgeStat(s.statut_mail_formateur)+'</td>' +
-      '<td>'+badgeStat(s.statut_qs_envoi1)+'</td>' +
-      '<td>'+badgeStat(s.statut_qs_relance)+'</td>' +
-      '<td>'+badgeStat(s.statut_diplomes)+'</td>' +
-      '<td style="text-align:center;" onclick="event.stopPropagation();">' +
-        '<input type="checkbox" class="chk" '+(s.doc_salarie?'checked':'')+' onchange="updSessionTDB(this,\''+s.id+'\',\'doc_salarie\')"></td>' +
-      '<td onclick="event.stopPropagation();">'+virHtml+'</td>' +
-      '<td style="text-align:center;font-size:11px;">'+txM+'</td>' +
-      '<td style="text-align:center;font-size:11px;">'+txF+'</td>' +
-      '<td style="text-align:center;" onclick="event.stopPropagation();">' +
-        '<input type="checkbox" class="chk" '+(s.rem_formateur?'checked':'')+' onchange="updSessionTDB(this,\''+s.id+'\',\'rem_formateur\')"></td>' +
-      '<td onclick="event.stopPropagation();">' +
-        '<input class="obs-input" type="text" value="'+(s.observations||'').replace(/"/g,'&quot;')+'" placeholder="Observations…"' +
-        ' onblur="updSessionObs(this,\''+s.id+'\')"' +
-        ' onkeydown="if(event.key===&quot;Enter&quot;)this.blur()">' +
-      '</td>' +
-      '<td>'+stBadge+'</td>' +
-      '<td onclick="event.stopPropagation();">' +
-        '<button class="tdb-action" onclick="archiverSession(\''+s.id+'\',\''+s.statut_stage+'\')" title="'+(s.statut_stage==='Archivé'?'Désarchiver':'Archiver')+'">'+(s.statut_stage==='Archivé'?'↩':'🗄')+'</button>' +
-      '</td>' +
-    '</tr>';
+
+    return '<tr onclick="openSession(\''+s.id+'\')" style="cursor:pointer;">'
+      + '<td><strong style="color:var(--sage-d);">'+(s.code_kalisport||'—')+'</strong></td>'
+      + '<td style="min-width:155px;">'+nomHtml+'<br><small style="color:var(--ink-s);">'+(s.secteur||'')+(s.date_debut?' · '+fmtDate(s.date_debut):'')+'</small></td>'
+      + '<td style="white-space:nowrap;">'+(s.formateur_nom||'—')+'</td>'
+      + '<td>'+payBadge+'</td>'
+      + '<td>'+admisBadge+'</td>'
+      + '<td>'+badgeStat(s.statut_convocation)+'</td>'
+      + '<td>'+badgeStat(s.statut_mail_formateur)+'</td>'
+      + '<td>'+badgeStat(s.statut_qs_envoi1)+'</td>'
+      + '<td>'+badgeStat(s.statut_qs_relance)+'</td>'
+      + '<td onclick="event.stopPropagation();">'+dipSelect+'</td>'
+      + '<td style="text-align:center;" onclick="event.stopPropagation();">'
+        + '<input type="checkbox" class="chk" '+(s.doc_salarie?'checked':'')+' onchange="updSessionTDB(this,\''+s.id+'\',\'doc_salarie\')"></td>'
+      + '<td onclick="event.stopPropagation();">'+virHtml+'</td>'
+      + '<td style="text-align:center;font-size:11px;color:'+txMColor+';">'+txM+'</td>'
+      + '<td style="text-align:center;font-size:11px;color:'+txFColor+';">'+txF+'</td>'
+      + '<td style="text-align:center;" onclick="event.stopPropagation();">'
+        + '<input type="checkbox" class="chk" '+(s.rem_formateur?'checked':'')+' onchange="updSessionTDB(this,\''+s.id+'\',\'rem_formateur\')"></td>'
+      + '<td onclick="event.stopPropagation();">'
+        + '<input class="obs-input" type="text" value="'+(s.observations||'').replace(/"/g,'&quot;')+'" placeholder="Observations…"'
+        + ' onblur="updSessionObs(this,\''+s.id+'\')"'
+        + ' onkeydown="if(event.key===&quot;Enter&quot;)this.blur()">'
+      + '</td>'
+      + '<td onclick="event.stopPropagation();">'+avaSelect+'</td>'
+      + '<td onclick="event.stopPropagation();">'
+        + '<button class="tdb-action" onclick="archiverSession(\''+s.id+'\',\''+s.statut_stage+'\')" title="'+(s.statut_stage==='Archivé'?'Désarchiver':'Archiver')+'">'+(s.statut_stage==='Archivé'?'↩':'🗄')+'</button>'
+      + '</td>'
+      + '</tr>';
   }).join('');
 }
 
 function badgeStat(v) {
   if (!v || v === 'À faire') return '<span class="badge neu">À faire</span>';
-  if (v === 'Envoyé') return '<span class="badge ok">✓ Envoyé</span>';
+  if (v === 'Envoyé') return '<span class="badge ok">✓</span>';
   return '<span class="badge warn">'+v+'</span>';
 }
 
-// Mise à jour depuis le TDB (sans ouvrir la session)
-async function updSessionTDB(el, id, field) {
-  var val = el.type === 'checkbox' ? el.checked : el.value;
-  var s = sessions.find(function(x) { return x.id === id; });
-  if (s) s[field] = val;
-  var fields = {}; fields[field] = val;
-  await api('updateSession', { id: id, fields: fields });
-  toast('✓ Enregistré');
-}
-
-async function updSessionObs(el, id) {
+async function updDiplomes(el, id) {
   var val = el.value;
   var s = sessions.find(function(x) { return x.id === id; });
-  if (s) s.observations = val;
-  await api('updateSession', { id: id, fields: { observations: val } });
-  toast('✓ Observation enregistrée');
+  if (s) s.statut_diplomes = val;
+  el.style.color = val === 'Complet' ? '#166534' : val === 'Envoi partiel' ? '#b45309' : 'var(--ink-s)';
+  var res = await api('updateSession', { id: id, fields: { statut_diplomes: val } });
+  if (res && res.error) toast('Erreur: ' + res.error);
+  else toast('✓ Diplômes : ' + (val || 'À faire'));
 }
 
-async function updSession(id, field, val) {
-  var fields = {}; fields[field] = val;
-  await api('updateSession', { id: id, fields: fields });
+async function updAvancement(el, id) {
+  var val = el.value;
   var s = sessions.find(function(x) { return x.id === id; });
-  if (s) s[field] = val;
-  toast('✓ Mis à jour');
-}
-
-// ARCHIVER / DÉSARCHIVER
-async function archiverSession(id, statut) {
-  var newStatut = statut === 'Archivé' ? 'Terminé' : 'Archivé';
-  var msg = statut === 'Archivé' ? 'Désarchiver cette session ?' : 'Archiver cette session ? Elle n\'apparaîtra plus dans le tableau de bord.';
-  if (!confirm(msg)) return;
-  await updSessionTDB(id, 'statut_stage', newStatut);
-  renderTDB();
-  toast(statut === 'Archivé' ? 'Session désarchivée' : 'Session archivée');
-}
-
-// VIREMENTS MULTIPLES — séparés par |
-function openVirement(id) {
-  virementSession = sessions.find(function(s) { return s.id === id; });
-  var info = virementSession ? (virementSession.virement_info || '') : '';
-  var lignes = info.split('|').map(function(v){return v.trim();}).filter(Boolean);
-  var rows = lignes.map(function(v, i) {
-    return '<div style="display:flex;gap:6px;margin-bottom:6px;">' +
-      '<input type="text" class="vir-ligne" value="'+v.replace(/"/g,'&quot;')+'" placeholder="490,50€ le 27/04/2026" style="flex:1;">' +
-      '<button class="btn-g" style="padding:4px 8px;font-size:11px;" onclick="this.parentElement.remove()">✕</button></div>';
-  }).join('');
-  document.getElementById('virement-content').innerHTML =
-    '<div id="vir-lignes">'+rows+'</div>' +
-    '<button class="btn-g" style="font-size:12px;margin-top:4px;" onclick="ajouterLigneVirement()">+ Ajouter un virement</button>';
-  if (!lignes.length) ajouterLigneVirement();
-  document.getElementById('modal-virement').classList.add('open');
-}
-function ajouterLigneVirement() {
-  var div = document.createElement('div');
-  div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
-  div.innerHTML = '<input type="text" class="vir-ligne" placeholder="490,50€ le 27/04/2026" style="flex:1;"><button class="btn-g" style="padding:4px 8px;font-size:11px;" onclick="this.parentElement.remove()">✕</button>';
-  document.getElementById('vir-lignes').appendChild(div);
-}
-async function saveVirement() {
-  if (!virementSession) return;
-  var lignes = Array.from(document.querySelectorAll('.vir-ligne'))
-    .map(function(i){return i.value.trim();}).filter(Boolean);
-  var info = lignes.join(' | ');
-  await updSessionTDB(virementSession.id, 'virement_info', info);
-  var s = sessions.find(function(x){return x.id===virementSession.id;});
-  if (s) s.virement_info = info;
-  closeAll();
-  renderTDB();
-  toast('Virement(s) enregistré(s)');
+  if (s) s.statut_admin = val;
+  el.style.color = val === 'Complet' ? '#166534' : 'var(--ink-s)';
+  var res = await api('updateSession', { id: id, fields: { statut_admin: val } });
+  if (res && res.error) toast('Erreur: ' + res.error);
+  else toast('✓ Avancement : ' + (val || 'À faire'));
 }
 
 // === PLANNING ===
@@ -760,6 +773,12 @@ async function saveSession() {
     formateur_telephone: document.getElementById('f-tel-fo').value,
     teachup_id: document.getElementById('f-tup-id').value,
     teachup_lien: document.getElementById('f-tup-lien').value,
+    formateur2_civilite: document.getElementById('f-civ2').value,
+    formateur2_nom: document.getElementById('f-nom-fo2').value,
+    formateur2_prenom: document.getElementById('f-pre-fo2').value,
+    formateur2_email: document.getElementById('f-email-fo2').value,
+    formateur2_telephone: document.getElementById('f-tel-fo2').value,
+    lien_suivi_formateur: document.getElementById('f-suivi-fo').value,
     observations: document.getElementById('f-obs').value
   };
   if (!fields.nom) { toast('Le nom est requis'); return; }
@@ -906,6 +925,7 @@ function prefill() {
   if (s.mail_date_visio) document.getElementById('m-fo-date').value = s.mail_date_visio;
   if (s.mail_lien_visio) document.getElementById('m-fo-lien').value = s.mail_lien_visio;
   if (s.mail_id_visio) document.getElementById('m-fo-id').value = s.mail_id_visio;
+  if (s.lien_suivi_formateur) document.getElementById('m-fo-suivi').value = s.lien_suivi_formateur;
   if (s.mail_session_kalisport) document.getElementById('m-kal-session').value = s.mail_session_kalisport;
   if (s.mail_formulaire) document.getElementById('m-kal-form').value = s.mail_formulaire;
   if (s.mail_parcours_enfants) document.getElementById('m-kal-enf').value = s.mail_parcours_enfants;
@@ -1086,7 +1106,7 @@ function aperçuConvoc() {
 
 // === MAIL FORMATEUR J-7 ===
 async function sendFormateur() {
-  var p = { session_id:currentSession.id, date_visio:document.getElementById('m-fo-date').value, lien_visio:document.getElementById('m-fo-lien').value, id_visio:document.getElementById('m-fo-id').value, lien_app:sUrl(currentSession.id) };
+  var p = { session_id:currentSession.id, date_visio:document.getElementById('m-fo-date').value, lien_visio:document.getElementById('m-fo-lien').value, id_visio:document.getElementById('m-fo-id').value, lien_suivi:document.getElementById('m-fo-suivi').value };
   document.getElementById('r-fo').textContent = 'Envoi…';
   var res = await api('envoyerMailFormateur', p);
   document.getElementById('r-fo').textContent = res.success ? ('Envoyé à '+currentSession.formateur_email) : ('Erreur: '+(res.error||''));
@@ -1094,11 +1114,12 @@ async function sendFormateur() {
 }
 function aperçuFormateur() {
   var s = currentSession;
+  var suivi = document.getElementById('m-fo-suivi').value;
   document.getElementById('apercu-title').textContent = 'Aperçu mail formateur';
   document.getElementById('apercu-body').innerHTML =
     '<p>Bonjour <strong>'+(s.formateur_civilite||'')+' '+(s.formateur_nom||'')+'</strong>,</p>' +
     '<p>Informations pour votre intervention dans <strong>'+s.nom+'</strong>.</p>' +
-    '<div style="background:#f0f7f0;border:1px solid #c3dbc3;border-radius:7px;padding:12px;margin:10px 0;"><strong>Votre espace formation :</strong><br><a href="'+sUrl(s.id)+'" style="color:#0059a9;font-weight:bold;">'+sUrl(s.id)+'</a></div>' +
+    (suivi ? '<div style="background:#f0f7f0;border:1px solid #c3dbc3;border-radius:7px;padding:12px;margin:10px 0;"><strong>📋 Votre espace de suivi (émargements, résultats) :</strong><br><a href="'+suivi+'" style="color:#0059a9;font-weight:bold;">'+suivi+'</a></div>' : '') +
     '<p><strong>Visio :</strong> '+(document.getElementById('m-fo-date').value||'—')+'</p>' +
     '<p><strong>Identifiants :</strong> '+(document.getElementById('m-fo-id').value||'—')+'</p>' +
     '<p><strong>Teach Up :</strong> '+(s.teachup_id||'')+'</p>' +
@@ -1187,6 +1208,83 @@ async function importCSV() {
   document.getElementById('r-import').textContent = (res.created||0)+' créé(s), '+(res.updated||0)+' mis à jour.';
   toast('Import terminé');
   openSession(currentSession.id);
+}
+
+// ======== IMPORT RÉSULTATS ========
+function telechargerModeleResultats() {
+  var stag = actifs();
+  var lignes = ['Nom,Prénom,Décision'];
+  stag.forEach(function(s) {
+    var dec = s.decision_attestation === 'ATTESTATION VALIDEE' ? 'Admis'
+            : s.decision_attestation === 'NON ADMIS' ? 'Non admis' : 'En attente';
+    lignes.push((s.nom||'') + ',' + (s.prenom||'') + ',' + dec);
+  });
+  var blob = new Blob([lignes.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'resultats-' + (currentSession ? currentSession.code_kalisport || 'session' : 'session') + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Modèle téléchargé — ' + stag.length + ' stagiaires');
+}
+
+async function importResultats() {
+  var text = document.getElementById('csv-resultats').value.trim();
+  if (!text) { toast('Colle un CSV'); return; }
+  var lines = text.split('\n').filter(function(l){return l.trim();});
+  if (lines.length < 2) { toast('Fichier trop court'); return; }
+  var headers = lines[0].split(',').map(function(h){return h.trim().toLowerCase().replace(/[éè]/g,'e').replace(/"/g,'');});
+  var iNom = -1, iPre = -1, iDec = -1;
+  headers.forEach(function(h,i){
+    if (h.indexOf('nom') > -1 && h.indexOf('pre') === -1) iNom = i;
+    if (h.indexOf('pre') > -1 || h.indexOf('prenom') > -1) iPre = i;
+    if (h.indexOf('dec') > -1 || h.indexOf('result') > -1 || h.indexOf('admis') > -1) iDec = i;
+  });
+  if (iNom === -1 || iDec === -1) {
+    document.getElementById('r-resultats').textContent = 'Colonnes requises : Nom + Décision. Trouvé : ' + headers.join(', ');
+    return;
+  }
+  var resultats = lines.slice(1).map(function(line) {
+    var cells = line.split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});
+    var nom = (cells[iNom]||'').trim().toUpperCase();
+    var pre = iPre > -1 ? (cells[iPre]||'').trim().toUpperCase() : '';
+    var raw = (cells[iDec]||'').trim().toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // supprimer accents
+    var decision = '';
+    // Admis / Validé / Réussi / Obtenu / Oui
+    if (/admis|valid|reussi|reussite|obtenu|^oui$|succes/.test(raw) && !/non|re(fus|jet)/.test(raw)) {
+      decision = 'ATTESTATION VALIDEE';
+    // Non admis / Refusé / Rejeté / Échoué / Ajourné / Non
+    } else if (/non.admis|refus|rejete|echoue|ajourn|^non$|^no$|^n$/.test(raw)) {
+      decision = 'NON ADMIS';
+    }
+    return { nom: nom, prenom: pre, decision: decision };
+  }).filter(function(r){return r.nom;});
+  if (!resultats.length) { toast('Aucun résultat'); return; }
+  var admisN = resultats.filter(function(r){return r.decision==='ATTESTATION VALIDEE';}).length;
+  var nonAdN = resultats.filter(function(r){return r.decision==='NON ADMIS';}).length;
+  var attN   = resultats.filter(function(r){return !r.decision;}).length;
+  if (!confirm(resultats.length + ' résultats : ' + admisN + ' admis · ' + nonAdN + ' non admis · ' + attN + ' en attente. Importer ?')) return;
+  document.getElementById('r-resultats').textContent = 'Mise à jour…';
+  var mis = 0; var notFound = [];
+  for (var i = 0; i < resultats.length; i++) {
+    var r = resultats[i];
+    var s = currentStag.find(function(x) {
+      return (x.nom||'').toUpperCase() === r.nom &&
+             (!r.prenom || (x.prenom||'').toUpperCase() === r.prenom);
+    });
+    if (!s) { notFound.push(r.nom); continue; }
+    if (s.decision_attestation === r.decision) continue;
+    s.decision_attestation = r.decision;
+    await api('updateStagiaire', { id: s.id, fields: { decision_attestation: r.decision } });
+    mis++;
+  }
+  var msg = '✓ ' + mis + ' mis à jour.';
+  if (notFound.length) msg += ' Non trouvés : ' + notFound.join(', ');
+  document.getElementById('r-resultats').textContent = msg;
+  toast('Import terminé — ' + admisN + ' admis · ' + nonAdN + ' non admis');
+  renderStag();
 }
 
 // === INIT ===
