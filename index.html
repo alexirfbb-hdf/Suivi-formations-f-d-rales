@@ -77,6 +77,12 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 .obs-input:hover,.obs-input:focus{border-color:var(--line);background:var(--white);}
 .tdb-action{font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink-s);}
 .tdb-action:hover{color:var(--terra);border-color:var(--terra);}
+/* Sections thématiques modal */
+.section-form{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;overflow:hidden;}
+.section-form-titre{padding:9px 14px;background:var(--sand);cursor:pointer;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;}
+.section-form-titre:hover{background:var(--sand-d);}
+.section-form-body{padding:12px 14px;display:none;}
+.section-form-body.open{display:block;}
 /* TÂCHES */
 .tache{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:9px;margin-bottom:8px;border:1px solid var(--line);background:var(--white);transition:.15s;}
 .tache:hover{border-color:var(--sage);}
@@ -218,11 +224,15 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 <!-- DETAIL SESSION -->
 <div class="view" id="view-detail">
   <span class="back" onclick="switchView('tdb')">← Tableau de bord</span>
-  <h2 id="det-title" style="font-size:19px;margin-bottom:3px;"></h2>
-  <div id="det-sub" style="color:var(--ink-s);font-size:12px;margin-bottom:14px;"></div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+    <div>
+      <h2 id="det-title" style="font-size:19px;margin-bottom:3px;"></h2>
+      <div id="det-sub" style="color:var(--ink-s);font-size:12px;margin-bottom:14px;"></div>
+    </div>
+    <button class="btn-g" style="font-size:12px;padding:5px 12px;" onclick="modifierSession()">✏️ Modifier la session</button>
+  </div>
   <div class="subtabs">
     <div class="stab active" data-s="stag" onclick="switchSub('stag')">Stagiaires</div>
-    <div class="stab" data-s="config-session" onclick="switchSub('config-session')">⚙ Config session</div>
     <div class="stab" data-s="mails" onclick="switchSub('mails')">Envoi mails</div>
     <div class="stab" data-s="import" onclick="switchSub('import')">Importer</div>
   </div>
@@ -437,78 +447,140 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 
 </main>
 
-<!-- MODAL NOUVELLE SESSION -->
+<!-- MODAL NOUVELLE SESSION / MODIFICATION -->
 <div class="modal-bg" id="modal-session">
-  <div class="modal" style="width:640px;">
-    <h3>Nouvelle session</h3>
-    <div class="field-row">
-      <div class="field"><label>Code Kalisport</label><input id="f-code" placeholder="BFJ12, BFE3, DETB-CS1…"></div>
-      <div class="field"><label>Type</label>
-        <select id="f-type">
-          <optgroup label="DETB"><option>DETB-CS1</option><option>DETB-CS2</option><option>DETB-CS3</option><option>DETB-CS4</option><option>DETB-CS5</option><option>DETB-CS6</option><option>DETB-CS7</option><option>DETB-CS8</option><option>DETB-CS9</option><option>DETB-CS10</option></optgroup>
-          <optgroup label="Brevet Fédéral"><option>Brevet Fédéral Enfants</option><option>Brevet Fédéral Jeunes</option><option>Brevet Fédéral Adultes</option></optgroup>
-        </select>
+  <div class="modal" style="width:680px;">
+    <h3 id="modal-session-titre">Nouvelle session</h3>
+
+    <!-- SECTION 1 : INFOS DE BASE -->
+    <div class="section-form">
+      <div class="section-form-titre" onclick="toggleSection('s1')">📋 Infos de base <span id="s1-arr">▾</span></div>
+      <div id="s1" class="section-form-body">
+        <div class="field-row">
+          <div class="field"><label>Code Kalisport</label><input id="f-code" placeholder="BFJ12, BFE3, DETB-CS1…"></div>
+          <div class="field"><label>Type</label>
+            <select id="f-type">
+              <optgroup label="DETB"><option>DETB-CS1</option><option>DETB-CS2</option><option>DETB-CS3</option><option>DETB-CS4</option><option>DETB-CS5</option><option>DETB-CS6</option><option>DETB-CS7</option><option>DETB-CS8</option><option>DETB-CS9</option><option>DETB-CS10</option></optgroup>
+              <optgroup label="Brevet Fédéral"><option>Brevet Fédéral Enfants</option><option>Brevet Fédéral Jeunes</option><option>Brevet Fédéral Adultes</option></optgroup>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Nom complet</label><input id="f-nom" placeholder="Brevet Fédéral Enfants - BFE3 PETITE SYNTHE - 2025-26"></div>
+        <div class="field">
+          <label>Secteur</label>
+          <input id="f-secteur" list="secteurs-dl" placeholder="OISE, AISNE, NORD…">
+          <datalist id="secteurs-dl"></datalist>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Statut</label><select id="f-statut"><option>À venir</option><option>En cours</option><option>Terminé</option></select></div>
+          <div class="field"><label>Tarif (€)</label><input id="f-tarif" type="number" placeholder="170"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Date début</label><input id="f-debut" type="date"></div>
+          <div class="field"><label>Date fin</label><input id="f-fin" type="date"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Fin inscription</label><input id="f-finins" type="date"></div>
+          <div class="field"><label>Lieu</label><input id="f-lieu"></div>
+        </div>
+        <div class="field"><label>Observations</label><input id="f-obs"></div>
       </div>
     </div>
-    <div class="field"><label>Nom complet de la session</label><input id="f-nom" placeholder="Brevet Fédéral Enfants - BFE3 PETITE SYNTHE - 2025-26"></div>
-    <div class="field">
-      <label>Secteur / Département</label>
-      <input id="f-secteur" list="secteurs-dl" placeholder="OISE, AISNE, NORD…">
-      <datalist id="secteurs-dl"></datalist>
+
+    <!-- SECTION 2 : DATES DE FORMATION -->
+    <div class="section-form">
+      <div class="section-form-titre" onclick="toggleSection('s2')">📅 Dates de formation & programme <span id="s2-arr">▾</span></div>
+      <div id="s2" class="section-form-body">
+        <div class="field"><label>Programme complet — une ligne par journée</label>
+          <textarea id="f-programme" style="min-height:90px;font-size:12px;" placeholder="Samedi 25 oct. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE&#10;Samedi 10 jan. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE"></textarea></div>
+        <div class="field"><label>Dates globales (pour la convocation)</label><input id="f-dates-globales" placeholder="du 25 oct. 2025 au 14 fév. 2026"></div>
+        <div class="field"><label>Date du dernier présentiel</label><input id="f-date-dernier" type="date"></div>
+        <hr>
+        <p style="font-size:12px;font-weight:600;margin:0 0 8px;">Visioconférence de présentation <span style="font-weight:400;color:var(--ink-s)">(BF uniquement)</span></p>
+        <div class="field-row">
+          <div class="field"><label>Type</label><select id="f-visio-type"><option value="">Pas de visio</option><option value="live">En direct</option><option value="replay">En replay</option></select></div>
+          <div class="field"><label>Date & heure</label><input id="f-visio-date" placeholder="Vendredi 17 oct. à 19h00"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Lien connexion (direct)</label><input id="f-visio-lien"></div>
+          <div class="field"><label>Lien replay</label><input id="f-visio-replay"></div>
+        </div>
+        <hr>
+        <div class="field"><label>Infos accès — une ligne par moyen</label>
+          <textarea id="f-acces" style="min-height:50px;font-size:12px;" placeholder="En voiture : parking sur site&#10;En train : gare de…"></textarea></div>
+        <div class="field-row">
+          <div class="field"><label>Matériel à prévoir</label><input id="f-materiel" placeholder="Tenue sportive, prise de notes"></div>
+          <div class="field"><label>Lien covoiturage Facebook</label><input id="f-fb" value="https://www.facebook.com/groups/632709503927580/"></div>
+        </div>
+      </div>
     </div>
-    <div class="field-row">
-      <div class="field"><label>Statut</label><select id="f-statut"><option>À venir</option><option>En cours</option><option>Terminé</option></select></div>
-      <div class="field"><label>Tarif (€)</label><input id="f-tarif" type="number" placeholder="170"></div>
+
+    <!-- SECTION 3 : KALISPORT -->
+    <div class="section-form">
+      <div class="section-form-titre" onclick="toggleSection('s3')">🔗 Kalisport <span id="s3-arr">▾</span></div>
+      <div id="s3" class="section-form-body">
+        <div class="field"><label>Lien page session Kalisport</label><input id="f-kal-session" placeholder="https://hautsdefrancebasketball.kalisport.com/..."></div>
+        <div class="field"><label>Lien formulaire inscription</label><input id="f-kal-form" placeholder="https://..."></div>
+      </div>
     </div>
-    <div class="field-row">
-      <div class="field"><label>Date début</label><input id="f-debut" type="date"></div>
-      <div class="field"><label>Date fin</label><input id="f-fin" type="date"></div>
+
+    <!-- SECTION 4 : TEACH UP -->
+    <div class="section-form">
+      <div class="section-form-titre" onclick="toggleSection('s4')">📚 Teach Up <span id="s4-arr">▾</span></div>
+      <div id="s4" class="section-form-body">
+        <div class="field"><label>Identifiant Teach Up</label><input id="f-tup-id"></div>
+        <div class="field"><label>Tableau de bord formateur (lien spécifique à cette session)</label><input id="f-tup-lien" placeholder="https://ffbb.teachup.com/dashboard/..."></div>
+        <div class="field"><label>Lien d'accès stagiaires (lien spécifique à cette session)</label><input id="f-tup-stag" placeholder="https://ffbb.teachup.com/course/..."></div>
+      </div>
     </div>
-    <div class="field-row">
-      <div class="field"><label>Fin inscription</label><input id="f-finins" type="date"></div>
-      <div class="field"><label>Lien Kalisport (page de la session)</label><input id="f-kalisport-lien" placeholder="https://hautsdefrancebasketball.kalisport.com/..."></div>
+
+    <!-- SECTION 5 : FORMATEUR -->
+    <div class="section-form">
+      <div class="section-form-titre" onclick="toggleSection('s5')">👨‍🏫 Formateur <span id="s5-arr">▾</span></div>
+      <div id="s5" class="section-form-body">
+        <p style="font-size:11.5px;color:var(--ink-s);margin:0 0 8px;"><span style="color:var(--sage-d);cursor:pointer;" onclick="openAnnuaire()">Choisir depuis l'annuaire</span></p>
+        <div class="field-row">
+          <div class="field"><label>Civilité</label><select id="f-civ"><option>Monsieur</option><option>Madame</option></select></div>
+          <div class="field"><label>Nom</label><input id="f-nom-fo"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Prénom</label><input id="f-pre-fo"></div>
+          <div class="field"><label>Téléphone</label><input id="f-tel-fo"></div>
+        </div>
+        <div class="field"><label>Email</label><input id="f-email-fo"></div>
+        <hr>
+        <p style="font-size:12px;font-weight:600;margin:0 0 8px;">Formateur 2 (optionnel)</p>
+        <div class="field-row">
+          <div class="field"><label>Civilité</label><select id="f-civ2"><option value="">—</option><option>Monsieur</option><option>Madame</option></select></div>
+          <div class="field"><label>Nom</label><input id="f-nom-fo2"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Prénom</label><input id="f-pre-fo2"></div>
+          <div class="field"><label>Téléphone</label><input id="f-tel-fo2"></div>
+        </div>
+        <div class="field"><label>Email</label><input id="f-email-fo2"></div>
+        <hr>
+        <div class="field"><label>Lien Google Sheet de suivi (émargements, résultats)</label><input id="f-suivi-fo" placeholder="https://docs.google.com/spreadsheets/d/..."></div>
+      </div>
     </div>
-    <div class="field"><label>Lieu</label><input id="f-lieu"></div>
-    <hr>
-    <p style="font-size:11.5px;color:var(--ink-s);margin:0 0 8px;">Formateur — <span style="color:var(--sage-d);cursor:pointer;" onclick="openAnnuaire()">choisir depuis l'annuaire</span></p>
-    <div class="field-row">
-      <div class="field"><label>Civilité</label><select id="f-civ"><option>Monsieur</option><option>Madame</option></select></div>
-      <div class="field"><label>Nom</label><input id="f-nom-fo"></div>
+
+    <!-- SECTION 6 : QS -->
+    <div class="section-form">
+      <div class="section-form-titre" onclick="toggleSection('s6')">⭐ Questionnaires de satisfaction <span id="s6-arr">▾</span></div>
+      <div id="s6" class="section-form-body">
+        <p style="font-size:12px;color:var(--ink-s);margin-top:0;">Liens uniques pour cette session.</p>
+        <div class="field-row">
+          <div class="field"><label>Lien QS stagiaires</label><input id="f-qs-stag" placeholder="https://forms.gle/..."></div>
+          <div class="field"><label>Lien QS formateur</label><input id="f-qs-form" placeholder="https://forms.gle/..."></div>
+        </div>
+      </div>
     </div>
-    <div class="field-row">
-      <div class="field"><label>Prénom</label><input id="f-pre-fo"></div>
-      <div class="field"><label>Téléphone</label><input id="f-tel-fo" placeholder="06 XX XX XX XX"></div>
-    </div>
-    <div class="field"><label>Email</label><input id="f-email-fo"></div>
-    <div class="field-row">
-      <div class="field"><label>Identifiant Teach Up</label><input id="f-tup-id"></div>
-      <div class="field"><label>Lien tableau de bord Teach Up</label><input id="f-tup-lien"></div>
-    </div>
-    <hr>
-    <p style="font-size:11.5px;color:var(--ink-s);margin:0 0 8px;">Formateur 2 (optionnel) — <span style="color:var(--sage-d);cursor:pointer;" onclick="openAnnuaire()">choisir depuis l'annuaire</span></p>
-    <div class="field-row">
-      <div class="field"><label>Civilité</label><select id="f-civ2"><option value="">—</option><option>Monsieur</option><option>Madame</option></select></div>
-      <div class="field"><label>Nom</label><input id="f-nom-fo2"></div>
-    </div>
-    <div class="field-row">
-      <div class="field"><label>Prénom</label><input id="f-pre-fo2"></div>
-      <div class="field"><label>Téléphone</label><input id="f-tel-fo2"></div>
-    </div>
-    <div class="field"><label>Email</label><input id="f-email-fo2"></div>
-    <hr>
-    <p style="font-size:11.5px;color:var(--ink-s);margin:0 0 8px;">Suivi formateur</p>
-    <div class="field">
-      <label>Lien Google Sheet de suivi formateur (émargements, résultats…)</label>
-      <input id="f-suivi-fo" placeholder="https://docs.google.com/spreadsheets/d/...">
-    </div>
-    <hr>
-    <p style="font-size:11.5px;color:var(--ink-s);margin:0 0 8px;">Suivi interne</p>
-    <div class="field"><label>Observations</label><input id="f-obs" placeholder="Remarques, notes internes…"></div>
-    <div class="btn-row">
+
+    <div class="btn-row" style="margin-top:14px;">
       <button class="btn-p" id="btn-save-session" onclick="saveSession()">Créer la session</button>
       <button class="btn-g" onclick="closeAll()">Annuler</button>
     </div>
-    <div id="r-session" style="font-size:12px;color:var(--terra);margin-top:8px;"></div>
+    <div id="r-session" style="font-size:12px;color:var(--terra);margin-top:6px;"></div>
   </div>
 </div>
 
@@ -603,9 +675,7 @@ function switchSub(name) {
   document.querySelectorAll('.subview').forEach(function(v) { v.classList.remove('active'); });
   document.getElementById('sub-' + name).classList.add('active');
   if (name === 'stag') renderStag();
-  if (name === 'config-session') loadConfigSession();
   if (name === 'mails') { prefillMails(); renderRelListe(); chargerConvocs(); }
-  if (name === 'import') {}
 }
 
 // === TABLEAU DE BORD ===
@@ -1088,58 +1158,181 @@ async function addFormateur() {
 }
 
 // === NOUVELLE SESSION ===
-function openNewSession() { loadAnnuaire(); document.getElementById('modal-session').classList.add('open'); }
+function toggleSection(id) {
+  var body = document.getElementById(id);
+  var arr = document.getElementById(id + '-arr');
+  if (!body) return;
+  body.classList.toggle('open');
+  if (arr) arr.textContent = body.classList.contains('open') ? '▴' : '▾';
+}
+
+var sessionEnCoursDeModif = null;
+
+function openNewSession() {
+  sessionEnCoursDeModif = null;
+  loadAnnuaire();
+  // Réinitialiser le formulaire
+  ['f-code','f-nom','f-secteur','f-debut','f-fin','f-finins','f-lieu','f-obs',
+   'f-programme','f-dates-globales','f-acces','f-materiel',
+   'f-visio-date','f-visio-lien','f-visio-replay',
+   'f-kal-session','f-kal-form','f-tup-id','f-tup-lien',
+   'f-nom-fo','f-pre-fo','f-email-fo','f-tel-fo',
+   'f-nom-fo2','f-pre-fo2','f-email-fo2','f-tel-fo2','f-suivi-fo',
+   'f-qs-stag','f-qs-form'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-tarif').value = '170';
+  document.getElementById('f-fb').value = 'https://www.facebook.com/groups/632709503927580/';
+  document.getElementById('f-statut').value = 'À venir';
+  document.getElementById('f-visio-type').value = '';
+  document.getElementById('f-civ2').value = '';
+  document.getElementById('modal-session-titre').textContent = 'Nouvelle session';
+  document.getElementById('btn-save-session').textContent = 'Créer la session';
+  // Ouvrir la section 1 par défaut
+  document.querySelectorAll('.section-form-body').forEach(function(b) { b.classList.remove('open'); });
+  document.querySelectorAll('[id$="-arr"]').forEach(function(a) { a.textContent = '▾'; });
+  document.getElementById('s1').classList.add('open');
+  document.getElementById('s1-arr').textContent = '▴';
+  document.getElementById('modal-session').classList.add('open');
+}
+
+function modifierSession() {
+  if (!currentSession) return;
+  sessionEnCoursDeModif = currentSession.id;
+  loadAnnuaire();
+  var s = currentSession;
+  var set = function(id, val) { var el = document.getElementById(id); if (el && val) el.value = val; };
+  set('f-code', s.code_kalisport);
+  set('f-nom', s.nom);
+  set('f-secteur', s.secteur);
+  set('f-lieu', s.lieu);
+  set('f-tarif', s.tarif);
+  set('f-debut', s.date_debut ? (s.date_debut+'').substring(0,10) : '');
+  set('f-fin', s.date_fin ? (s.date_fin+'').substring(0,10) : '');
+  set('f-finins', s.date_fin_inscription ? (s.date_fin_inscription+'').substring(0,10) : '');
+  set('f-obs', s.observations);
+  if (s.statut_stage) document.getElementById('f-statut').value = s.statut_stage;
+  // Dates & programme
+  set('f-programme', s.programme_presentiel);
+  set('f-dates-globales', s.dates_globales);
+  set('f-date-dernier', s.date_dernier_presentiel ? (s.date_dernier_presentiel+'').substring(0,10) : '');
+  if (s.mail_visio_type) document.getElementById('f-visio-type').value = s.mail_visio_type;
+  set('f-visio-date', s.mail_date_visio);
+  set('f-visio-lien', s.mail_lien_visio);
+  set('f-visio-replay', s.mail_visio_replay);
+  set('f-acces', s.mail_acces);
+  set('f-materiel', s.mail_materiel);
+  set('f-fb', s.mail_fb || 'https://www.facebook.com/groups/632709503927580/');
+  // Kalisport
+  set('f-kal-session', s.mail_session_kalisport);
+  set('f-kal-form', s.mail_formulaire);
+  // Teach Up
+  set('f-tup-id', s.teachup_id);
+  set('f-tup-lien', s.teachup_lien);
+  set('f-tup-stag', s.teachup_lien_stag);
+  // Formateur
+  if (s.formateur_civilite) document.getElementById('f-civ').value = s.formateur_civilite;
+  set('f-nom-fo', s.formateur_nom);
+  set('f-pre-fo', s.formateur_prenom);
+  set('f-email-fo', s.formateur_email);
+  set('f-tel-fo', s.formateur_telephone);
+  if (s.formateur2_civilite) document.getElementById('f-civ2').value = s.formateur2_civilite;
+  set('f-nom-fo2', s.formateur2_nom);
+  set('f-pre-fo2', s.formateur2_prenom);
+  set('f-email-fo2', s.formateur2_email);
+  set('f-tel-fo2', s.formateur2_telephone);
+  set('f-suivi-fo', s.lien_suivi_formateur);
+  // QS
+  set('f-qs-stag', s.lien_qs_stag);
+  set('f-qs-form', s.lien_qs_form);
+  // Ouvrir toutes les sections
+  document.querySelectorAll('.section-form-body').forEach(function(b) { b.classList.add('open'); });
+  document.querySelectorAll('[id$="-arr"]').forEach(function(a) { a.textContent = '▴'; });
+  document.getElementById('modal-session-titre').textContent = 'Modifier la session';
+  document.getElementById('btn-save-session').textContent = 'Enregistrer les modifications';
+  document.getElementById('modal-session').classList.add('open');
+}
+
 async function saveSession() {
   var btn = document.getElementById('btn-save-session');
+  var g = function(id) { var el = document.getElementById(id); return el ? el.value : ''; };
   var fields = {
-    code_kalisport: document.getElementById('f-code').value,
-    type: document.getElementById('f-type').value,
-    nom: document.getElementById('f-nom').value,
-    secteur: document.getElementById('f-secteur').value,
-    statut_stage: document.getElementById('f-statut').value,
-    date_debut: document.getElementById('f-debut').value,
-    date_fin: document.getElementById('f-fin').value,
-    date_fin_inscription: document.getElementById('f-finins').value,
-    kalisport_lien: document.getElementById('f-kalisport-lien').value,
-    lieu: document.getElementById('f-lieu').value,
-    tarif: document.getElementById('f-tarif').value || '170',
-    formateur_civilite: document.getElementById('f-civ').value,
-    formateur_nom: document.getElementById('f-nom-fo').value,
-    formateur_prenom: document.getElementById('f-pre-fo').value,
-    formateur_email: document.getElementById('f-email-fo').value,
-    formateur_telephone: document.getElementById('f-tel-fo').value,
-    teachup_id: document.getElementById('f-tup-id').value,
-    teachup_lien: document.getElementById('f-tup-lien').value,
-    formateur2_civilite: document.getElementById('f-civ2').value,
-    formateur2_nom: document.getElementById('f-nom-fo2').value,
-    formateur2_prenom: document.getElementById('f-pre-fo2').value,
-    formateur2_email: document.getElementById('f-email-fo2').value,
-    formateur2_telephone: document.getElementById('f-tel-fo2').value,
-    lien_suivi_formateur: document.getElementById('f-suivi-fo').value,
-    observations: document.getElementById('f-obs').value
+    code_kalisport: g('f-code'),
+    type: g('f-type'),
+    nom: g('f-nom'),
+    secteur: g('f-secteur'),
+    statut_stage: g('f-statut'),
+    tarif: g('f-tarif') || '170',
+    date_debut: g('f-debut'),
+    date_fin: g('f-fin'),
+    date_fin_inscription: g('f-finins'),
+    lieu: g('f-lieu'),
+    observations: g('f-obs'),
+    programme_presentiel: g('f-programme'),
+    dates_globales: g('f-dates-globales'),
+    date_dernier_presentiel: g('f-date-dernier'),
+    mail_visio_type: g('f-visio-type'),
+    mail_date_visio: g('f-visio-date'),
+    mail_lien_visio: g('f-visio-lien'),
+    mail_visio_replay: g('f-visio-replay'),
+    mail_acces: g('f-acces'),
+    mail_materiel: g('f-materiel'),
+    mail_fb: g('f-fb'),
+    mail_session_kalisport: g('f-kal-session'),
+    mail_formulaire: g('f-kal-form'),
+    teachup_id: g('f-tup-id'),
+    teachup_lien: g('f-tup-lien'),
+    teachup_lien_stag: g('f-tup-stag'),
+    formateur_civilite: g('f-civ'),
+    formateur_nom: g('f-nom-fo'),
+    formateur_prenom: g('f-pre-fo'),
+    formateur_email: g('f-email-fo'),
+    formateur_telephone: g('f-tel-fo'),
+    formateur2_civilite: g('f-civ2'),
+    formateur2_nom: g('f-nom-fo2'),
+    formateur2_prenom: g('f-pre-fo2'),
+    formateur2_email: g('f-email-fo2'),
+    formateur2_telephone: g('f-tel-fo2'),
+    lien_suivi_formateur: g('f-suivi-fo'),
+    lien_qs_stag: g('f-qs-stag'),
+    lien_qs_form: g('f-qs-form')
   };
   if (!fields.nom) { toast('Le nom est requis'); return; }
-  btn.textContent = 'Création…'; btn.disabled = true;
+  btn.disabled = true;
   document.getElementById('r-session').textContent = '';
+
   try {
-    var res = await api('createSession', fields);
-    if (res.error) throw new Error(res.error);
-    // Proposer annuaire si formateur renseigné
-    if (fields.formateur_nom && fields.formateur_email) {
-      var existe = formateurs.find(function(f) { return f.email === fields.formateur_email; });
-      if (!existe && confirm('Enregistrer ' + fields.formateur_civilite + ' ' + fields.formateur_nom + ' dans l\'annuaire des formateurs ?')) {
-        await api('ajouterFormateur', { civilite: fields.formateur_civilite, nom: fields.formateur_nom, prenom: fields.formateur_prenom, email: fields.formateur_email, telephone: fields.formateur_telephone });
-        toast('Formateur ajouté à l\'annuaire');
-        await loadAnnuaire();
+    if (sessionEnCoursDeModif) {
+      // Modification
+      btn.textContent = 'Enregistrement…';
+      var res = await api('updateSession', { id: sessionEnCoursDeModif, fields: fields });
+      if (res && res.error) throw new Error(res.error);
+      Object.assign(currentSession, fields);
+      closeAll();
+      toast('Session mise à jour !');
+      loadSessions();
+    } else {
+      // Création
+      btn.textContent = 'Création…';
+      var res = await api('createSession', fields);
+      if (res.error) throw new Error(res.error);
+      if (fields.formateur_nom && fields.formateur_email) {
+        var existe = formateurs.find(function(f) { return f.email === fields.formateur_email; });
+        if (!existe && confirm('Enregistrer ' + fields.formateur_civilite + ' ' + fields.formateur_nom + ' dans l\'annuaire ?')) {
+          await api('ajouterFormateur', { civilite: fields.formateur_civilite, nom: fields.formateur_nom, prenom: fields.formateur_prenom, email: fields.formateur_email, telephone: fields.formateur_telephone });
+          await loadAnnuaire();
+        }
       }
+      closeAll();
+      toast('Session créée !');
+      loadSessions();
     }
-    closeAll();
-    toast('Session créée !');
-    loadSessions();
   } catch(e) {
     document.getElementById('r-session').textContent = 'Erreur : ' + e.message;
   } finally {
-    btn.textContent = 'Créer la session'; btn.disabled = false;
+    btn.textContent = sessionEnCoursDeModif ? 'Enregistrer les modifications' : 'Créer la session';
+    btn.disabled = false;
   }
 }
 
