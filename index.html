@@ -222,26 +222,95 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   <div id="det-sub" style="color:var(--ink-s);font-size:12px;margin-bottom:14px;"></div>
   <div class="subtabs">
     <div class="stab active" data-s="stag" onclick="switchSub('stag')">Stagiaires</div>
+    <div class="stab" data-s="config-session" onclick="switchSub('config-session')">⚙ Config session</div>
     <div class="stab" data-s="mails" onclick="switchSub('mails')">Envoi mails</div>
     <div class="stab" data-s="import" onclick="switchSub('import')">Importer</div>
   </div>
   <div class="subview active" id="sub-stag"><div id="stag-content"></div></div>
+
+  <!-- CONFIG SESSION -->
+  <div class="subview" id="sub-config-session">
+    <div class="card">
+      <h3 style="font-size:14px;margin-bottom:12px;">Informations Kalisport</h3>
+      <div class="field-row">
+        <div class="field"><label>Lien page session Kalisport</label><input id="cfg-s-kal-session" placeholder="https://hautsdefrancebasketball.kalisport.com/..."></div>
+        <div class="field"><label>Lien formulaire inscription</label><input id="cfg-s-kal-form" placeholder="https://..."></div>
+      </div>
+      <div class="field"><label>Tableau de bord Teach Up (spécifique à cette session)</label><input id="cfg-s-tup-lien" placeholder="https://ffbb.teachup.com/dashboard/..."></div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;margin-bottom:12px;">Dates de formation</h3>
+      <p style="font-size:12px;color:var(--ink-s);margin-top:0;">Ces dates apparaissent dans le mail aux clubs et dans les convocations. Une ligne par présentiel.</p>
+      <div class="field"><label>Programme complet — une ligne par journée</label>
+        <textarea id="cfg-s-programme" style="min-height:100px;font-size:12px;" placeholder="Samedi 25 oct. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE&#10;Samedi 10 jan. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE&#10;Samedi 14 fév. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Lieu de formation</label><input id="cfg-s-lieu"></div>
+        <div class="field"><label>Dates globales (ex : du 25 oct. au 14 fév.)</label><input id="cfg-s-dates-globales" placeholder="du 25 oct. 2025 au 14 fév. 2026"></div>
+      </div>
+      <div class="field"><label>Date du dernier présentiel <small style="color:var(--ink-s);">(pour déclencheur QS)</small></label><input id="cfg-s-date-dernier" type="date"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;margin-bottom:12px;">Visioconférence de présentation <span style="font-size:11px;font-weight:400;color:var(--ink-s)">(BF uniquement)</span></h3>
+      <div class="field-row">
+        <div class="field"><label>Type</label>
+          <select id="cfg-s-visio-type">
+            <option value="">Pas de visio</option>
+            <option value="live">En direct</option>
+            <option value="replay">En replay</option>
+          </select></div>
+        <div class="field"><label>Date & heure (si direct)</label><input id="cfg-s-visio-date" placeholder="Vendredi 17 oct. à 19h00"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Lien connexion (si direct)</label><input id="cfg-s-visio-lien"></div>
+        <div class="field"><label>Lien replay (si replay)</label><input id="cfg-s-visio-replay"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;margin-bottom:12px;">Infos pratiques (convocation)</h3>
+      <div class="field"><label>Infos accès — une ligne par moyen</label>
+        <textarea id="cfg-s-acces" style="min-height:60px;font-size:12px;" placeholder="En voiture : parking sur site&#10;En train : gare de…"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Matériel à prévoir</label><input id="cfg-s-materiel" placeholder="Tenue sportive, prise de notes"></div>
+        <div class="field"><label>Lien Facebook covoiturage</label><input id="cfg-s-fb" value="https://www.facebook.com/groups/632709503927580/"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;margin-bottom:12px;">Formateur</h3>
+      <div class="field"><label>Lien Google Sheet de suivi formateur (émargements, résultats)</label><input id="cfg-s-suivi-fo" placeholder="https://docs.google.com/spreadsheets/d/..."></div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;margin-bottom:12px;">Questionnaires de satisfaction</h3>
+      <div class="info">Liens uniques pour cette session.</div>
+      <div class="field-row">
+        <div class="field"><label>Lien questionnaire stagiaires</label><input id="cfg-s-qs-stag" placeholder="https://forms.gle/..."></div>
+        <div class="field"><label>Lien questionnaire formateur</label><input id="cfg-s-qs-form" placeholder="https://forms.gle/..."></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-p" onclick="saveConfigSession()">💾 Enregistrer toute la configuration</button>
+    </div>
+    <div id="r-config-session" style="font-size:12px;color:var(--ink-s);margin-top:6px;"></div>
+  </div>
   <div class="subview" id="sub-mails">
 
-    <!-- OUVERTURE CLUBS -->
+    <!-- CLUBS -->
     <div class="card">
-      <h3 style="font-size:14px;margin-bottom:8px;">📢 Communication ouverture aux clubs</h3>
-      <div class="info">Regroupe toutes les formations du même secteur en un seul mail pour Christelle et Martin. Coche les sessions à inclure.</div>
-      <div class="field-row">
-        <div class="field"><label>Email Christelle (secrétaire)</label><input id="m-clubs-christelle" value="christelle.delaey@hdfbasket.org"></div>
-        <div class="field"><label>Email Martin (communication)</label><input id="m-clubs-martin" value="martin.weber@hdfbasket.org"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="font-size:14px;margin:0;">📢 Communication ouverture aux clubs</h3>
+        <span id="st-clubs" class="badge neu">À faire</span>
       </div>
-      <div class="field"><label>Lien d'inscription (optionnel — remplace le lien Kalisport de la session si renseigné)</label><input id="m-clubs-inscription" placeholder="Laisser vide pour utiliser le lien Kalisport de chaque session"></div>
+      <div class="info" id="prev-clubs" style="font-size:12px;"></div>
       <div class="field-row">
-        <div class="field"><label>Lien planning BF (carte interactive)</label><input id="m-clubs-plan-bf" placeholder="https://www.google.com/maps/d/..."></div>
-        <div class="field"><label>Lien planning DETB</label><input id="m-clubs-plan-detb" placeholder="https://..."></div>
+        <div class="field"><label>Email Christelle</label><input id="m-clubs-christelle" value="christelle.delaey@hdfbasket.org"></div>
+        <div class="field"><label>Email Martin</label><input id="m-clubs-martin" value="martin.weber@hdfbasket.org"></div>
       </div>
-      <div id="clubs-sessions-liste" style="margin:10px 0;"></div>
+      <div id="clubs-sessions-liste" style="margin:8px 0;"></div>
       <div class="btn-row">
         <button class="btn-s" onclick="sendClubs()">Envoyer à Christelle et Martin</button>
         <button class="btn-g" onclick="testM('clubs')">📧 Test</button>
@@ -251,24 +320,24 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 
     <!-- KALISPORT -->
     <div class="card">
-      <h3 style="font-size:14px;margin-bottom:8px;">🔗 Ouverture session Kalisport → formateur</h3>
-      <div class="info">Les parcours Teach Up (BF Enfants/Jeunes/Adultes) sont automatiquement inclus depuis la Config.</div>
-      <div class="field-row">
-        <div class="field"><label>Lien session Kalisport</label><input id="m-kal-session"></div>
-        <div class="field"><label>Lien formulaire inscription</label><input id="m-kal-form"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="font-size:14px;margin:0;">🔗 Ouverture session Kalisport → formateur</h3>
+        <span id="st-kal" class="badge neu">À faire</span>
       </div>
-      <div class="field"><label>Tableau de bord Teach Up (lien spécifique à cette session)</label><input id="m-kal-tdb" placeholder="https://ffbb.teachup.com/dashboard/..."></div>
-      <div class="btn-row"><button class="btn-s" onclick="sendKalisport()">Envoyer au formateur</button><button class="btn-g" onclick="testM('kalisport')">📧 Test</button></div>
+      <div class="info" id="prev-kal" style="font-size:12px;"></div>
+      <div class="btn-row">
+        <button class="btn-s" onclick="sendKalisport()">Envoyer au formateur</button>
+        <button class="btn-g" onclick="testM('kalisport')">📧 Test</button>
+      </div>
       <div id="r-kal" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
 
     <!-- RELANCE PAIEMENT -->
     <div class="card">
       <h3 style="font-size:14px;margin-bottom:8px;">💶 Relance paiement</h3>
-      <div class="info">Lien de paiement individuel par stagiaire. Coche qui relancer.</div>
       <div class="field-row">
         <div class="field"><label>Date début formation</label><input id="m-rel-date" placeholder="15 mars 2026"></div>
-        <div class="field"><label>Message complémentaire (optionnel)</label><input id="m-rel-comp"></div>
+        <div class="field"><label>Message complémentaire</label><input id="m-rel-comp"></div>
       </div>
       <div id="rel-liste" style="margin:8px 0;"></div>
       <div class="btn-row">
@@ -280,41 +349,16 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <div id="r-rel" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
 
-    <!-- CONVOCATIONS PAR PRÉSENTIEL -->
+    <!-- CONVOCATIONS -->
     <div class="card">
-      <h3 style="font-size:14px;margin-bottom:6px;">📋 Convocations — par présentiel</h3>
-      <div class="info">Une convocation est envoyée avant chaque présentiel. Rien ne part automatiquement — c'est toi qui cliques.</div>
-
-      <!-- Liste des présentiels -->
-      <div id="convoc-liste" style="margin-bottom:12px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="font-size:14px;margin:0;">📋 Convocations — par présentiel</h3>
+      </div>
+      <div class="info">Programme et infos chargés depuis la Config session.</div>
+      <div id="convoc-liste" style="margin-bottom:10px;"></div>
       <button class="btn-g" style="font-size:12px;" onclick="ajouterPresentiel()">+ Ajouter un présentiel</button>
-
-      <!-- Formulaire de convocation (s'ouvre à la demande) -->
-      <div id="convoc-form" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:14px;">
-        <p id="convoc-form-titre" style="font-size:13px;font-weight:600;margin:0 0 10px;color:var(--sage-d);"></p>
-        <div class="field-row">
-          <div class="field"><label>Lieu</label><input id="m-cv-lieu"></div>
-          <div class="field"><label>Dates globales de la formation</label><input id="m-cv-dates" placeholder="du 17 oct. 2025 au 14 fév. 2026"></div>
-        </div>
-        <div class="card" style="background:var(--sand);border-color:var(--line);padding:10px;">
-          <p style="font-size:11.5px;font-weight:600;margin:0 0 8px;">Visioconférence de présentation <span style="font-weight:400;color:var(--ink-s)">(BF uniquement)</span></p>
-          <div class="field-row">
-            <div class="field"><label>Type</label><select id="m-cv-visio-type"><option value="">Pas de visio</option><option value="live">En direct</option><option value="replay">En replay</option></select></div>
-            <div class="field"><label>Date & heure (si direct)</label><input id="m-cv-visio-date" placeholder="Vendredi 17 oct. à 19h00"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>Lien connexion (si direct)</label><input id="m-cv-visio-lien"></div>
-            <div class="field"><label>Lien replay (si replay)</label><input id="m-cv-visio-replay"></div>
-          </div>
-        </div>
-        <div class="field"><label>Programme complet — une ligne par étape</label>
-          <textarea id="m-cv-prog" style="min-height:80px;font-size:12px;" placeholder="Samedi 25 oct. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE&#10;Samedi 10 jan. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE"></textarea></div>
-        <div class="field"><label>Infos accès</label>
-          <textarea id="m-cv-acces" style="min-height:40px;font-size:12px;" placeholder="En voiture : parking sur site&#10;En train : gare de…"></textarea></div>
-        <div class="field-row">
-          <div class="field"><label>Matériel à prévoir</label><input id="m-cv-mat" placeholder="Tenue sportive, prise de notes"></div>
-          <div class="field"><label>Lien Facebook covoiturage</label><input id="m-cv-fb" value="https://www.facebook.com/groups/632709503927580/"></div>
-        </div>
+      <div id="convoc-form" style="display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:12px;">
+        <p id="convoc-form-titre" style="font-size:13px;font-weight:600;margin:0 0 8px;color:var(--sage-d);"></p>
         <div class="field"><label>Message complémentaire (optionnel)</label><input id="m-cv-comp"></div>
         <div class="btn-row">
           <button class="btn-p" id="btn-convoc-stag" onclick="sendConvoc('stag')">Envoyer aux stagiaires</button>
@@ -327,18 +371,13 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       </div>
     </div>
 
-    <!-- INFOS FORMATEUR -->
+    <!-- INFOS FORMATEUR J-7 -->
     <div class="card">
-      <h3 style="font-size:14px;margin-bottom:8px;">👨‍🏫 Informations stage → formateur <span style="font-size:11px;font-weight:400;color:var(--ink-s)">(J-7)</span></h3>
-      <div class="field-row">
-        <div class="field"><label>Date & horaire visio d'accueil</label><input id="m-fo-date" placeholder="Lundi 10 mars à 18h00"></div>
-        <div class="field"><label>Lien visio</label><input id="m-fo-lien"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="font-size:14px;margin:0;">👨‍🏫 Infos stage → formateur (J-7)</h3>
+        <span id="st-fo" class="badge neu">À faire</span>
       </div>
-      <div class="field"><label>Identifiants connexion</label><input id="m-fo-id"></div>
-      <div class="field">
-        <label>Lien Google Sheet suivi formateur (émargements, résultats)</label>
-        <input id="m-fo-suivi" placeholder="https://docs.google.com/spreadsheets/d/...">
-      </div>
+      <div class="info" id="prev-fo" style="font-size:12px;"></div>
       <div class="btn-row">
         <button class="btn-p" onclick="sendFormateur()">Envoyer au formateur</button>
         <button class="btn-g" onclick="aperçuFormateur()">Aperçu</button>
@@ -349,22 +388,18 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 
     <!-- QUESTIONNAIRE SATISFACTION -->
     <div class="card">
-      <h3 style="font-size:14px;margin-bottom:8px;">⭐ Questionnaire de satisfaction</h3>
-      <div class="info">Envoyé après le dernier présentiel. Le déclencheur J+1 envoie un rappel automatique.</div>
-      <div class="field-row">
-        <div class="field"><label>Lien questionnaire stagiaires</label><input id="m-qs-stag" placeholder="https://forms.gle/..."></div>
-        <div class="field"><label>Lien questionnaire formateur</label><input id="m-qs-form" placeholder="https://forms.gle/..."></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="font-size:14px;margin:0;">⭐ Questionnaire de satisfaction</h3>
+        <span id="st-qs" class="badge neu">À faire</span>
       </div>
-      <div class="field"><label>Date du dernier présentiel</label><input id="m-qs-date" type="date" placeholder="Nécessaire pour le déclencheur automatique"></div>
-      <p style="font-size:11.5px;color:var(--ink-s);margin:4px 0 10px;">La relance est envoyée automatiquement 1 mois après la date du dernier présentiel.</p>
+      <div class="info" id="prev-qs" style="font-size:12px;"></div>
       <div class="btn-row">
-        <button class="btn-p" onclick="sendQS('envoi1')">Envoi n°1 (stagiaires + formateur)</button>
-        <button class="btn-s" onclick="sendQS('relance')">Relance (1 mois)</button>
+        <button class="btn-p" onclick="sendQS('envoi1')">Envoi n°1</button>
+        <button class="btn-s" onclick="sendQS('relance')">Relance</button>
         <button class="btn-g" onclick="testM('qs')">📧 Test</button>
       </div>
       <div id="r-qs" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
-
 
   </div><!-- fin sub-mails -->
 
@@ -568,7 +603,9 @@ function switchSub(name) {
   document.querySelectorAll('.subview').forEach(function(v) { v.classList.remove('active'); });
   document.getElementById('sub-' + name).classList.add('active');
   if (name === 'stag') renderStag();
-  if (name === 'mails') { prefill(); renderRelListe(); chargerConvocs(); }
+  if (name === 'config-session') loadConfigSession();
+  if (name === 'mails') { prefillMails(); renderRelListe(); chargerConvocs(); }
+  if (name === 'import') {}
 }
 
 // === TABLEAU DE BORD ===
@@ -707,6 +744,40 @@ async function updAvancement(el, id) {
   var res = await api('updateSession', { id: id, fields: { statut_admin: val } });
   if (res && res.error) toast('Erreur: ' + res.error);
   else toast('✓ Avancement : ' + (val || 'À faire'));
+}
+
+// === ENREGISTREMENT CHAMPS MAILS ===
+async function saveMailFields(bloc) {
+  if (!currentSession) { toast('Aucune session ouverte'); return; }
+  var fields = {};
+  var label = '';
+  if (bloc === 'kal') {
+    fields.mail_session_kalisport = document.getElementById('m-kal-session').value;
+    fields.mail_formulaire = document.getElementById('m-kal-form').value;
+    fields.teachup_lien = document.getElementById('m-kal-tdb').value;
+    label = 'Kalisport';
+  } else if (bloc === 'fo') {
+    fields.mail_date_visio = document.getElementById('m-fo-date').value;
+    fields.mail_lien_visio = document.getElementById('m-fo-lien').value;
+    fields.mail_id_visio = document.getElementById('m-fo-id').value;
+    fields.lien_suivi_formateur = document.getElementById('m-fo-suivi').value;
+    label = 'infos formateur';
+  } else if (bloc === 'cv') {
+    fields.lieu = document.getElementById('m-cv-lieu').value;
+    fields.mail_date_visio_cv = document.getElementById('m-cv-visio-date').value;
+    fields.mail_lien_visio_cv = document.getElementById('m-cv-visio-lien').value;
+    label = 'convocation';
+  } else if (bloc === 'qs') {
+    fields.lien_qs_stag = document.getElementById('m-qs-stag').value;
+    fields.lien_qs_form = document.getElementById('m-qs-form').value;
+    fields.date_dernier_presentiel = document.getElementById('m-qs-date').value;
+    label = 'questionnaire';
+  }
+  if (!Object.keys(fields).length) { toast('Rien à enregistrer'); return; }
+  var res = await api('updateSession', { id: currentSession.id, fields: fields });
+  if (res && res.error) { toast('Erreur: ' + res.error); return; }
+  Object.assign(currentSession, fields);
+  toast('✓ Champs ' + label + ' enregistrés');
 }
 
 // === VIREMENTS ===
@@ -1182,27 +1253,8 @@ async function updStatut(id, val) { var s=currentStag.find(function(x){return x.
 async function updNote(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.note=val; await api('updateStagiaire',{id:id,fields:{note:val}}); toast('Note enregistrée'); }
 async function updRepas(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.repas=val?'Oui':'Non'; await api('updateStagiaire',{id:id,fields:{repas:val?'Oui':'Non'}}); toast(val?'Repas ajouté':'Retiré'); }
 
-// === MAILS - PREFILL ===
-function prefill() {
-  if (!currentSession) return;
-  var s = currentSession;
-  if (s.lieu) document.getElementById('m-cv-lieu').value = s.lieu;
-  if (s.formateur_telephone) document.getElementById('m-cv-tel') && (document.getElementById('m-cv-tel').value = s.formateur_telephone);
-  if (s.mail_date_visio) document.getElementById('m-fo-date').value = s.mail_date_visio;
-  if (s.mail_lien_visio) document.getElementById('m-fo-lien').value = s.mail_lien_visio;
-  if (s.mail_id_visio) document.getElementById('m-fo-id').value = s.mail_id_visio;
-  if (s.lien_suivi_formateur) document.getElementById('m-fo-suivi').value = s.lien_suivi_formateur;
-  if (s.mail_session_kalisport) document.getElementById('m-kal-session').value = s.mail_session_kalisport;
-  if (s.mail_formulaire) document.getElementById('m-kal-form').value = s.mail_formulaire;
-  if (s.teachup_lien) document.getElementById('m-kal-tdb').value = s.teachup_lien;
-  // QS : liens uniques par session, chargés depuis la session uniquement
-  if (s.lien_qs_stag) document.getElementById('m-qs-stag').value = s.lien_qs_stag;
-  if (s.lien_qs_form) document.getElementById('m-qs-form').value = s.lien_qs_form;
-  if (s.date_dernier_presentiel) document.getElementById('m-qs-date').value = s.date_dernier_presentiel;
-  if (configData.plan_bf) document.getElementById('m-clubs-plan-bf').value = configData.plan_bf;
-  if (configData.plan_detb) document.getElementById('m-clubs-plan-detb').value = configData.plan_detb;
-  renderClubsListe();
-}
+// === MAILS - PREFILL (alias) ===
+function prefill() { prefillMails(); renderClubsListe(); }
 
 // === CONFIG ===
 async function loadConfig() {
@@ -1326,22 +1378,25 @@ async function sendClubs() {
 
 // === MAIL KALISPORT ===
 async function sendKalisport() {
+  var s = currentSession;
   var p = {
-    session_id: currentSession.id,
-    session_kalisport: document.getElementById('m-kal-session').value,
-    formulaire: document.getElementById('m-kal-form').value,
-    tdb_lien: document.getElementById('m-kal-tdb').value
+    session_id: s.id,
+    session_kalisport: s.mail_session_kalisport || '',
+    formulaire: s.mail_formulaire || '',
+    tdb_lien: s.teachup_lien || ''
   };
+  if (!p.session_kalisport && !p.formulaire) {
+    toast('Configure les liens dans ⚙ Config session d\'abord');
+    return;
+  }
   document.getElementById('r-kal').textContent = 'Envoi…';
   var res = await api('envoyerMailKalisport', p);
-  document.getElementById('r-kal').textContent = res.success ? ('Envoyé à ' + currentSession.formateur_email) : ('Erreur: ' + (res.error||''));
+  document.getElementById('r-kal').textContent = res.success ? ('Envoyé à ' + s.formateur_email) : ('Erreur: ' + (res.error||''));
   if (res.success) {
     toast('Mail envoyé');
-    await api('updateSession', { id: currentSession.id, fields: {
-      statut_mail_kalisport: 'Envoyé',
-      mail_session_kalisport: p.session_kalisport,
-      mail_formulaire: p.formulaire
-    }});
+    await api('updateSession', { id: s.id, fields: { statut_mail_kalisport: 'Envoyé' } });
+    currentSession.statut_mail_kalisport = 'Envoyé';
+    prefillMails();
   }
 }
 
@@ -1476,21 +1531,22 @@ async function sendConvoc(type) {
   var nb = actifs().filter(function(s){return s.email;}).length;
   var dest = type === 'stag' ? nb + ' stagiaire(s)' : 'le formateur';
   if (!confirm('Envoyer la convocation Présentiel '+(i+1)+' à '+dest+' ?')) return;
+  var s = currentSession;
   var p = {
-    session_id: currentSession.id,
+    session_id: s.id,
     presentiel_index: i,
     presentiel_date: convocs[i].date,
     dest_type: type,
-    lieu: document.getElementById('m-cv-lieu').value,
-    dates_globales: document.getElementById('m-cv-dates').value,
-    visio_type: document.getElementById('m-cv-visio-type').value,
-    visio_date: document.getElementById('m-cv-visio-date').value,
-    visio_lien: document.getElementById('m-cv-visio-lien').value,
-    visio_replay: document.getElementById('m-cv-visio-replay').value,
-    programme: document.getElementById('m-cv-prog').value,
-    acces: document.getElementById('m-cv-acces').value,
-    materiel: document.getElementById('m-cv-mat').value,
-    facebook: document.getElementById('m-cv-fb').value,
+    lieu: s.lieu || '',
+    dates_globales: s.dates_globales || '',
+    visio_type: s.mail_visio_type || '',
+    visio_date: s.mail_date_visio || '',
+    visio_lien: s.mail_lien_visio || '',
+    visio_replay: s.mail_visio_replay || '',
+    programme: s.programme_presentiel || '',
+    acces: s.mail_acces || '',
+    materiel: s.mail_materiel || '',
+    facebook: s.mail_fb || 'https://www.facebook.com/groups/632709503927580/',
     complement: document.getElementById('m-cv-comp').value
   };
   document.getElementById('r-cv').textContent = 'Envoi…';
@@ -1532,15 +1588,16 @@ function aperçuConvoc() {
 
 // === MAIL FORMATEUR J-7 ===
 async function sendFormateur() {
-  var p = { session_id:currentSession.id, date_visio:document.getElementById('m-fo-date').value, lien_visio:document.getElementById('m-fo-lien').value, id_visio:document.getElementById('m-fo-id').value, lien_suivi:document.getElementById('m-fo-suivi').value };
+  var s = currentSession;
+  var p = { session_id: s.id, date_visio: s.mail_date_visio||'', lien_visio: s.mail_lien_visio||'', id_visio: s.mail_id_visio||'', lien_suivi: s.lien_suivi_formateur||'' };
   document.getElementById('r-fo').textContent = 'Envoi…';
   var res = await api('envoyerMailFormateur', p);
-  document.getElementById('r-fo').textContent = res.success ? ('Envoyé à '+currentSession.formateur_email) : ('Erreur: '+(res.error||''));
-  if (res.success) { toast('Mail envoyé'); await api('updateSession',{id:currentSession.id,fields:{statut_mail_formateur:'Envoyé',mail_date_visio:p.date_visio,mail_lien_visio:p.lien_visio,mail_id_visio:p.id_visio}}); }
+  document.getElementById('r-fo').textContent = res.success ? ('Envoyé à '+s.formateur_email) : ('Erreur: '+(res.error||''));
+  if (res.success) { toast('Mail envoyé'); await api('updateSession',{id:s.id,fields:{statut_mail_formateur:'Envoyé'}}); currentSession.statut_mail_formateur='Envoyé'; prefillMails(); }
 }
 function aperçuFormateur() {
   var s = currentSession;
-  var suivi = document.getElementById('m-fo-suivi').value;
+  var suivi = currentSession.lien_suivi_formateur || '';
   document.getElementById('apercu-title').textContent = 'Aperçu mail formateur';
   document.getElementById('apercu-body').innerHTML =
     '<p>Bonjour <strong>'+(s.formateur_civilite||'')+' '+(s.formateur_nom||'')+'</strong>,</p>' +
@@ -1555,11 +1612,10 @@ function aperçuFormateur() {
 
 // === QUESTIONNAIRE SATISFACTION ===
 async function sendQS(type) {
-  var lienStag = document.getElementById('m-qs-stag').value.trim();
-  var lienForm = document.getElementById('m-qs-form').value.trim();
-  var dateDernier = document.getElementById('m-qs-date').value;
-  if (!lienStag) { toast('Renseigne le lien questionnaire stagiaires — ce lien est unique pour cette session'); return; }
-  if (!lienForm) { toast('Renseigne le lien questionnaire formateur — ce lien est unique pour cette session'); return; }
+  var lienStag = (currentSession.lien_qs_stag || '').trim();
+  var lienForm = (currentSession.lien_qs_form || '').trim();
+  var dateDernier = currentSession.date_dernier_presentiel || '';
+  if (!lienStag) { toast('Renseigne les liens QS dans ⚙ Config session d\'abord'); return; }
   var p = { session_id: currentSession.id, type: type, lien_stag: lienStag, lien_form: lienForm, date_dernier_presentiel: dateDernier };
   document.getElementById('r-qs').textContent = 'Envoi…';
   var res = await api('envoyerQuestionnaireSatisfaction', p);
