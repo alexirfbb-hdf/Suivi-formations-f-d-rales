@@ -104,7 +104,6 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 <div class="tabs">
   <div class="tab" data-view="taches" onclick="switchView('taches')">✅ Tâches</div>
   <div class="tab" data-view="tdb" onclick="switchView('tdb')">Tableau de bord</div>
-  <div class="tab" data-view="planning" onclick="switchView('planning')">Planning</div>
   <div class="tab" data-view="annuaire" onclick="switchView('annuaire')">Formateurs</div>
   <div class="tab" data-view="config" onclick="switchView('config')">⚙ Config</div>
 </div>
@@ -127,13 +126,13 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 <!-- TABLEAU DE BORD -->
 <div class="view active" id="view-tdb">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-    <div class="stats" style="margin:0;" id="tdb-stats"></div>
-    <div style="display:flex;gap:6px;">
+    <div style="display:flex;gap:6px;align-items:center;">
       <select id="tdb-type" class="sm" onchange="renderTDB()"><option value="">Tous types</option></select>
       <input id="tdb-search" style="width:160px;font-size:12px;padding:5px 8px;" placeholder="Rechercher (code, nom…)" oninput="renderTDB()">
       <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap;"><input type="checkbox" id="tdb-archived" onchange="renderTDB()"> Voir archivés</label>
-      <button class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="exportTDB()">Export Excel</button>
     </div>
+    <button class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="exportTDB()">Export Excel</button>
+  </div>
   </div>
   <div class="scroll">
     <table class="tdb"><thead>
@@ -151,25 +150,6 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   </div>
 </div>
 
-<!-- PLANNING -->
-<div class="view" id="view-planning">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-    <h2 style="font-size:17px;">Planning des formations</h2>
-    <div style="display:flex;gap:6px;">
-      <select id="plan-type" class="sm" onchange="renderPlanning()"><option value="">Tous types</option></select>
-      <select id="plan-statut" class="sm" onchange="renderPlanning()"><option value="">Tous statuts</option><option>À venir</option><option>En cours</option><option>Terminé</option></select>
-      <button class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="exportPlanning('pdf')">Export PDF</button>
-      <button class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="exportPlanning('excel')">Export Excel</button>
-    </div>
-  </div>
-  <div class="scroll">
-    <table><thead><tr>
-      <th>Réf.</th><th>Type</th><th>Secteur</th><th>Lieu</th>
-      <th>Fin inscription</th><th>Début</th><th>Fin</th>
-      <th>Formateur</th><th>Contact</th><th>Statut</th><th>Stag.</th>
-    </tr></thead><tbody id="plan-body"></tbody></table>
-  </div>
-</div>
 
 <!-- ANNUAIRE -->
 <div class="view" id="view-annuaire">
@@ -363,17 +343,6 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <div id="r-qs" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
 
-    <!-- ATTESTATIONS -->
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:8px;">🎓 Génération attestations PDF</h3>
-      <div class="field-row">
-        <div class="field"><label>ID template Google Doc</label><input id="m-pdf-tpl" placeholder="1aC2-jVj_..."></div>
-        <div class="field"><label>ID dossier Drive destination</label><input id="m-pdf-dir" placeholder="1hTN3WIGo..."></div>
-      </div>
-      <div class="field"><label>Préfixe nom fichier</label><input id="m-pdf-nom" placeholder="Brevet Fédéral Enfants - 2025-26"></div>
-      <div class="btn-row"><button class="btn-s" onclick="genPDF()">Générer les attestations</button></div>
-      <div id="r-pdf" style="font-size:12px;color:var(--ink-s);"></div>
-    </div>
 
   </div><!-- fin sub-mails -->
 
@@ -567,7 +536,6 @@ function switchView(name) {
   document.getElementById('view-' + name).classList.add('active');
   if (name === 'taches') { window.location.hash = ''; renderTaches(); }
   if (name === 'tdb') { window.location.hash = ''; loadSessions(); }
-  if (name === 'planning') { window.location.hash = ''; renderPlanning(); }
   if (name === 'annuaire') { window.location.hash = ''; loadAnnuaire(); }
   if (name === 'config') { window.location.hash = ''; loadConfig(); }
 }
@@ -586,17 +554,9 @@ async function loadSessions() {
   sessions = Array.isArray(data) ? data : [];
   // Alimenter les filtres type
   var types = [...new Set(sessions.map(function(s) { return s.type; }).filter(Boolean))];
-  ['tdb-type','plan-type'].forEach(function(id) {
-    var el = document.getElementById(id);
-    var cur = el.value;
-    el.innerHTML = '<option value="">Tous types</option>' + types.map(function(t) { return '<option' + (t===cur?' selected':'') + '>' + t + '</option>'; }).join('');
-  });
-  var total = sessions.reduce(function(s,x) { return s+(Number(x.nb_stagiaires)||0); }, 0);
-  var repas = sessions.reduce(function(s,x) { return s+(Number(x.nb_repas)||0); }, 0);
-  document.getElementById('tdb-stats').innerHTML =
-    '<div class="stat"><div class="n">'+sessions.length+'</div><div class="l">Sessions</div></div>' +
-    '<div class="stat"><div class="n">'+total+'</div><div class="l">Stagiaires</div></div>' +
-    '<div class="stat"><div class="n">'+repas+'</div><div class="l">Repas</div></div>';
+  var el = document.getElementById('tdb-type');
+  var cur = el.value;
+  el.innerHTML = '<option value="">Tous types</option>' + types.map(function(t) { return '<option' + (t===cur?' selected':'') + '>' + t + '</option>'; }).join('');
   renderTDB();
 }
 
@@ -725,7 +685,43 @@ async function updAvancement(el, id) {
   else toast('✓ Avancement : ' + (val || 'À faire'));
 }
 
-// === TÂCHES ===
+// === VIREMENTS ===
+function openVirement(id) {
+  virementSession = sessions.find(function(s) { return String(s.id) === String(id); });
+  if (!virementSession) { toast('Session introuvable'); return; }
+  var info = virementSession.virement_info || '';
+  var lignes = info.split('|').map(function(v){return v.trim();}).filter(Boolean);
+  var rows = lignes.map(function(v) {
+    return '<div style="display:flex;gap:6px;margin-bottom:6px;">' +
+      '<input type="text" class="vir-ligne" value="'+v.replace(/"/g,'&quot;')+'" placeholder="490,50€ le 27/04/2026" style="flex:1;">' +
+      '<button class="btn-g" style="padding:4px 8px;font-size:11px;" onclick="this.parentElement.remove()">✕</button></div>';
+  }).join('');
+  document.getElementById('virement-content').innerHTML =
+    '<div id="vir-lignes">'+rows+'</div>' +
+    '<button class="btn-g" style="font-size:12px;margin-top:4px;" onclick="ajouterLigneVirement()">+ Ajouter un virement</button>';
+  if (!lignes.length) ajouterLigneVirement();
+  document.getElementById('modal-virement').classList.add('open');
+}
+function ajouterLigneVirement() {
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
+  div.innerHTML = '<input type="text" class="vir-ligne" placeholder="490,50€ le 27/04/2026" style="flex:1;"><button class="btn-g" style="padding:4px 8px;font-size:11px;" onclick="this.parentElement.remove()">✕</button>';
+  document.getElementById('vir-lignes').appendChild(div);
+  div.querySelector('input').focus();
+}
+async function saveVirement() {
+  if (!virementSession) { toast('Session introuvable'); return; }
+  var lignes = Array.from(document.querySelectorAll('.vir-ligne'))
+    .map(function(i){return i.value.trim();}).filter(Boolean);
+  var info = lignes.join(' | ');
+  var res = await api('updateSession', { id: virementSession.id, fields: { virement_info: info } });
+  if (res && res.error) { toast('Erreur: ' + res.error); return; }
+  var s = sessions.find(function(x){return x.id===virementSession.id;});
+  if (s) s.virement_info = info;
+  closeAll();
+  renderTDB();
+  toast('✓ Virement(s) enregistré(s)');
+}
 async function reloadTaches() {
   await loadSessions();
   renderTaches();
