@@ -186,6 +186,30 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <div class="btn-row"><button class="btn-p" onclick="saveConfigTup()">Enregistrer</button></div>
     <div id="r-cfg-tup" style="font-size:12px;color:var(--ink-s);"></div>
   </div>
+  <div class="card">
+    <h3 style="font-size:14px;margin-bottom:8px;">Liens planning & informations formations</h3>
+    <p style="font-size:12px;color:var(--ink-s);margin-top:0;">Ces liens se pré-remplissent automatiquement dans le mail d'ouverture aux clubs.</p>
+    <hr style="margin:8px 0;">
+    <p style="font-size:12px;font-weight:600;margin-bottom:6px;">Liens "informations sur la formation" → clubs & stagiaires</p>
+    <div class="field-row">
+      <div class="field"><label>Infos BF</label><input id="cfg-info-bf" placeholder="https://irfbb.hautsdefrancebasketball.org/..."></div>
+      <div class="field"><label>Infos DETB</label><input id="cfg-info-detb" placeholder="https://irfbb.hautsdefrancebasketball.org/..."></div>
+    </div>
+    <hr style="margin:8px 0;">
+    <p style="font-size:12px;font-weight:600;margin-bottom:6px;">Planning public (carte interactive) → corps du mail clubs</p>
+    <div class="field-row">
+      <div class="field"><label>Planning BF (carte Google Maps)</label><input id="cfg-plan-bf" placeholder="https://www.google.com/maps/d/..."></div>
+      <div class="field"><label>Planning DETB (carte Google Maps)</label><input id="cfg-plan-detb" placeholder="https://..."></div>
+    </div>
+    <hr style="margin:8px 0;">
+    <p style="font-size:12px;font-weight:600;margin-bottom:6px;">Planning interne → Martin uniquement</p>
+    <div class="field-row">
+      <div class="field"><label>Planning interne BF</label><input id="cfg-plan-int-bf" placeholder="https://docs.google.com/..."></div>
+      <div class="field"><label>Planning interne DETB</label><input id="cfg-plan-int-detb" placeholder="https://docs.google.com/..."></div>
+    </div>
+    <div class="btn-row"><button class="btn-p" onclick="saveConfigPlanning()">Enregistrer tous les liens</button></div>
+    <div id="r-cfg-plan" style="font-size:12px;color:var(--ink-s);"></div>
+  </div>
   <div class="card" style="background:var(--sand);border:1px dashed var(--line);">
     <p style="font-size:12.5px;color:var(--ink-s);margin:0;">ℹ️ Les liens des questionnaires de satisfaction sont <strong>uniques par session</strong> — à renseigner dans l'onglet "Envoi mails" de chaque session (bloc "Questionnaire de satisfaction").</p>
   </div>
@@ -213,6 +237,10 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
         <div class="field"><label>Email Martin (communication)</label><input id="m-clubs-martin" value="martin.weber@hdfbasket.org"></div>
       </div>
       <div class="field"><label>Lien d'inscription (commun à toutes les sessions du mail)</label><input id="m-clubs-inscription" placeholder="https://hautsdefrancebasketball.kalisport.com/..."></div>
+      <div class="field-row">
+        <div class="field"><label>Lien planning BF (carte interactive)</label><input id="m-clubs-plan-bf" placeholder="https://www.google.com/maps/d/..."></div>
+        <div class="field"><label>Lien planning DETB</label><input id="m-clubs-plan-detb" placeholder="https://..."></div>
+      </div>
       <div id="clubs-sessions-liste" style="margin:10px 0;"></div>
       <div class="btn-row">
         <button class="btn-s" onclick="sendClubs()">Envoyer à Christelle et Martin</button>
@@ -224,18 +252,12 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <!-- KALISPORT -->
     <div class="card">
       <h3 style="font-size:14px;margin-bottom:8px;">🔗 Ouverture session Kalisport → formateur</h3>
+      <div class="info">Les parcours Teach Up (BF Enfants/Jeunes/Adultes) sont automatiquement inclus depuis la Config.</div>
       <div class="field-row">
         <div class="field"><label>Lien session Kalisport</label><input id="m-kal-session"></div>
         <div class="field"><label>Lien formulaire inscription</label><input id="m-kal-form"></div>
       </div>
-      <div class="card" style="background:var(--sand);border-color:var(--line);padding:10px;margin-top:4px;">
-        <p style="font-size:11.5px;margin:0 0 8px;font-weight:600;">Parcours formateur Teach Up <span style="font-weight:400;color:var(--ink-s)">(liens permanents — sauvegardés automatiquement)</span></p>
-        <div class="field-row3">
-          <div class="field"><label>BF Enfants</label><input id="m-kal-enf"></div>
-          <div class="field"><label>BF Jeunes</label><input id="m-kal-jeu"></div>
-          <div class="field"><label>BF Adultes</label><input id="m-kal-adu"></div>
-        </div>
-      </div>
+      <div class="field"><label>Tableau de bord Teach Up (lien spécifique à cette session)</label><input id="m-kal-tdb" placeholder="https://ffbb.teachup.com/dashboard/..."></div>
       <div class="btn-row"><button class="btn-s" onclick="sendKalisport()">Envoyer au formateur</button><button class="btn-g" onclick="testM('kalisport')">📧 Test</button></div>
       <div id="r-kal" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
@@ -394,12 +416,14 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       </div>
     </div>
     <div class="field"><label>Nom complet de la session</label><input id="f-nom" placeholder="Brevet Fédéral Enfants - BFE3 PETITE SYNTHE - 2025-26"></div>
+    <div class="field">
+      <label>Secteur / Département</label>
+      <input id="f-secteur" list="secteurs-dl" placeholder="OISE, AISNE, NORD…">
+      <datalist id="secteurs-dl"></datalist>
+    </div>
     <div class="field-row">
-      <div class="field"><label>Secteur / Département</label>
-        <input id="f-secteur" list="secteurs-dl" placeholder="OISE, AISNE, NORD…">
-        <datalist id="secteurs-dl"></datalist>
-      </div>
       <div class="field"><label>Statut</label><select id="f-statut"><option>À venir</option><option>En cours</option><option>Terminé</option></select></div>
+      <div class="field"><label>Tarif (€)</label><input id="f-tarif" type="number" placeholder="170"></div>
     </div>
     <div class="field-row">
       <div class="field"><label>Date début</label><input id="f-debut" type="date"></div>
@@ -1007,6 +1031,7 @@ async function saveSession() {
     date_fin_inscription: document.getElementById('f-finins').value,
     kalisport_lien: document.getElementById('f-kalisport-lien').value,
     lieu: document.getElementById('f-lieu').value,
+    tarif: document.getElementById('f-tarif').value || '170',
     formateur_civilite: document.getElementById('f-civ').value,
     formateur_nom: document.getElementById('f-nom-fo').value,
     formateur_prenom: document.getElementById('f-pre-fo').value,
@@ -1169,16 +1194,13 @@ function prefill() {
   if (s.lien_suivi_formateur) document.getElementById('m-fo-suivi').value = s.lien_suivi_formateur;
   if (s.mail_session_kalisport) document.getElementById('m-kal-session').value = s.mail_session_kalisport;
   if (s.mail_formulaire) document.getElementById('m-kal-form').value = s.mail_formulaire;
-  if (s.mail_parcours_enfants) document.getElementById('m-kal-enf').value = s.mail_parcours_enfants;
-  else if (configData.tup_enfants) document.getElementById('m-kal-enf').value = configData.tup_enfants;
-  if (s.mail_parcours_jeunes) document.getElementById('m-kal-jeu').value = s.mail_parcours_jeunes;
-  else if (configData.tup_jeunes) document.getElementById('m-kal-jeu').value = configData.tup_jeunes;
-  if (s.mail_parcours_adultes) document.getElementById('m-kal-adu').value = s.mail_parcours_adultes;
-  else if (configData.tup_adultes) document.getElementById('m-kal-adu').value = configData.tup_adultes;
+  if (s.teachup_lien) document.getElementById('m-kal-tdb').value = s.teachup_lien;
   // QS : liens uniques par session, chargés depuis la session uniquement
   if (s.lien_qs_stag) document.getElementById('m-qs-stag').value = s.lien_qs_stag;
   if (s.lien_qs_form) document.getElementById('m-qs-form').value = s.lien_qs_form;
   if (s.date_dernier_presentiel) document.getElementById('m-qs-date').value = s.date_dernier_presentiel;
+  if (configData.plan_bf) document.getElementById('m-clubs-plan-bf').value = configData.plan_bf;
+  if (configData.plan_detb) document.getElementById('m-clubs-plan-detb').value = configData.plan_detb;
   renderClubsListe();
 }
 
@@ -1192,6 +1214,12 @@ async function loadConfig() {
   if (configData.tup_enfants) document.getElementById('cfg-tup-enf').value = configData.tup_enfants;
   if (configData.tup_jeunes) document.getElementById('cfg-tup-jeu').value = configData.tup_jeunes;
   if (configData.tup_adultes) document.getElementById('cfg-tup-adu').value = configData.tup_adultes;
+  if (configData.plan_bf) document.getElementById('cfg-plan-bf').value = configData.plan_bf;
+  if (configData.plan_detb) document.getElementById('cfg-plan-detb').value = configData.plan_detb;
+  if (configData.info_bf) document.getElementById('cfg-info-bf').value = configData.info_bf;
+  if (configData.info_detb) document.getElementById('cfg-info-detb').value = configData.info_detb;
+  if (configData.plan_int_bf) document.getElementById('cfg-plan-int-bf').value = configData.plan_int_bf;
+  if (configData.plan_int_detb) document.getElementById('cfg-plan-int-detb').value = configData.plan_int_detb;
   updateSecteursDatalist();
 }
 
@@ -1215,6 +1243,25 @@ async function saveSecteurs() {
   }
 }
 
+async function saveConfigPlanning() {
+  var bf = document.getElementById('cfg-plan-bf').value;
+  var detb = document.getElementById('cfg-plan-detb').value;
+  var infoBf = document.getElementById('cfg-info-bf').value;
+  var infoDetb = document.getElementById('cfg-info-detb').value;
+  var intBf = document.getElementById('cfg-plan-int-bf').value;
+  var intDetb = document.getElementById('cfg-plan-int-detb').value;
+  await api('setConfig', { cle: 'plan_bf', valeur: bf });
+  await api('setConfig', { cle: 'plan_detb', valeur: detb });
+  await api('setConfig', { cle: 'info_bf', valeur: infoBf });
+  await api('setConfig', { cle: 'info_detb', valeur: infoDetb });
+  await api('setConfig', { cle: 'plan_int_bf', valeur: intBf });
+  await api('setConfig', { cle: 'plan_int_detb', valeur: intDetb });
+  configData.plan_bf = bf; configData.plan_detb = detb;
+  configData.info_bf = infoBf; configData.info_detb = infoDetb;
+  configData.plan_int_bf = intBf; configData.plan_int_detb = intDetb;
+  document.getElementById('r-cfg-plan').textContent = '✓ Liens enregistrés';
+  toast('Enregistré');
+}
 async function saveConfigTup() {
   var enf = document.getElementById('cfg-tup-enf').value;
   var jeu = document.getElementById('cfg-tup-jeu').value;
@@ -1263,7 +1310,13 @@ async function sendClubs() {
     sessions_ids: ids,
     christelle: document.getElementById('m-clubs-christelle').value,
     martin: document.getElementById('m-clubs-martin').value,
-    lien_inscription: document.getElementById('m-clubs-inscription').value
+    lien_inscription: document.getElementById('m-clubs-inscription').value,
+    plan_bf: document.getElementById('m-clubs-plan-bf').value,
+    plan_detb: document.getElementById('m-clubs-plan-detb').value,
+    info_bf: configData.info_bf || '',
+    info_detb: configData.info_detb || '',
+    plan_int_bf: configData.plan_int_bf || '',
+    plan_int_detb: configData.plan_int_detb || ''
   };
   document.getElementById('r-clubs').textContent = 'Envoi…';
   var res = await api('envoyerMailClubs', p);
@@ -1273,11 +1326,23 @@ async function sendClubs() {
 
 // === MAIL KALISPORT ===
 async function sendKalisport() {
-  var p = { session_id:currentSession.id, session_kalisport:document.getElementById('m-kal-session').value, formulaire:document.getElementById('m-kal-form').value, parcours_enfants:document.getElementById('m-kal-enf').value, parcours_jeunes:document.getElementById('m-kal-jeu').value, parcours_adultes:document.getElementById('m-kal-adu').value };
+  var p = {
+    session_id: currentSession.id,
+    session_kalisport: document.getElementById('m-kal-session').value,
+    formulaire: document.getElementById('m-kal-form').value,
+    tdb_lien: document.getElementById('m-kal-tdb').value
+  };
   document.getElementById('r-kal').textContent = 'Envoi…';
   var res = await api('envoyerMailKalisport', p);
-  document.getElementById('r-kal').textContent = res.success ? ('Envoyé à '+currentSession.formateur_email) : ('Erreur: '+(res.error||''));
-  if (res.success) { toast('Mail envoyé'); await api('updateSession',{id:currentSession.id,fields:{statut_mail_kalisport:'Envoyé',mail_session_kalisport:p.session_kalisport,mail_formulaire:p.formulaire,mail_parcours_enfants:p.parcours_enfants,mail_parcours_jeunes:p.parcours_jeunes,mail_parcours_adultes:p.parcours_adultes}}); }
+  document.getElementById('r-kal').textContent = res.success ? ('Envoyé à ' + currentSession.formateur_email) : ('Erreur: ' + (res.error||''));
+  if (res.success) {
+    toast('Mail envoyé');
+    await api('updateSession', { id: currentSession.id, fields: {
+      statut_mail_kalisport: 'Envoyé',
+      mail_session_kalisport: p.session_kalisport,
+      mail_formulaire: p.formulaire
+    }});
+  }
 }
 
 // === RELANCE PAIEMENT (lien individuel par stagiaire) ===
@@ -1530,10 +1595,10 @@ async function testM(type) {
   var p = { session_id:currentSession.id, test:true, test_email:ME };
   var res;
   if (type==='formateur') { p.date_visio=document.getElementById('m-fo-date').value; p.lien_visio=document.getElementById('m-fo-lien').value; p.id_visio=document.getElementById('m-fo-id').value; p.lien_app=sUrl(currentSession.id); res=await api('envoyerMailFormateur',p); }
-  else if (type==='kalisport') { p.session_kalisport=document.getElementById('m-kal-session').value; p.formulaire=document.getElementById('m-kal-form').value; p.parcours_enfants=document.getElementById('m-kal-enf').value; res=await api('envoyerMailKalisport',p); }
+  else if (type==='kalisport') { p.session_kalisport=document.getElementById('m-kal-session').value; p.formulaire=document.getElementById('m-kal-form').value; p.tdb_lien=document.getElementById('m-kal-tdb').value; res=await api('envoyerMailKalisport',p); }
   else if (type==='convoc') { p.lieu=document.getElementById('m-cv-lieu').value; p.dates_globales=document.getElementById('m-cv-dates').value; p.visio_type=document.getElementById('m-cv-visio-type').value; p.visio_date=document.getElementById('m-cv-visio-date').value; p.visio_lien=document.getElementById('m-cv-visio-lien').value; p.visio_replay=document.getElementById('m-cv-visio-replay').value; p.programme=document.getElementById('m-cv-prog').value; p.acces=document.getElementById('m-cv-acces').value; p.materiel=document.getElementById('m-cv-mat').value; p.facebook=document.getElementById('m-cv-fb').value; res=await api('envoyerConvocations',p); }
   else if (type==='relance') { p.stagiaires_avec_lien=[{id:'TEST',lien:'https://kalisport.test'}]; p.date_debut=document.getElementById('m-rel-date').value; res=await api('envoyerRelancePaiement',p); }
-  else if (type==='clubs') { p.sessions_ids=[currentSession.id]; p.christelle=document.getElementById('m-clubs-christelle').value; p.martin=document.getElementById('m-clubs-martin').value; p.lien_inscription=document.getElementById('m-clubs-inscription').value; res=await api('envoyerMailClubs',p); }
+  else if (type==='clubs') { p.sessions_ids=[currentSession.id]; p.christelle=document.getElementById('m-clubs-christelle').value; p.martin=document.getElementById('m-clubs-martin').value; p.lien_inscription=document.getElementById('m-clubs-inscription').value; p.plan_bf=document.getElementById('m-clubs-plan-bf').value; p.plan_detb=document.getElementById('m-clubs-plan-detb').value; res=await api('envoyerMailClubs',p); }
   else if (type==='qs') { p.type='envoi1'; p.lien_stag=document.getElementById('m-qs-stag').value; p.lien_form=document.getElementById('m-qs-form').value; res=await api('envoyerQuestionnaireSatisfaction',p); }
   toast(res&&res.success ? ('Test envoyé à '+ME) : ('Erreur: '+(res&&res.error||'inconnue')));
 }
