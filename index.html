@@ -1552,14 +1552,16 @@ async function sendClubs() {
   if (!ids.length) { toast('Aucune session sélectionnée'); return; }
   var sessionsRetenues = sessions.filter(function(s){return ids.indexOf(s.id)>-1;});
   if (!confirm('Envoyer ' + sessionsRetenues.length + ' formation(s) à Christelle et Martin ?')) return;
+  var christelleEl = document.getElementById('m-clubs-christelle');
+  var martinEl = document.getElementById('m-clubs-martin');
   var p = {
     session_id: currentSession.id,
     sessions_ids: ids,
-    christelle: document.getElementById('m-clubs-christelle').value,
-    martin: document.getElementById('m-clubs-martin').value,
-    lien_inscription: document.getElementById('m-clubs-inscription').value,
-    plan_bf: document.getElementById('m-clubs-plan-bf').value,
-    plan_detb: document.getElementById('m-clubs-plan-detb').value,
+    christelle: christelleEl ? christelleEl.value : 'christelle.delaey@hdfbasket.org',
+    martin: martinEl ? martinEl.value : 'martin.weber@hdfbasket.org',
+    lien_inscription: '',
+    plan_bf: configData.plan_bf || '',
+    plan_detb: configData.plan_detb || '',
     info_bf: configData.info_bf || '',
     info_detb: configData.info_detb || '',
     plan_int_bf: configData.plan_int_bf || '',
@@ -1568,7 +1570,12 @@ async function sendClubs() {
   document.getElementById('r-clubs').textContent = 'Envoi…';
   var res = await api('envoyerMailClubs', p);
   document.getElementById('r-clubs').textContent = res.success ? ('Envoyé — ' + sessionsRetenues.length + ' formation(s) regroupées') : ('Erreur: '+(res.error||''));
-  if (res.success) toast('Mail clubs envoyé');
+  if (res.success) {
+    toast('Mail clubs envoyé');
+    await api('updateSession', { id: currentSession.id, fields: { statut_mail_clubs: 'Envoyé' } });
+    currentSession.statut_mail_clubs = 'Envoyé';
+    prefillMails();
+  }
 }
 
 // === MAIL KALISPORT ===
@@ -1843,15 +1850,58 @@ async function genPDF() {
 async function testM(type) {
   if (!currentSession) { toast('Ouvre une session'); return; }
   if (!confirm('Envoyer un mail test à ' + ME + ' ?')) return;
-  var p = { session_id:currentSession.id, test:true, test_email:ME };
+  var s = currentSession;
+  var p = { session_id: s.id, test: true, test_email: ME };
   var res;
-  if (type==='formateur') { p.date_visio=document.getElementById('m-fo-date').value; p.lien_visio=document.getElementById('m-fo-lien').value; p.id_visio=document.getElementById('m-fo-id').value; p.lien_app=sUrl(currentSession.id); res=await api('envoyerMailFormateur',p); }
-  else if (type==='kalisport') { p.session_kalisport=document.getElementById('m-kal-session').value; p.formulaire=document.getElementById('m-kal-form').value; p.tdb_lien=document.getElementById('m-kal-tdb').value; res=await api('envoyerMailKalisport',p); }
-  else if (type==='convoc') { p.lieu=document.getElementById('m-cv-lieu').value; p.dates_globales=document.getElementById('m-cv-dates').value; p.visio_type=document.getElementById('m-cv-visio-type').value; p.visio_date=document.getElementById('m-cv-visio-date').value; p.visio_lien=document.getElementById('m-cv-visio-lien').value; p.visio_replay=document.getElementById('m-cv-visio-replay').value; p.programme=document.getElementById('m-cv-prog').value; p.acces=document.getElementById('m-cv-acces').value; p.materiel=document.getElementById('m-cv-mat').value; p.facebook=document.getElementById('m-cv-fb').value; res=await api('envoyerConvocations',p); }
-  else if (type==='relance') { p.stagiaires_avec_lien=[{id:'TEST',lien:'https://kalisport.test'}]; p.date_debut=document.getElementById('m-rel-date').value; res=await api('envoyerRelancePaiement',p); }
-  else if (type==='clubs') { p.sessions_ids=[currentSession.id]; p.christelle=document.getElementById('m-clubs-christelle').value; p.martin=document.getElementById('m-clubs-martin').value; p.lien_inscription=document.getElementById('m-clubs-inscription').value; p.plan_bf=document.getElementById('m-clubs-plan-bf').value; p.plan_detb=document.getElementById('m-clubs-plan-detb').value; res=await api('envoyerMailClubs',p); }
-  else if (type==='qs') { p.type='envoi1'; p.lien_stag=document.getElementById('m-qs-stag').value; p.lien_form=document.getElementById('m-qs-form').value; res=await api('envoyerQuestionnaireSatisfaction',p); }
-  toast(res&&res.success ? ('Test envoyé à '+ME) : ('Erreur: '+(res&&res.error||'inconnue')));
+  if (type === 'formateur') {
+    p.date_visio = s.mail_date_visio || '';
+    p.lien_visio = s.mail_lien_visio || '';
+    p.id_visio = s.mail_id_visio || '';
+    p.lien_suivi = s.lien_suivi_formateur || '';
+    res = await api('envoyerMailFormateur', p);
+  } else if (type === 'kalisport') {
+    p.session_kalisport = s.mail_session_kalisport || '';
+    p.formulaire = s.mail_formulaire || '';
+    p.tdb_lien = s.teachup_lien || '';
+    res = await api('envoyerMailKalisport', p);
+  } else if (type === 'convoc') {
+    p.presentiel_date = '';
+    p.dest_type = 'stag';
+    p.lieu = s.lieu || '';
+    p.dates_globales = s.dates_globales || '';
+    p.visio_type = s.mail_visio_type || '';
+    p.visio_date = s.mail_date_visio || '';
+    p.visio_lien = s.mail_lien_visio || '';
+    p.visio_replay = s.mail_visio_replay || '';
+    p.programme = s.programme_presentiel || '';
+    p.acces = s.mail_acces || '';
+    p.materiel = s.mail_materiel || '';
+    p.facebook = s.mail_fb || 'https://www.facebook.com/groups/632709503927580/';
+    p.complement = '';
+    res = await api('envoyerConvocations', p);
+  } else if (type === 'relance') {
+    p.stagiaires_avec_lien = [{ id: 'TEST', lien: 'https://kalisport.test' }];
+    p.date_debut = s.date_debut || '';
+    res = await api('envoyerRelancePaiement', p);
+  } else if (type === 'clubs') {
+    p.sessions_ids = [s.id];
+    p.christelle = 'christelle.delaey@hdfbasket.org';
+    p.martin = 'martin.weber@hdfbasket.org';
+    p.lien_inscription = '';
+    p.plan_bf = configData.plan_bf || '';
+    p.plan_detb = configData.plan_detb || '';
+    p.info_bf = configData.info_bf || '';
+    p.info_detb = configData.info_detb || '';
+    p.plan_int_bf = configData.plan_int_bf || '';
+    p.plan_int_detb = configData.plan_int_detb || '';
+    res = await api('envoyerMailClubs', p);
+  } else if (type === 'qs') {
+    p.type = 'envoi1';
+    p.lien_stag = s.lien_qs_stag || '';
+    p.lien_form = s.lien_qs_form || '';
+    res = await api('envoyerQuestionnaireSatisfaction', p);
+  }
+  toast(res && res.success ? ('Test envoyé à ' + ME) : ('Erreur : ' + (res && res.error || 'inconnue')));
 }
 
 // === IMPORT CSV ===
