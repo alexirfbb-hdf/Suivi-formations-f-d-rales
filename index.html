@@ -1141,8 +1141,10 @@ function pickFormateur(id) {
   document.getElementById('f-pre-fo').value = f.prenom || '';
   document.getElementById('f-email-fo').value = f.email || '';
   document.getElementById('f-tel-fo').value = f.telephone || '';
-  closeAll();
-  toast('Formateur sélectionné');
+  // Fermer uniquement le modal annuaire, garder la modal session ouverte
+  document.getElementById('modal-annuaire').classList.remove('open');
+  document.getElementById('modal-session').classList.add('open');
+  toast('✓ ' + (f.civilite||'') + ' ' + f.nom + ' sélectionné(e)');
 }
 async function addFormateur() {
   var fields = { civilite: document.getElementById('ann-civ').value, nom: document.getElementById('ann-nom').value, prenom: document.getElementById('ann-pre').value, email: document.getElementById('ann-email').value, telephone: document.getElementById('ann-tel').value };
