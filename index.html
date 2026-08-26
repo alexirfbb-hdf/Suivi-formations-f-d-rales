@@ -656,7 +656,22 @@ function toast(msg) {
 }
 function sUrl(id) { return APP_URL + '#' + id; }
 function closeAll() { document.querySelectorAll('.modal-bg').forEach(function(m) { m.classList.remove('open'); }); }
-function fmtDate(d) { if(!d) return ''; try { var dt = new Date(d); return dt.toLocaleDateString('fr-FR'); } catch(e) { return d; } }
+function parseDateLocal(str) {
+  if (!str) return null;
+  var s = String(str);
+  // Format ISO YYYY-MM-DD → construire en local pour éviter le décalage UTC
+  var iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return new Date(parseInt(iso[1]), parseInt(iso[2])-1, parseInt(iso[3]));
+  // Google Sheets Date object → utiliser directement
+  if (s.indexOf('GMT') > -1 || s.indexOf('Sat') > -1 || s.indexOf('Sun') > -1 || s.indexOf('Mon') > -1 || s.indexOf('Tue') > -1 || s.indexOf('Wed') > -1 || s.indexOf('Thu') > -1 || s.indexOf('Fri') > -1) {
+    var d = new Date(s); return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  return new Date(s);
+}
+function fmtDate(d) {
+  if (!d) return '';
+  try { return parseDateLocal(String(d)).toLocaleDateString('fr-FR'); } catch(e) { return String(d); }
+}
 
 // === NAVIGATION ===
 function switchView(name) {
@@ -904,7 +919,8 @@ function renderTaches() {
     convocs.forEach(function(c, i) {
       var dateP = parseDate(c.date);
       var j7 = dateP ? new Date(dateP.getTime() - 7*86400000) : null;
-      var pLabel = 'Présentiel '+(i+1)+(c.date?' — '+c.date:'');
+      var dateAff = dateP ? dateP.toLocaleDateString('fr-FR') : (c.date || '');
+      var pLabel = 'Présentiel '+(i+1)+(dateAff?' — '+dateAff:'');
       if (c.stag !== 'Envoyé') {
         taches.push({ done:false, urgence:getUrgence(today,j7,dateP), echeance:j7, icon:'📋',
           titre:'Convocation '+pLabel+' → stagiaires', meta:code,
@@ -929,7 +945,7 @@ function renderTaches() {
       } else { taches.push({ done:true, urgence:'fait', echeance:j7, icon:'✅', titre:'Convocation '+pLabel+' → formateur', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) }); }
     });
     if (!convocs.length && s.statut_convocation !== 'Envoyé') {
-      var dateD = s.date_debut ? new Date(s.date_debut) : null;
+      var dateD = s.date_debut ? parseDateLocal(String(s.date_debut)) : null;
       var j7D = dateD ? new Date(dateD.getTime() - 7*86400000) : null;
       taches.push({ done:false, urgence:getUrgence(today,j7D,dateD), echeance:j7D, icon:'📋',
         titre:'Convocation stagiaires', meta:code+' — Configure les présentiels',
@@ -940,7 +956,7 @@ function renderTaches() {
 
     // Infos formateur
     if (s.statut_mail_formateur !== 'Envoyé') {
-      var dateD2 = s.date_debut ? new Date(s.date_debut) : null;
+      var dateD2 = s.date_debut ? parseDateLocal(String(s.date_debut)) : null;
       var j7F = dateD2 ? new Date(dateD2.getTime() - 7*86400000) : null;
       taches.push({ done:false, urgence:getUrgence(today,j7F,dateD2), echeance:j7F, icon:'👨‍🏫',
         titre:'Infos stage → formateur (J-7)', meta:code,
@@ -950,7 +966,7 @@ function renderTaches() {
     } else { taches.push({ done:true, urgence:'fait', echeance:null, icon:'✅', titre:'Infos formateur envoyées', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) }); }
 
     // QS
-    var dateDernier = s.date_dernier_presentiel ? new Date(s.date_dernier_presentiel) : null;
+    var dateDernier = s.date_dernier_presentiel ? parseDateLocal(String(s.date_dernier_presentiel)) : null;
     if (dateDernier) {
       var j1 = new Date(dateDernier.getTime() + 86400000);
       if (s.statut_qs_envoi1 !== 'Envoyé') {
@@ -1094,7 +1110,7 @@ function renderTaches() {
       var dateP = parseDate(c.date);
       var j7 = dateP ? new Date(dateP.getTime() - 7*86400000) : null;
       var j14 = dateP ? new Date(dateP.getTime() - 14*86400000) : null;
-      var pLabel = 'Présentiel '+(i+1)+(c.date?' — '+c.date:'');
+      var dp = parseDate(c.date); var pLabel = 'Présentiel '+(i+1)+(dp?' — '+dp.toLocaleDateString('fr-FR'):(c.date?(' — '+c.date):''));
 
       if (c.stag !== 'Envoyé') {
         var done = false;
@@ -1133,7 +1149,7 @@ function renderTaches() {
 
     // Fallback: convocation globale si pas de présentiels configurés
     if (!convocs.length) {
-      var dateD = s.date_debut ? new Date(s.date_debut) : null;
+      var dateD = s.date_debut ? parseDateLocal(String(s.date_debut)) : null;
       var j7D = dateD ? new Date(dateD.getTime() - 7*86400000) : null;
       if (s.statut_convocation !== 'Envoyé') {
         taches.push({ done: false, urgence: getUrgence(today, j7D, dateD), echeance: j7D,
@@ -1145,7 +1161,7 @@ function renderTaches() {
 
     // --- Infos formateur J-7 ---
     if (s.statut_mail_formateur !== 'Envoyé') {
-      var dateD2 = s.date_debut ? new Date(s.date_debut) : null;
+      var dateD2 = s.date_debut ? parseDateLocal(String(s.date_debut)) : null;
       var j7F = dateD2 ? new Date(dateD2.getTime() - 7*86400000) : null;
       taches.push({ done: false, urgence: getUrgence(today, j7F, dateD2), echeance: j7F,
         icon: '👨‍🏫', titre: 'Infos stage → formateur (J-7)', meta: code,
@@ -1159,7 +1175,7 @@ function renderTaches() {
     }
 
     // --- QS Envoi 1 ---
-    var dateDernier = s.date_dernier_presentiel ? new Date(s.date_dernier_presentiel) : null;
+    var dateDernier = s.date_dernier_presentiel ? parseDateLocal(String(s.date_dernier_presentiel)) : null;
     if (dateDernier) {
       var j1 = new Date(dateDernier.getTime() + 86400000);
       if (s.statut_qs_envoi1 !== 'Envoyé') {
@@ -1219,13 +1235,20 @@ function getUrgence(today, echeance, dateFin) {
 
 function parseDate(str) {
   if (!str) return null;
+  // Format ISO YYYY-MM-DD (stocké par input type="date")
+  var iso = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) {
+    var d = new Date(parseInt(iso[1]), parseInt(iso[2])-1, parseInt(iso[3]));
+    d.setHours(0,0,0,0);
+    return d;
+  }
   // Format DD/MM/YYYY ou DD/MM/YY
   var m = str.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
   if (m) {
     var y = m[3] ? (parseInt(m[3]) < 100 ? 2000+parseInt(m[3]) : parseInt(m[3])) : new Date().getFullYear();
-    var d = new Date(y, parseInt(m[2])-1, parseInt(m[1]));
-    d.setHours(0,0,0,0);
-    return d;
+    var d2 = new Date(y, parseInt(m[2])-1, parseInt(m[1]));
+    d2.setHours(0,0,0,0);
+    return d2;
   }
   return null;
 }
@@ -1386,7 +1409,7 @@ function updatePresentielForm(i) {
   var fin = datesSorted[datesSorted.length-1] || '';
   var fmt = function(d) {
     if (!d) return '';
-    var dt = new Date(d);
+    var dt = parseDateLocal(String(d));
     return dt.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
   };
   var preview = debut ? (debut === fin ? 'Le ' + fmt(debut) : 'Du ' + fmt(debut) + ' au ' + fmt(fin)) : '';
@@ -1404,7 +1427,7 @@ function getPresentielsPourSave() {
 function presentielsToProgramme(presentiels) {
   // Génère le texte du programme depuis la liste structurée
   return presentiels.filter(function(p){return p.date;}).map(function(p) {
-    var d = p.date ? new Date(p.date) : null;
+    var d = p.date ? parseDateLocal(p.date) : null;
     var dateStr = d ? d.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) : '';
     dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
     var parts = [dateStr];
@@ -2014,7 +2037,7 @@ function ouvrirConvocForm(i, type) {
   var c = convocs[i];
   var typeLabel = type === 'stag' ? 'stagiaires' : 'formateur';
   document.getElementById('convoc-form-titre').textContent =
-    'Convocation Présentiel ' + (i+1) + (c.date ? ' — ' + c.date : '') + ' → ' + typeLabel;
+    'Convocation Présentiel ' + (i+1) + (c.date ? ' — ' + (parseDate(c.date)||{toLocaleDateString:function(){return c.date;}}).toLocaleDateString('fr-FR') : '') + ' → ' + typeLabel;
   document.getElementById('btn-convoc-stag').style.display = type === 'stag' ? '' : 'none';
   document.getElementById('btn-convoc-form').style.display = type === 'form' ? '' : 'none';
   document.getElementById('r-cv').textContent = '';
