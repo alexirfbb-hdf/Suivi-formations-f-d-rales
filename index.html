@@ -239,6 +239,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <div id="det-sub" style="color:var(--ink-s);font-size:12px;margin-bottom:10px;"></div>
     </div>
     <button class="btn-g" style="font-size:12px;padding:5px 12px;" onclick="modifierSession()">✏️ Modifier la session</button>
+  <button class="btn-g" style="font-size:11px;padding:4px 8px;color:var(--ink-s);" onclick="diagSession()">🔍 Diagnostic</button>
   </div>
   <div id="det-liens-rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
   <div class="subtabs">
@@ -1329,6 +1330,16 @@ async function syncPresentielsDepuisProgramme() {
   currentSession.convocs_json = json;
   chargerConvocs();
   toast('✓ ' + newConvocs.length + ' présentiel(s) synchronisé(s)');
+}
+
+function diagSession() {
+  var champs = ['convocs_json','programme_presentiel','dates_globales','date_debut','date_fin','lieu','mail_acces','mail_materiel'];
+  var rapport = champs.map(function(c) {
+    var v = currentSession[c];
+    var etat = !v ? '❌ VIDE' : (v.length > 80 ? '✅ OK ('+v.length+' car.)' : '✅ "'+v+'"');
+    return c + ' : ' + etat;
+  }).join('\n');
+  alert('=== Diagnostic session ===\n\n' + rapport);
 }
 
 async function marquerTacheFaite(idx) {
