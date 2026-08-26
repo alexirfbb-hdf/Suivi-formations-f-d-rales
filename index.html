@@ -227,10 +227,11 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
     <div>
       <h2 id="det-title" style="font-size:19px;margin-bottom:3px;"></h2>
-      <div id="det-sub" style="color:var(--ink-s);font-size:12px;margin-bottom:14px;"></div>
+      <div id="det-sub" style="color:var(--ink-s);font-size:12px;margin-bottom:10px;"></div>
     </div>
     <button class="btn-g" style="font-size:12px;padding:5px 12px;" onclick="modifierSession()">✏️ Modifier la session</button>
   </div>
+  <div id="det-liens-rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
   <div class="subtabs">
     <div class="stab active" data-s="stag" onclick="switchSub('stag')">Stagiaires</div>
     <div class="stab" data-s="mails" onclick="switchSub('mails')">Envoi mails</div>
@@ -345,10 +346,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <!-- RELANCE PAIEMENT -->
     <div class="card">
       <h3 style="font-size:14px;margin-bottom:8px;">💶 Relance paiement</h3>
-      <div class="field-row">
-        <div class="field"><label>Date début formation</label><input id="m-rel-date" placeholder="15 mars 2026"></div>
-        <div class="field"><label>Message complémentaire</label><input id="m-rel-comp"></div>
-      </div>
+      <div class="field"><label>Message complémentaire (optionnel)</label><input id="m-rel-comp"></div>
       <div id="rel-liste" style="margin:8px 0;"></div>
       <div class="btn-row">
         <button class="btn-s" onclick="sendRelance()">Envoyer aux sélectionnés</button>
@@ -489,12 +487,15 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 
     <!-- SECTION 2 : DATES DE FORMATION -->
     <div class="section-form">
-      <div class="section-form-titre" onclick="toggleSection('s2')">📅 Dates de formation & programme <span id="s2-arr">▾</span></div>
+      <div class="section-form-titre" onclick="toggleSection('s2')">📅 Dates de formation <span id="s2-arr">▾</span></div>
       <div id="s2" class="section-form-body">
-        <div class="field"><label>Programme complet — une ligne par journée</label>
-          <textarea id="f-programme" style="min-height:90px;font-size:12px;" placeholder="Samedi 25 oct. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE&#10;Samedi 10 jan. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE"></textarea></div>
-        <div class="field"><label>Dates globales (pour la convocation)</label><input id="f-dates-globales" placeholder="du 25 oct. 2025 au 14 fév. 2026"></div>
-        <div class="field"><label>Date du dernier présentiel</label><input id="f-date-dernier" type="date"></div>
+        <p style="font-size:12px;color:var(--ink-s);margin:0 0 10px;">Saisis chaque présentiel — ces dates alimentent les tâches J-7, le programme dans les mails et les convocations.</p>
+        <div id="f-presentiels-liste"></div>
+        <button type="button" class="btn-g" style="font-size:12px;margin-bottom:12px;" onclick="ajouterPresentielForm()">+ Ajouter un présentiel</button>
+        <div class="field-row">
+          <div class="field"><label>Dates globales (résumé pour les mails)</label><input id="f-dates-globales" placeholder="du 19 sept. 2026 au 22 mai 2027"></div>
+          <div class="field"><label>Date du dernier présentiel</label><input id="f-date-dernier" type="date"></div>
+        </div>
         <hr>
         <p style="font-size:12px;font-weight:600;margin:0 0 8px;">Visioconférence de présentation <span style="font-weight:400;color:var(--ink-s)">(BF uniquement)</span></p>
         <div class="field-row">
@@ -506,7 +507,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
           <div class="field"><label>Lien replay</label><input id="f-visio-replay"></div>
         </div>
         <hr>
-        <div class="field"><label>Infos accès — une ligne par moyen</label>
+        <div class="field"><label>Infos accès</label>
           <textarea id="f-acces" style="min-height:50px;font-size:12px;" placeholder="En voiture : parking sur site&#10;En train : gare de…"></textarea></div>
         <div class="field-row">
           <div class="field"><label>Matériel à prévoir</label><input id="f-materiel" placeholder="Tenue sportive, prise de notes"></div>
@@ -900,6 +901,195 @@ function renderTaches() {
   sessions.filter(function(s){ return s.statut_stage !== 'Archivé'; }).forEach(function(s) {
     var code = s.code_kalisport || s.nom || '—';
 
+    // Convocations par présentiel
+    var convocs = [];
+    try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
+    convocs.forEach(function(c, i) {
+      var dateP = parseDate(c.date);
+      var j7 = dateP ? new Date(dateP.getTime() - 7*86400000) : null;
+      var pLabel = 'Présentiel '+(i+1)+(c.date?' — '+c.date:'');
+      if (c.stag !== 'Envoyé') {
+        taches.push({ done:false, urgence:getUrgence(today,j7,dateP), echeance:j7, icon:'📋',
+          titre:'Convocation '+pLabel+' → stagiaires', meta:code,
+          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+          marquer:function(sid,ci,conv){return async function(){
+            conv[ci].stag='Envoyé';
+            await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv),statut_convocation:'Envoyé'}});
+            await reloadTaches();
+          };}(s.id,i,convocs)
+        });
+      } else { taches.push({ done:true, urgence:'fait', echeance:j7, icon:'✅', titre:'Convocation '+pLabel+' → stagiaires', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) }); }
+      if (c.form !== 'Envoyé') {
+        taches.push({ done:false, urgence:getUrgence(today,j7,dateP), echeance:j7, icon:'👨‍🏫',
+          titre:'Convocation '+pLabel+' → formateur', meta:code,
+          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+          marquer:function(sid,ci,conv){return async function(){
+            conv[ci].form='Envoyé';
+            await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv)}});
+            await reloadTaches();
+          };}(s.id,i,convocs)
+        });
+      } else { taches.push({ done:true, urgence:'fait', echeance:j7, icon:'✅', titre:'Convocation '+pLabel+' → formateur', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) }); }
+    });
+    if (!convocs.length && s.statut_convocation !== 'Envoyé') {
+      var dateD = s.date_debut ? new Date(s.date_debut) : null;
+      var j7D = dateD ? new Date(dateD.getTime() - 7*86400000) : null;
+      taches.push({ done:false, urgence:getUrgence(today,j7D,dateD), echeance:j7D, icon:'📋',
+        titre:'Convocation stagiaires', meta:code+' — Configure les présentiels',
+        action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+        marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_convocation:'Envoyé'}}); await reloadTaches(); };}(s.id)
+      });
+    }
+
+    // Infos formateur
+    if (s.statut_mail_formateur !== 'Envoyé') {
+      var dateD2 = s.date_debut ? new Date(s.date_debut) : null;
+      var j7F = dateD2 ? new Date(dateD2.getTime() - 7*86400000) : null;
+      taches.push({ done:false, urgence:getUrgence(today,j7F,dateD2), echeance:j7F, icon:'👨‍🏫',
+        titre:'Infos stage → formateur (J-7)', meta:code,
+        action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+        marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_mail_formateur:'Envoyé'}}); await reloadTaches(); };}(s.id)
+      });
+    } else { taches.push({ done:true, urgence:'fait', echeance:null, icon:'✅', titre:'Infos formateur envoyées', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) }); }
+
+    // QS
+    var dateDernier = s.date_dernier_presentiel ? new Date(s.date_dernier_presentiel) : null;
+    if (dateDernier) {
+      var j1 = new Date(dateDernier.getTime() + 86400000);
+      if (s.statut_qs_envoi1 !== 'Envoyé') {
+        taches.push({ done:false, urgence:today >= j1 ? 'orange' : 'gris', echeance:j1, icon:'⭐',
+          titre:'QS — Envoi 1', meta:code,
+          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+          marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_qs_envoi1:'Envoyé'}}); await reloadTaches(); };}(s.id)
+        });
+      } else {
+        taches.push({ done:true, urgence:'fait', echeance:j1, icon:'✅', titre:'QS Envoi 1 envoyé', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+        var j30 = new Date(dateDernier.getTime() + 30*86400000);
+        if (s.statut_qs_relance !== 'Envoyé') {
+          taches.push({ done:false, urgence:today >= j30 ? 'orange' : 'gris', echeance:j30, icon:'🔄',
+            titre:'QS — Relance', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+            marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_qs_relance:'Envoyé'}}); await reloadTaches(); };}(s.id)
+          });
+        } else { taches.push({ done:true, urgence:'fait', echeance:j30, icon:'✅', titre:'QS Relance envoyée', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) }); }
+      }
+    }
+
+    // Clubs
+    if (s.statut_mail_clubs !== 'Envoyé' && s.statut_stage === 'À venir') {
+      taches.push({ done:false, urgence:'gris', echeance:null, icon:'📢', titre:'Communication ouverture clubs', meta:code,
+        action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+        marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_mail_clubs:'Envoyé'}}); await reloadTaches(); };}(s.id)
+      });
+    }
+
+    // Diplômes
+    if (s.statut_diplomes && s.statut_diplomes !== 'Complet' && s.statut_stage === 'Terminé') {
+      taches.push({ done:false, urgence:'orange', echeance:null, icon:'🎓', titre:'Diplômes — '+s.statut_diplomes, meta:code,
+        action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+        marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_diplomes:'Complet'}}); await reloadTaches(); };}(s.id)
+      });
+    }
+  });
+
+  // Trier par urgence puis date
+  var ordre = { rouge:0, orange:1, gris:2, fait:3 };
+  taches.sort(function(a,b) {
+    var ou = (ordre[a.urgence]||2) - (ordre[b.urgence]||2);
+    if (ou !== 0) return ou;
+    if (a.echeance && b.echeance) return a.echeance - b.echeance;
+    if (a.echeance) return -1; if (b.echeance) return 1;
+    return 0;
+  });
+
+  var aFaire = taches.filter(function(t){return !t.done;});
+  var faites = taches.filter(function(t){return t.done;});
+
+  // Grouper par période
+  var groupes = [
+    { label:'🔴 En retard ou cette semaine', test:function(t){
+      if (!t.echeance) return false;
+      var diff = Math.ceil((t.echeance - today)/86400000);
+      return diff <= 7;
+    }, couleur:'#fee2e2', border:'#fca5a5' },
+    { label:'🟡 Semaine prochaine', test:function(t){
+      if (!t.echeance) return false;
+      var diff = Math.ceil((t.echeance - today)/86400000);
+      return diff > 7 && diff <= 14;
+    }, couleur:'#fef9c3', border:'#fde047' },
+    { label:'📅 Ce mois', test:function(t){
+      if (!t.echeance) return false;
+      var diff = Math.ceil((t.echeance - today)/86400000);
+      return diff > 14 && diff <= 31;
+    }, couleur:'#f0f9ff', border:'#bae6fd' },
+    { label:'📋 Sans échéance ou plus tard', test:function(t){
+      if (!t.echeance) return true;
+      return Math.ceil((t.echeance - today)/86400000) > 31;
+    }, couleur:'var(--sand)', border:'var(--line)' }
+  ];
+
+  // Comptes pour résumé
+  var nbUrgent = taches.filter(function(t){return !t.done && t.urgence==='rouge';}).length;
+  var header = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">'
+    + '<div class="stat"><div class="n" style="color:'+(nbUrgent?'var(--terra)':'var(--sage-d)')+'">'+aFaire.length+'</div><div class="l">À faire</div></div>'
+    + (nbUrgent?'<div class="stat"><div class="n" style="color:var(--terra);">'+nbUrgent+'</div><div class="l">Urgentes</div></div>':'')
+    + '<div class="stat"><div class="n" style="color:var(--sage-d);">'+faites.length+'</div><div class="l">Faites</div></div>'
+    + '</div>';
+
+  window.tacheActions = [];
+  var html = header;
+  var affichees = 0;
+
+  groupes.forEach(function(g) {
+    var items = aFaire.filter(g.test);
+    if (!items.length) return;
+    affichees += items.length;
+    html += '<div style="margin-bottom:20px;">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid '+g.border+';background:'+g.couleur+';padding:6px 10px;border-radius:6px;">'
+      + g.label + ' <span style="font-weight:400;color:var(--ink-s);">('+items.length+')</span></div>';
+    items.forEach(function(t) {
+      var idx = window.tacheActions.length;
+      window.tacheActions.push(t.action);
+      window.tacheMarquer = window.tacheMarquer || [];
+      var idxM = window.tacheMarquer.length;
+      window.tacheMarquer.push(t.marquer || null);
+      var dateStr = t.echeance ? fmtDate(t.echeance) : '';
+      html += '<div class="tache '+(t.urgence==='rouge'?'urgent':t.urgence==='orange'?'bientot':'')+'" style="margin-bottom:6px;">'
+        + '<span class="tache-icon">'+t.icon+'</span>'
+        + '<div class="tache-body"><div class="tache-titre">'+t.titre+'</div><div class="tache-meta">'+t.meta+'</div></div>'
+        + (dateStr?'<span class="tache-date '+(t.urgence==='rouge'?'rouge':t.urgence==='orange'?'orange':'gris')+'">'+dateStr+'</span>':'')
+        + (t.marquer?'<button class="btn-g" style="font-size:11px;padding:4px 10px;flex-shrink:0;border-color:var(--sage);color:var(--sage-d);" onclick="marquerTacheFaite('+idxM+')">✓ Fait</button>':'')
+        + '<button class="btn-p" style="font-size:11px;padding:4px 10px;flex-shrink:0;" onclick="tacheActions['+idx+']()">Ouvrir →</button>'
+        + '</div>';
+    });
+    html += '</div>';
+  });
+
+  if (!affichees) {
+    html += '<div class="card" style="text-align:center;padding:40px;color:var(--ink-s);">🎉 Aucune tâche en attente !</div>';
+  }
+
+  // Faites (si option cochée)
+  if (showDone && faites.length) {
+    html += '<div style="margin-top:20px;opacity:.6;">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">✅ Faites ('+faites.length+')</div>';
+    faites.forEach(function(t) {
+      html += '<div class="tache ok" style="margin-bottom:6px;">'
+        + '<span class="tache-icon">'+t.icon+'</span>'
+        + '<div class="tache-body" style="text-decoration:line-through;"><div class="tache-titre">'+t.titre+'</div><div class="tache-meta">'+t.meta+'</div></div>'
+        + '<span class="badge ok">Fait</span>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('taches-content').innerHTML = html;
+}
+  var taches = [];
+
+  sessions.filter(function(s){ return s.statut_stage !== 'Archivé'; }).forEach(function(s) {
+    var code = s.code_kalisport || s.nom || '—';
+
     // --- Convocations par présentiel ---
     var convocs = [];
     try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
@@ -1020,51 +1210,6 @@ function renderTaches() {
     }
   });
 
-  // Trier : urgent d'abord, puis par date, puis faites en bas
-  var ordre = { rouge: 0, orange: 1, gris: 2, fait: 3 };
-  taches.sort(function(a,b) {
-    var ou = (ordre[a.urgence]||2) - (ordre[b.urgence]||2);
-    if (ou !== 0) return ou;
-    if (a.echeance && b.echeance) return a.echeance - b.echeance;
-    if (a.echeance) return -1;
-    if (b.echeance) return 1;
-    return 0;
-  });
-
-  var visibles = showDone ? taches : taches.filter(function(t){ return !t.done; });
-  if (!visibles.length) {
-    document.getElementById('taches-content').innerHTML =
-      '<div class="card" style="text-align:center;padding:40px;color:var(--ink-s);">' +
-      (showDone ? '📭 Aucune tâche.' : '🎉 Aucune tâche en attente ! Tout est à jour.') + '</div>';
-    return;
-  }
-
-  var nbUrgent = taches.filter(function(t){return t.urgence==='rouge'&&!t.done;}).length;
-  var nbTotal = taches.filter(function(t){return !t.done;}).length;
-  var header = '<div class="stats" style="margin-bottom:14px;">'
-    + '<div class="stat"><div class="n" style="color:'+(nbUrgent?'var(--terra)':'var(--sage-d)')+'">'+nbTotal+'</div><div class="l">À faire</div></div>'
-    + (nbUrgent?'<div class="stat"><div class="n" style="color:var(--terra);">'+nbUrgent+'</div><div class="l">Urgentes</div></div>':'')
-    + '<div class="stat"><div class="n" style="color:var(--sage-d);">'+taches.filter(function(t){return t.done;}).length+'</div><div class="l">Faites</div></div>'
-    + '</div>';
-
-  var html = header + visibles.map(function(t, i) {
-    var dateStr = t.echeance ? 'J-7 : ' + fmtDate(t.echeance) : '';
-    var cls = t.done ? 'tache ok' : t.urgence === 'rouge' ? 'tache urgent' : t.urgence === 'orange' ? 'tache bientot' : 'tache';
-    var dateCls = t.urgence === 'rouge' ? 'rouge' : t.urgence === 'orange' ? 'orange' : t.done ? 'vert' : 'gris';
-    return '<div class="'+cls+(t.done?' tache-ok':'')+'">'
-      + '<span class="tache-icon">'+t.icon+'</span>'
-      + '<div class="tache-body"><div class="tache-titre">'+t.titre+'</div><div class="tache-meta">'+t.meta+'</div></div>'
-      + (dateStr?'<span class="tache-date '+dateCls+'">'+dateStr+'</span>':'')
-      + (t.done?'<span class="badge ok" style="margin-left:4px;flex-shrink:0;">Fait</span>'
-        :'<button class="btn-p" style="font-size:11px;padding:4px 10px;flex-shrink:0;" onclick="tacheActions['+i+']()">Ouvrir →</button>')
-      + '</div>';
-  }).join('');
-
-  // Stocker les actions dans un tableau global pour les boutons onclick
-  window.tacheActions = visibles.map(function(t){ return t.action; });
-  document.getElementById('taches-content').innerHTML = html;
-}
-
 function getUrgence(today, echeance, dateFin) {
   if (!echeance && !dateFin) return 'gris';
   var ref = echeance || dateFin;
@@ -1092,6 +1237,13 @@ function ouvrirTache(sessionId, subtab) {
   openSession(sessionId).then(function() {
     if (subtab === 'mails') switchSub('mails');
   });
+}
+
+async function marquerTacheFaite(idx) {
+  if (!window.tacheMarquer || !window.tacheMarquer[idx]) return;
+  if (!confirm('Marquer cette tâche comme faite ?')) return;
+  await window.tacheMarquer[idx]();
+  toast('✓ Tâche marquée comme faite');
 }
 function renderPlanning() {
   var tf = document.getElementById('plan-type').value;
@@ -1160,6 +1312,104 @@ async function addFormateur() {
 }
 
 // === NOUVELLE SESSION ===
+// === PRÉSENTIELS DANS LE FORMULAIRE SESSION ===
+var formPresentiels = []; // [{date, horaires, lieu, stag, form}]
+
+function parseHoraire(valeur) {
+  var rdv = '', debut = '', fin = '';
+  if (valeur) {
+    var mRdv = valeur.match(/RDV\s*(\d{1,2})h(\d{2})/i);
+    var mDeb = valeur.match(/^(\d{1,2})h(\d{2})/);
+    var mFin = valeur.match(/à\s*(\d{1,2})h(\d{2})/i);
+    if (mRdv) rdv = ('0'+mRdv[1]).slice(-2) + ':' + mRdv[2];
+    if (mDeb) debut = ('0'+mDeb[1]).slice(-2) + ':' + mDeb[2];
+    if (mFin) fin = ('0'+mFin[1]).slice(-2) + ':' + mFin[2];
+  }
+  return { rdv: rdv, debut: debut, fin: fin };
+}
+
+function buildHorairesSelect(i, valeur) {
+  var h = parseHoraire(valeur);
+  return '<div style="display:flex;gap:5px;align-items:center;flex:1;min-width:280px;">'
+    + '<small style="color:var(--ink-s);">RDV</small>'
+    + '<input type="time" class="pres-rdv" data-i="'+i+'" value="'+h.rdv+'" style="width:80px;font-size:12px;" onchange="updatePresentielForm('+i+')">'
+    + '<small style="color:var(--ink-s);">Début</small>'
+    + '<input type="time" class="pres-deb" data-i="'+i+'" value="'+h.debut+'" style="width:80px;font-size:12px;" onchange="updatePresentielForm('+i+')">'
+    + '<small style="color:var(--ink-s);">Fin</small>'
+    + '<input type="time" class="pres-fin" data-i="'+i+'" value="'+h.fin+'" style="width:80px;font-size:12px;" onchange="updatePresentielForm('+i+')">'
+    + '</div>';
+}
+
+function horairesFromInputs(i) {
+  var rdv = (document.querySelectorAll('.pres-rdv')[i]||{}).value || '';
+  var deb = (document.querySelectorAll('.pres-deb')[i]||{}).value || '';
+  var fin = (document.querySelectorAll('.pres-fin')[i]||{}).value || '';
+  var fh = function(t) { return t ? t.replace(':','h') : ''; };
+  var s = '';
+  if (deb) s += fh(deb) + (fin ? ' à ' + fh(fin) : '');
+  if (rdv) s += (s ? ' ' : '') + '(RDV ' + fh(rdv) + ')';
+  return s;
+}
+
+
+function ajouterPresentielForm(data) {
+  data = data || { date: '', horaires: '', lieu: '' };
+  formPresentiels.push(data);
+  renderPresentielsForms();
+}
+
+function supprimerPresentielForm(i) {
+  formPresentiels.splice(i, 1);
+  renderPresentielsForms();
+}
+
+function renderPresentielsForms() {
+  var html = formPresentiels.map(function(p, i) {
+    return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:8px;background:var(--sand);border-radius:7px;flex-wrap:wrap;">'
+      + '<span style="font-size:11px;font-weight:700;color:var(--sage-d);min-width:22px;">P'+(i+1)+'</span>'
+      + '<input type="date" class="pres-date" data-i="'+i+'" value="'+(p.date||'')+'" style="width:140px;font-size:12px;" onchange="updatePresentielForm('+i+')" title="Date">'
+      + buildHorairesSelect(i, p.horaires)
+      + '<input type="text" class="pres-lieu" data-i="'+i+'" value="'+(p.lieu||'')+'" placeholder="Lieu" style="flex:1;min-width:130px;font-size:12px;" onchange="updatePresentielForm('+i+')" title="Lieu">'
+      + '<button type="button" style="padding:3px 8px;font-size:11px;border-radius:4px;border:1px solid var(--line);background:transparent;cursor:pointer;color:var(--terra);" onclick="supprimerPresentielForm('+i+')">✕</button>'
+      + '</div>';
+  }).join('');
+  document.getElementById('f-presentiels-liste').innerHTML = html || '<p style="font-size:12px;color:var(--ink-s);margin:0 0 8px;">Aucun présentiel — clique sur + pour en ajouter.</p>';
+}
+
+function updatePresentielForm(i) {
+  if (formPresentiels[i]) {
+    var dateEl = document.querySelectorAll('.pres-date')[i];
+    var lieuEl = document.querySelectorAll('.pres-lieu')[i];
+    if (dateEl) formPresentiels[i].date = dateEl.value;
+    if (lieuEl) formPresentiels[i].lieu = lieuEl.value;
+    formPresentiels[i].horaires = horairesFromInputs(i);
+  }
+  var derniere = formPresentiels.map(function(p){return p.date;}).filter(Boolean).sort().pop();
+  if (derniere && document.getElementById('f-date-dernier')) {
+    document.getElementById('f-date-dernier').value = derniere;
+  }
+}
+
+function getPresentielsPourSave() {
+  document.querySelectorAll('.pres-date').forEach(function(el, i) { if (formPresentiels[i]) formPresentiels[i].date = el.value; });
+  document.querySelectorAll('.pres-lieu').forEach(function(el, i) { if (formPresentiels[i]) formPresentiels[i].lieu = el.value; });
+  formPresentiels.forEach(function(p, i) { p.horaires = horairesFromInputs(i); });
+  return formPresentiels;
+}
+
+function presentielsToProgramme(presentiels) {
+  // Génère le texte du programme depuis la liste structurée
+  return presentiels.filter(function(p){return p.date;}).map(function(p) {
+    var d = p.date ? new Date(p.date) : null;
+    var dateStr = d ? d.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) : '';
+    dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+    var parts = [dateStr];
+    if (p.horaires) parts.push('de ' + p.horaires);
+    if (p.lieu) parts.push(p.lieu);
+    return parts.join(' — ');
+  }).join('\n');
+}
+
 function toggleSection(id) {
   var body = document.getElementById(id);
   var arr = document.getElementById(id + '-arr');
@@ -1175,7 +1425,7 @@ function openNewSession() {
   loadAnnuaire();
   // Réinitialiser le formulaire
   ['f-code','f-nom','f-secteur','f-debut','f-fin','f-finins','f-lieu','f-obs',
-   'f-programme','f-dates-globales','f-acces','f-materiel',
+   'f-dates-globales','f-acces','f-materiel',
    'f-visio-date','f-visio-lien','f-visio-replay',
    'f-kal-session','f-kal-form','f-tup-id','f-tup-lien',
    'f-nom-fo','f-pre-fo','f-email-fo','f-tel-fo',
@@ -1184,6 +1434,8 @@ function openNewSession() {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
+  formPresentiels = [];
+  renderPresentielsForms();
   document.getElementById('f-tarif').value = '170';
   document.getElementById('f-fb').value = 'https://www.facebook.com/groups/632709503927580/';
   document.getElementById('f-statut').value = 'À venir';
@@ -1217,6 +1469,17 @@ function modifierSession() {
   if (s.statut_stage) document.getElementById('f-statut').value = s.statut_stage;
   // Dates & programme
   set('f-programme', s.programme_presentiel);
+  // Charger les présentiels depuis convocs_json
+  formPresentiels = [];
+  try {
+    if (s.convocs_json) {
+      var conv = JSON.parse(s.convocs_json);
+      formPresentiels = conv.map(function(c) {
+        return { date: c.date || '', horaires: c.horaires || '', lieu: c.lieu || '', stag: c.stag || '', form: c.form || '' };
+      });
+    }
+  } catch(e) {}
+  renderPresentielsForms();
   set('f-dates-globales', s.dates_globales);
   set('f-date-dernier', s.date_dernier_presentiel ? (s.date_dernier_presentiel+'').substring(0,10) : '');
   if (s.mail_visio_type) document.getElementById('f-visio-type').value = s.mail_visio_type;
@@ -1271,7 +1534,8 @@ async function saveSession() {
     date_fin_inscription: g('f-finins'),
     lieu: g('f-lieu'),
     observations: g('f-obs'),
-    programme_presentiel: g('f-programme'),
+    programme_presentiel: presentielsToProgramme(getPresentielsPourSave()),
+    convocs_json: JSON.stringify(getPresentielsPourSave()),
     dates_globales: g('f-dates-globales'),
     date_dernier_presentiel: g('f-date-dernier'),
     mail_visio_type: g('f-visio-type'),
@@ -1354,6 +1618,21 @@ async function openSession(id) {
       (currentSession.code_kalisport||'') + ' · ' + (currentSession.type||'') + ' · ' +
       (currentSession.formateur_civilite||'') + ' ' + (currentSession.formateur_nom||'') +
       ' · ' + currentStag.length + ' stagiaire(s)';
+
+    // Boutons d'accès rapide
+    var liens = [
+      { label: '🔗 Kalisport', url: currentSession.mail_session_kalisport || currentSession.kalisport_lien, title: 'Ouvrir la page session Kalisport' },
+      { label: '📋 Suivi formateur', url: currentSession.lien_suivi_formateur, title: 'Ouvrir le Google Sheet de suivi' },
+      { label: '📚 Teach Up formateur', url: currentSession.teachup_lien, title: 'Tableau de bord Teach Up formateur' }
+    ].filter(function(l) { return l.url; });
+    document.getElementById('det-liens-rapides').innerHTML = liens.map(function(l) {
+      return '<a href="' + l.url + '" target="_blank" title="' + l.title + '" '
+        + 'style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;'
+        + 'background:var(--sand-d);border:1px solid var(--line);font-size:12px;color:var(--ink);text-decoration:none;white-space:nowrap;"'
+        + ' onmouseover="this.style.borderColor=\'var(--sage)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
+        + l.label + '</a>';
+    }).join('');
+
     switchSub('stag');
   } catch(e) {
     document.getElementById('det-title').textContent = 'Erreur';
@@ -1629,7 +1908,13 @@ async function sendRelance() {
   if (!cochés.length) { toast('Aucun stagiaire sélectionné'); return; }
   if (!confirm('Envoyer la relance à ' + cochés.length + ' stagiaire(s) ?')) return;
   document.getElementById('r-rel').textContent = 'Envoi…';
-  var res = await api('envoyerRelancePaiement', { session_id:currentSession.id, stagiaires_avec_lien:cochés, date_debut:document.getElementById('m-rel-date').value, complement:document.getElementById('m-rel-comp').value });
+  var dateDebut = fmtDate(currentSession.date_debut);
+  var res = await api('envoyerRelancePaiement', {
+    session_id: currentSession.id,
+    stagiaires_avec_lien: cochés,
+    date_debut: dateDebut,
+    complement: document.getElementById('m-rel-comp').value
+  });
   document.getElementById('r-rel').textContent = res.success ? (res.sent+' envoyé(s)') : ('Erreur: '+(res.error||''));
   if (res.success) toast('Relances envoyées');
 }
@@ -1881,7 +2166,7 @@ async function testM(type) {
     res = await api('envoyerConvocations', p);
   } else if (type === 'relance') {
     p.stagiaires_avec_lien = [{ id: 'TEST', lien: 'https://kalisport.test' }];
-    p.date_debut = s.date_debut || '';
+    p.date_debut = fmtDate(s.date_debut);
     res = await api('envoyerRelancePaiement', p);
   } else if (type === 'clubs') {
     p.sessions_ids = [s.id];
