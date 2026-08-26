@@ -1895,7 +1895,24 @@ async function updStatut(id, val) { var s=currentStag.find(function(x){return x.
 async function updNote(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.note=val; await api('updateStagiaire',{id:id,fields:{note:val}}); toast('Note enregistrée'); }
 async function updRepas(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.repas=val?'Oui':'Non'; await api('updateStagiaire',{id:id,fields:{repas:val?'Oui':'Non'}}); toast(val?'Repas ajouté':'Retiré'); }
 
-// === MAILS - PREFILL (alias) ===
+// === MAILS - PREFILL ===
+function prefillMails() {
+  if (!currentSession) return;
+  var s = currentSession;
+  var el = function(id) { var e = document.getElementById(id); return e ? e : {textContent:'',className:'',innerHTML:''}; };
+  // Statuts badges
+  var kal = el('st-kal'); kal.className = 'badge '+(s.statut_mail_kalisport==='Envoyé'?'ok':'neu'); kal.textContent = s.statut_mail_kalisport||'À faire';
+  var fo = el('st-fo'); fo.className = 'badge '+(s.statut_mail_formateur==='Envoyé'?'ok':'neu'); fo.textContent = s.statut_mail_formateur||'À faire';
+  var cl = el('st-clubs'); cl.className = 'badge '+(s.statut_mail_clubs==='Envoyé'?'ok':'neu'); cl.textContent = s.statut_mail_clubs||'À faire';
+  var qsSt = s.statut_qs_envoi1==='Envoyé'&&s.statut_qs_relance==='Envoyé'?'ok':s.statut_qs_envoi1==='Envoyé'?'warn':'neu';
+  var qsTxt = s.statut_qs_envoi1==='Envoyé'?(s.statut_qs_relance==='Envoyé'?'Relance envoyée':'Envoi 1 fait'):'À faire';
+  var qs = el('st-qs'); qs.className = 'badge '+qsSt; qs.textContent = qsTxt;
+  // Previews
+  var pk = el('prev-kal'); pk.textContent = s.mail_session_kalisport ? 'Session Kalisport configurée · TUP: '+(s.teachup_lien?'✓':'—') : 'Aucun lien — configure dans ✏️ Modifier';
+  var pf = el('prev-fo'); pf.textContent = s.mail_date_visio ? 'Visio: '+s.mail_date_visio : (s.lien_suivi_formateur?'Suivi configuré':'Configure dans ✏️ Modifier');
+  var pq = el('prev-qs'); pq.textContent = s.lien_qs_stag ? 'Liens QS configurés · Dernier présentiel: '+(s.date_dernier_presentiel||'—') : 'Aucun lien QS — configure dans ✏️ Modifier';
+}
+
 function prefill() { prefillMails(); renderClubsListe(); }
 
 // === CONFIG ===
