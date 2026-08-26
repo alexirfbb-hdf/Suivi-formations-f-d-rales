@@ -380,7 +380,8 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
         <div class="btn-row">
           <button class="btn-p" id="btn-convoc-stag" onclick="sendConvoc('stag')">Envoyer aux stagiaires</button>
           <button class="btn-p" id="btn-convoc-form" onclick="sendConvoc('form')" style="background:var(--terra);">Envoyer au formateur</button>
-          <button class="btn-g" onclick="aperçuConvoc()">Aperçu</button>
+          <button class="btn-g" id="btn-apercu-stag" onclick="aperçuConvoc()">👁 Aperçu stagiaire</button>
+          <button class="btn-g" id="btn-apercu-form" onclick="aperçuConvocFormateur()">👁 Aperçu formateur</button>
           <button class="btn-g" onclick="fermerConvocForm()">Fermer</button>
         </div>
         <div id="r-cv" style="font-size:12px;color:var(--ink-s);"></div>
@@ -1702,6 +1703,21 @@ async function saveSession() {
     lien_qs_stag: g('f-qs-stag'),
     lien_qs_form: g('f-qs-form')
   };
+  // PROTECTION : ne jamais écraser convocs_json ou programme_presentiel avec une valeur vide
+  // si la session en avait déjà
+  if (sessionEnCoursDeModif) {
+    if (!fields.convocs_json || fields.convocs_json === '[]') {
+      delete fields.convocs_json;
+    }
+    if (!fields.programme_presentiel) {
+      delete fields.programme_presentiel;
+    }
+    if (!fields.date_debut) delete fields.date_debut;
+    if (!fields.date_fin) delete fields.date_fin;
+    if (!fields.date_dernier_presentiel) delete fields.date_dernier_presentiel;
+    if (!fields.dates_globales) delete fields.dates_globales;
+    if (!fields.lieu) delete fields.lieu;
+  }
   if (!fields.nom) { toast('Le nom est requis'); return; }
   btn.disabled = true;
   document.getElementById('r-session').textContent = '';
@@ -2233,7 +2249,23 @@ function aperçuConvoc() {
   document.getElementById('modal-apercu').classList.add('open');
 }
 
-// === MAIL FORMATEUR J-7 ===
+function aperçuConvocFormateur() {
+  var s = currentSession;
+  var i = convocIndex;
+  var c = i >= 0 ? convocs[i] : null;
+  var dateAff = c && c.date ? (parseDateLocal(c.date)||{toLocaleDateString:function(){return c.date;}}).toLocaleDateString('fr-FR') : '';
+  document.getElementById('apercu-title').textContent = 'Aperçu convocation formateur';
+  document.getElementById('apercu-body').innerHTML =
+    '<p>Bonjour <strong>'+(s.formateur_civilite||'')+' '+(s.formateur_nom||'')+'</strong>,</p>' +
+    '<p>Vous êtes convoqué(e) en tant que formateur pour le stage <strong>'+s.nom+'</strong>.</p>' +
+    (dateAff ? '<p><strong>Présentiel :</strong> '+dateAff+(c.horaires?' — '+c.horaires:'')+(c.lieu?' — '+c.lieu:'')+'</p>' : '') +
+    '<p><strong>Programme complet :</strong></p>' +
+    ((s.programme_presentiel||'').split('\n').filter(Boolean).map(function(l){return '<p style="margin:2px 0;padding-left:10px;">• '+l+'</p>';}).join('') || '<p style="color:#888;">—</p>') +
+    (s.mail_acces ? '<p><strong>Accès :</strong> '+s.mail_acces+'</p>' : '') +
+    (s.mail_materiel ? '<p><strong>Matériel :</strong> '+s.mail_materiel+'</p>' : '') +
+    '<p><strong>Alexandra GODART</strong> — 03 20 16 93 75 — agodart@hdfbasket.org</p>';
+  document.getElementById('modal-apercu').classList.add('open');
+}
 async function sendFormateur() {
   var s = currentSession;
   var p = { session_id: s.id, date_visio: s.mail_date_visio||'', lien_visio: s.mail_lien_visio||'', id_visio: s.mail_id_visio||'', lien_suivi: s.lien_suivi_formateur||'' };
