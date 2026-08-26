@@ -1454,10 +1454,23 @@ function updatePresentielForm(i) {
 }
 
 function getPresentielsPourSave() {
-  document.querySelectorAll('.pres-date').forEach(function(el, i) { if (formPresentiels[i]) formPresentiels[i].date = el.value; });
-  document.querySelectorAll('.pres-lieu').forEach(function(el, i) { if (formPresentiels[i]) formPresentiels[i].lieu = el.value; });
-  formPresentiels.forEach(function(p, i) { p.horaires = horairesFromInputs(i); });
-  return formPresentiels;
+  // Lire DIRECTEMENT le DOM — source de vérité finale
+  var dates = document.querySelectorAll('.pres-date');
+  var lieus = document.querySelectorAll('.pres-lieu');
+  var result = [];
+  for (var i = 0; i < dates.length; i++) {
+    var stag = (formPresentiels[i] && formPresentiels[i].stag) || '';
+    var form = (formPresentiels[i] && formPresentiels[i].form) || '';
+    result.push({
+      date: dates[i].value || '',
+      horaires: horairesFromInputs(i),
+      lieu: lieus[i] ? lieus[i].value : '',
+      stag: stag,
+      form: form
+    });
+  }
+  formPresentiels = result;
+  return result;
 }
 
 function presentielsToProgramme(presentiels) {
@@ -1531,7 +1544,6 @@ function modifierSession() {
   set('f-obs', s.observations);
   if (s.statut_stage) document.getElementById('f-statut').value = s.statut_stage;
   // Dates & programme
-  set('f-programme', s.programme_presentiel);
   // Charger les présentiels depuis convocs_json
   formPresentiels = [];
   try {
@@ -1585,8 +1597,15 @@ function modifierSession() {
 async function saveSession() {
   var btn = document.getElementById('btn-save-session');
   var g = function(id) { var el = document.getElementById(id); return el ? el.value : ''; };
-  // Auto-calculer les dates depuis les présentiels
+  // Lire les présentiels depuis le DOM
   var pres = getPresentielsPourSave();
+  // Si modification et aucun présentiel saisi dans le form → garder les existants
+  if (sessionEnCoursDeModif && pres.length === 0) {
+    var existing = currentSession && currentSession.convocs_json;
+    if (existing) {
+      try { pres = JSON.parse(existing); } catch(e) {}
+    }
+  }
   var datesSorted = pres.map(function(p){return p.date;}).filter(Boolean).sort();
   var autoDebut = datesSorted[0] || '';
   var autoFin = datesSorted[datesSorted.length-1] || '';
