@@ -2034,16 +2034,29 @@ var convocIndex = -1; // index du présentiel en cours d'envoi
 
 function chargerConvocs() {
   var raw = currentSession.convocs_json || '';
-  // Nettoyer si c'est un tableau vide en string
   if (raw === '[]' || raw === '') raw = '';
-  try { convocs = raw ? JSON.parse(raw) : []; } catch(e) { convocs = []; }
 
-  // Si convocs vide mais programme_presentiel existe → proposer de synchroniser
+  // Diagnostic temporaire
+  console.log('convocs_json brut:', currentSession.convocs_json);
+  console.log('Clés de currentSession:', Object.keys(currentSession).join(', '));
+
+  try { convocs = raw ? JSON.parse(raw) : []; } catch(e) {
+    console.log('Erreur JSON parse:', e.message);
+    convocs = [];
+  }
+
+  console.log('convocs parsés:', convocs.length, 'éléments');
+
   if (!convocs.length && currentSession.programme_presentiel) {
     document.getElementById('convoc-liste').innerHTML =
       '<div class="info">Les présentiels ne sont pas encore configurés ici.<br>'
       + 'Va dans <strong>✏️ Modifier la session</strong> → section "Dates de formation", '
       + 'saisis tes présentiels et clique Enregistrer — ils apparaîtront ici automatiquement.</div>';
+    return;
+  }
+  if (!convocs.length) {
+    document.getElementById('convoc-liste').innerHTML =
+      '<p style="font-size:12.5px;color:var(--ink-s);margin:0 0 8px;">Aucun présentiel configuré. Clique sur + pour en ajouter, ou saisis-les dans ✏️ Modifier la session.</p>';
     return;
   }
   renderConvocListe();
