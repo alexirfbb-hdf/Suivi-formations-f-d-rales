@@ -464,24 +464,24 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
           </div>
         </div>
         <div class="field"><label>Nom complet</label><input id="f-nom" placeholder="Brevet Fédéral Enfants - BFE3 PETITE SYNTHE - 2025-26"></div>
-        <div class="field">
-          <label>Secteur</label>
-          <input id="f-secteur" list="secteurs-dl" placeholder="OISE, AISNE, NORD…">
-          <datalist id="secteurs-dl"></datalist>
-        </div>
         <div class="field-row">
-          <div class="field"><label>Statut</label><select id="f-statut"><option>À venir</option><option>En cours</option><option>Terminé</option></select></div>
+          <div class="field">
+            <label>Secteur</label>
+            <input id="f-secteur" list="secteurs-dl" placeholder="OISE, AISNE, NORD…">
+            <datalist id="secteurs-dl"></datalist>
+          </div>
           <div class="field"><label>Tarif (€)</label><input id="f-tarif" type="number" placeholder="170"></div>
         </div>
         <div class="field-row">
-          <div class="field"><label>Date début</label><input id="f-debut" type="date"></div>
-          <div class="field"><label>Date fin</label><input id="f-fin" type="date"></div>
+          <div class="field"><label>Date fin inscription</label><input id="f-finins" type="date"></div>
+          <div class="field"><label>Observations</label><input id="f-obs"></div>
         </div>
-        <div class="field-row">
-          <div class="field"><label>Fin inscription</label><input id="f-finins" type="date"></div>
-          <div class="field"><label>Lieu</label><input id="f-lieu"></div>
-        </div>
-        <div class="field"><label>Observations</label><input id="f-obs"></div>
+        <input type="hidden" id="f-statut" value="À venir">
+        <input type="hidden" id="f-debut" value="">
+        <input type="hidden" id="f-fin" value="">
+        <input type="hidden" id="f-lieu" value="">
+        <input type="hidden" id="f-dates-globales-hidden" value="">
+        <input type="hidden" id="f-date-dernier" value="">
       </div>
     </div>
 
@@ -492,10 +492,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
         <p style="font-size:12px;color:var(--ink-s);margin:0 0 10px;">Saisis chaque présentiel — ces dates alimentent les tâches J-7, le programme dans les mails et les convocations.</p>
         <div id="f-presentiels-liste"></div>
         <button type="button" class="btn-g" style="font-size:12px;margin-bottom:12px;" onclick="ajouterPresentielForm()">+ Ajouter un présentiel</button>
-        <div class="field-row">
-          <div class="field"><label>Dates globales (résumé pour les mails)</label><input id="f-dates-globales" placeholder="du 19 sept. 2026 au 22 mai 2027"></div>
-          <div class="field"><label>Date du dernier présentiel</label><input id="f-date-dernier" type="date"></div>
-        </div>
+        <div class="info" id="f-dates-preview" style="font-size:12px;">Les dates globales et le dernier présentiel se calculent automatiquement.</div>
         <hr>
         <p style="font-size:12px;font-weight:600;margin:0 0 8px;">Visioconférence de présentation <span style="font-weight:400;color:var(--ink-s)">(BF uniquement)</span></p>
         <div class="field-row">
@@ -1384,10 +1381,17 @@ function updatePresentielForm(i) {
     if (lieuEl) formPresentiels[i].lieu = lieuEl.value;
     formPresentiels[i].horaires = horairesFromInputs(i);
   }
-  var derniere = formPresentiels.map(function(p){return p.date;}).filter(Boolean).sort().pop();
-  if (derniere && document.getElementById('f-date-dernier')) {
-    document.getElementById('f-date-dernier').value = derniere;
-  }
+  var datesSorted = formPresentiels.map(function(p){return p.date;}).filter(Boolean).sort();
+  var debut = datesSorted[0] || '';
+  var fin = datesSorted[datesSorted.length-1] || '';
+  var fmt = function(d) {
+    if (!d) return '';
+    var dt = new Date(d);
+    return dt.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
+  };
+  var preview = debut ? (debut === fin ? 'Le ' + fmt(debut) : 'Du ' + fmt(debut) + ' au ' + fmt(fin)) : '';
+  var prevEl = document.getElementById('f-dates-preview');
+  if (prevEl) prevEl.textContent = preview || 'Les dates globales se calculent automatiquement.';
 }
 
 function getPresentielsPourSave() {
@@ -1522,22 +1526,36 @@ function modifierSession() {
 async function saveSession() {
   var btn = document.getElementById('btn-save-session');
   var g = function(id) { var el = document.getElementById(id); return el ? el.value : ''; };
+  // Auto-calculer les dates depuis les présentiels
+  var pres = getPresentielsPourSave();
+  var datesSorted = pres.map(function(p){return p.date;}).filter(Boolean).sort();
+  var autoDebut = datesSorted[0] || '';
+  var autoFin = datesSorted[datesSorted.length-1] || '';
+  var autoDatesGlobales = '';
+  if (autoDebut && autoFin) {
+    var fmt = function(d) {
+      var dt = new Date(d);
+      return dt.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
+    };
+    autoDatesGlobales = autoDebut === autoFin ? 'Le ' + fmt(autoDebut) : 'du ' + fmt(autoDebut) + ' au ' + fmt(autoFin);
+  }
+
   var fields = {
     code_kalisport: g('f-code'),
     type: g('f-type'),
     nom: g('f-nom'),
     secteur: g('f-secteur'),
-    statut_stage: g('f-statut'),
+    statut_stage: g('f-statut') || 'À venir',
     tarif: g('f-tarif') || '170',
-    date_debut: g('f-debut'),
-    date_fin: g('f-fin'),
+    date_debut: autoDebut,
+    date_fin: autoFin,
     date_fin_inscription: g('f-finins'),
-    lieu: g('f-lieu'),
+    lieu: pres.length ? (pres[0].lieu || '') : '',
     observations: g('f-obs'),
-    programme_presentiel: presentielsToProgramme(getPresentielsPourSave()),
-    convocs_json: JSON.stringify(getPresentielsPourSave()),
-    dates_globales: g('f-dates-globales'),
-    date_dernier_presentiel: g('f-date-dernier'),
+    programme_presentiel: presentielsToProgramme(pres),
+    convocs_json: JSON.stringify(pres),
+    dates_globales: autoDatesGlobales,
+    date_dernier_presentiel: autoFin,
     mail_visio_type: g('f-visio-type'),
     mail_date_visio: g('f-visio-date'),
     mail_lien_visio: g('f-visio-lien'),
