@@ -2091,32 +2091,56 @@ var convocIndex = -1; // index du présentiel en cours d'envoi
 
 function chargerConvocs() {
   var raw = currentSession.convocs_json || '';
-  if (raw === '[]' || raw === '') raw = '';
-
-  // Diagnostic temporaire
-  console.log('convocs_json brut:', currentSession.convocs_json);
-  console.log('Clés de currentSession:', Object.keys(currentSession).join(', '));
-
-  try { convocs = raw ? JSON.parse(raw) : []; } catch(e) {
-    console.log('Erreur JSON parse:', e.message);
-    convocs = [];
+  // Ne pas traiter [] comme vide
+  convocs = [];
+  if (raw && raw !== '[]') {
+    try {
+      var parsed = JSON.parse(raw);
+      convocs = Array.isArray(parsed) ? parsed : [];
+    } catch(e) {
+      console.log('Erreur JSON parse convocs:', e.message, 'raw:', raw.substring(0,100));
+    }
   }
 
-  console.log('convocs parsés:', convocs.length, 'éléments');
+  var el = document.getElementById('convoc-liste');
+  if (!el) { console.log('convoc-liste introuvable'); return; }
 
   if (!convocs.length && currentSession.programme_presentiel) {
-    document.getElementById('convoc-liste').innerHTML =
-      '<div class="info">Les présentiels ont été saisis dans la session mais pas encore synchronisés ici.<br>'
-      + '<button class="btn-p" style="margin-top:8px;font-size:12px;" onclick="syncPresentielsDepuisProgramme()">↻ Synchroniser automatiquement</button>'
-      + '</div>';
+    el.innerHTML = '<div class="info">Les présentiels ont été saisis dans la session mais pas encore synchronisés ici.<br>'
+      + '<button class="btn-p" style="margin-top:8px;font-size:12px;" onclick="syncPresentielsDepuisProgramme()">↻ Synchroniser automatiquement</button></div>';
     return;
   }
   if (!convocs.length) {
-    document.getElementById('convoc-liste').innerHTML =
-      '<p style="font-size:12.5px;color:var(--ink-s);margin:0 0 8px;">Aucun présentiel configuré. Clique sur + pour en ajouter, ou saisis-les dans ✏️ Modifier la session.</p>';
+    el.innerHTML = '<p style="font-size:12.5px;color:var(--ink-s);margin:0 0 8px;">Aucun présentiel. Clique sur + pour en ajouter.</p>';
     return;
   }
-  renderConvocListe();
+  // Afficher directement sans passer par renderConvocListe pour isoler le bug
+  var html = '<div style="font-size:11.5px;color:var(--sage-d);margin-bottom:8px;">'+convocs.length+' présentiel(s) chargé(s)</div>';
+  html += '<table style="width:100%;font-size:12.5px;margin-bottom:8px;"><thead><tr>'
+    + '<th style="padding:5px 6px;">Présentiel</th><th style="padding:5px 6px;">Date</th>'
+    + '<th style="padding:5px 6px;">Stag.</th><th style="padding:5px 6px;">Form.</th><th></th>'
+    + '</tr></thead><tbody>';
+  convocs.forEach(function(c, i) {
+    var stagBadge = c.stag === 'Envoyé'
+      ? '<span class="badge ok">✓ Envoyé</span>'
+      : '<button class="btn-s" style="font-size:11px;padding:3px 8px;" onclick="ouvrirConvocForm('+i+',\'stag\')">Envoyer stag.</button>';
+    var formBadge = c.form === 'Envoyé'
+      ? '<span class="badge ok">✓ Envoyé</span>'
+      : '<button class="btn-p" style="font-size:11px;padding:3px 8px;background:var(--terra);" onclick="ouvrirConvocForm('+i+',\'form\')">Envoyer form.</button>';
+    var dateAff = c.date ? fmtDate(c.date) : '—';
+    html += '<tr>'
+      + '<td style="padding:5px 6px;"><strong>P'+(i+1)+'</strong></td>'
+      + '<td style="padding:5px 6px;">'
+        + '<input type="text" value="'+(c.date||'')+'" placeholder="2026-09-19" style="width:110px;font-size:12px;" onblur="updatePresentielDate('+i+',this.value)"> '
+        + '<span style="font-size:11px;color:var(--ink-s);">'+dateAff+'</span>'
+      + '</td>'
+      + '<td style="padding:5px 6px;">'+stagBadge+'</td>'
+      + '<td style="padding:5px 6px;">'+formBadge+'</td>'
+      + '<td style="padding:5px 6px;"><button class="tdb-action" onclick="supprimerPresentiel('+i+')" title="Supprimer">✕</button></td>'
+      + '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
 }
 
 function renderConvocListe() {
