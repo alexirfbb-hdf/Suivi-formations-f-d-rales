@@ -159,7 +159,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
         <th>Diplômes</th><th>Doc<br>salarié</th><th>Virement</th>
         <th>Taux ♂</th><th>Taux ♀</th>
         <th>Rém.</th><th>Observations</th>
-        <th>Avancement</th><th></th>
+        <th>Avancement</th><th>Dernier point</th><th></th>
       </tr>
     </thead><tbody id="tdb-body"></tbody></table>
   </div>
@@ -810,6 +810,7 @@ function renderTDB() {
         + ' onkeydown="if(event.key===&quot;Enter&quot;)this.blur()">'
       + '</td>'
       + '<td onclick="event.stopPropagation();">'+avaSelect+'</td>'
+      + '<td onclick="event.stopPropagation();pointerSession(\''+s.id+'\');" style="cursor:pointer;text-align:center;" title="Cliquer pour pointer aujourd\'hui">'+badgePoint(s.date_revue)+'</td>'
       + '<td onclick="event.stopPropagation();">'
         + '<button class="tdb-action" onclick="archiverSession(\''+s.id+'\',\''+s.statut_stage+'\')" title="'+(s.statut_stage==='Archivé'?'Désarchiver':'Archiver')+'">'+(s.statut_stage==='Archivé'?'↩':'🗄')+'</button>'
       + '</td>'
@@ -817,8 +818,29 @@ function renderTDB() {
   }).join('');
 }
 
+function badgePoint(dateRevue) {
+  if (!dateRevue) return '<span style="font-size:11px;color:var(--terra);">🔴 jamais</span>';
+  var d = parseDateLocal(String(dateRevue));
+  if (!d) return '<span style="font-size:11px;color:var(--terra);">🔴 jamais</span>';
+  var today = new Date(); today.setHours(0,0,0,0);
+  var diff = Math.round((today - d) / 86400000);
+  var label = ('0'+d.getDate()).slice(-2) + '/' + ('0'+(d.getMonth()+1)).slice(-2);
+  if (diff <= 7)  return '<span style="font-size:11px;color:#166534;">🟢 '+label+'</span>';
+  if (diff <= 14) return '<span style="font-size:11px;color:#b45309;">🟡 '+label+'</span>';
+  return '<span style="font-size:11px;color:var(--terra);">🔴 '+label+'</span>';
+}
+
+async function pointerSession(id) {
+  var today = new Date();
+  var iso = today.getFullYear() + '-' + ('0'+(today.getMonth()+1)).slice(-2) + '-' + ('0'+today.getDate()).slice(-2);
+  var s = sessions.find(function(x){return x.id===id;});
+  if (s) s.date_revue = iso;
+  await api('updateSession', { id: id, fields: { date_revue: iso } });
+  renderTDB();
+  toast('✓ Point fait le ' + today.toLocaleDateString('fr-FR'));
+}
+
 function badgeStat(v) {
-  if (!v || v === 'À faire') return '<span class="badge neu">À faire</span>';
   if (v === 'Envoyé') return '<span class="badge ok">✓</span>';
   return '<span class="badge warn">'+v+'</span>';
 }
