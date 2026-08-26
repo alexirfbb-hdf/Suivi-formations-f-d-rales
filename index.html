@@ -1535,6 +1535,7 @@ function modifierSession() {
   var set = function(id, val) { var el = document.getElementById(id); if (el && val) el.value = val; };
   set('f-code', s.code_kalisport);
   set('f-nom', s.nom);
+  if (s.type) document.getElementById('f-type').value = s.type;
   set('f-secteur', s.secteur);
   set('f-lieu', s.lieu);
   set('f-tarif', s.tarif);
