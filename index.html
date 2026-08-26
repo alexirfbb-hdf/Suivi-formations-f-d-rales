@@ -239,7 +239,6 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <div id="det-sub" style="color:var(--ink-s);font-size:12px;margin-bottom:10px;"></div>
     </div>
     <button class="btn-g" style="font-size:12px;padding:5px 12px;" onclick="modifierSession()">✏️ Modifier la session</button>
-  <button class="btn-g" style="font-size:11px;padding:4px 8px;color:var(--ink-s);" onclick="diagSession()">🔍 Diagnostic</button>
   </div>
   <div id="det-liens-rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
   <div class="subtabs">
@@ -2103,7 +2102,8 @@ function chargerConvocs() {
   }
 
   var el = document.getElementById('convoc-liste');
-  if (!el) { console.log('convoc-liste introuvable'); return; }
+  if (!el) { alert('ERREUR: convoc-liste introuvable dans le DOM'); return; }
+  alert('Debug: convocs trouvés = ' + convocs.length + '\nPremier élément: ' + (convocs[0] ? JSON.stringify(convocs[0]) : 'aucun'));
 
   if (!convocs.length && currentSession.programme_presentiel) {
     el.innerHTML = '<div class="info">Les présentiels ont été saisis dans la session mais pas encore synchronisés ici.<br>'
