@@ -77,6 +77,10 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 .obs-input:hover,.obs-input:focus{border-color:var(--line);background:var(--white);}
 .tdb-action{font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink-s);}
 .tdb-action:hover{color:var(--terra);border-color:var(--terra);}
+/* Sous-onglets TDB */
+.tdb-tab{font-size:12px;font-weight:600;padding:5px 14px;border-radius:7px;border:none;cursor:pointer;background:transparent;color:var(--ink-s);transition:.15s;}
+.tdb-tab.active{background:var(--white);color:var(--sage-d);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.tdb-tab:hover:not(.active){color:var(--ink);}
 /* Sections thématiques modal */
 .section-form{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;overflow:hidden;}
 .section-form-titre{padding:9px 14px;background:var(--sand);cursor:pointer;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;}
@@ -132,12 +136,17 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 <!-- TABLEAU DE BORD -->
 <div class="view active" id="view-tdb">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-    <div style="display:flex;gap:6px;align-items:center;">
-      <select id="tdb-type" class="sm" onchange="renderTDB()"><option value="">Tous types</option></select>
-      <input id="tdb-search" style="width:160px;font-size:12px;padding:5px 8px;" placeholder="Rechercher (code, nom…)" oninput="renderTDB()">
-      <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap;"><input type="checkbox" id="tdb-archived" onchange="renderTDB()"> Voir archivés</label>
+    <!-- Sous-onglets BF / DETB / Tous -->
+    <div style="display:flex;gap:4px;background:var(--sand-d);padding:4px;border-radius:10px;">
+      <button id="tdb-tab-tous" class="tdb-tab active" onclick="setTdbTab('tous')">Toutes</button>
+      <button id="tdb-tab-bf" class="tdb-tab" onclick="setTdbTab('bf')">Brevets Fédéraux</button>
+      <button id="tdb-tab-detb" class="tdb-tab" onclick="setTdbTab('detb')">DETB</button>
     </div>
-    <button class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="exportTDB()">Export Excel</button>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <input id="tdb-search" style="width:160px;font-size:12px;padding:5px 8px;" placeholder="Rechercher…" oninput="renderTDB()">
+      <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap;"><input type="checkbox" id="tdb-archived" onchange="renderTDB()"> Voir archivés</label>
+      <button class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="exportTDB()">Export Excel</button>
+    </div>
   </div>
   </div>
   <div class="scroll">
@@ -696,21 +705,26 @@ async function loadSessions() {
   document.getElementById('tdb-body').innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--ink-s);padding:24px;">Chargement…</td></tr>';
   var data = await api('getSessions');
   sessions = Array.isArray(data) ? data : [];
-  // Alimenter les filtres type
-  var types = [...new Set(sessions.map(function(s) { return s.type; }).filter(Boolean))];
-  var el = document.getElementById('tdb-type');
-  var cur = el.value;
-  el.innerHTML = '<option value="">Tous types</option>' + types.map(function(t) { return '<option' + (t===cur?' selected':'') + '>' + t + '</option>'; }).join('');
+  renderTDB();
+}
+
+var tdbTab = 'tous'; // 'tous' | 'bf' | 'detb'
+
+function setTdbTab(tab) {
+  tdbTab = tab;
+  document.querySelectorAll('.tdb-tab').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('tdb-tab-' + tab).classList.add('active');
   renderTDB();
 }
 
 function renderTDB() {
   var q = (document.getElementById('tdb-search').value || '').toLowerCase();
-  var tf = document.getElementById('tdb-type').value;
   var showArch = document.getElementById('tdb-archived') && document.getElementById('tdb-archived').checked;
   var liste = sessions.filter(function(s) {
     if (!showArch && s.statut_stage === 'Archivé') return false;
-    if (tf && s.type !== tf) return false;
+    // Filtre par onglet
+    if (tdbTab === 'bf' && (s.type||'').indexOf('Brevet') === -1) return false;
+    if (tdbTab === 'detb' && (s.type||'').indexOf('DETB') === -1) return false;
     if (q) {
       var hay = ((s.code_kalisport||'')+(s.nom||'')+(s.formateur_nom||'')+(s.secteur||'')).toLowerCase();
       if (hay.indexOf(q) === -1) return false;
