@@ -702,7 +702,11 @@ function switchSub(name) {
   document.querySelectorAll('.subview').forEach(function(v) { v.classList.remove('active'); });
   document.getElementById('sub-' + name).classList.add('active');
   if (name === 'stag') renderStag();
-  if (name === 'mails') { prefillMails(); renderRelListe(); chargerConvocs(); }
+  if (name === 'mails') {
+    try { prefillMails(); } catch(e) { alert('Erreur prefillMails: ' + e.message); }
+    try { renderRelListe(); } catch(e) { alert('Erreur renderRelListe: ' + e.message); }
+    try { chargerConvocs(); } catch(e) { alert('Erreur chargerConvocs: ' + e.message); }
+  }
 }
 
 // === TABLEAU DE BORD ===
