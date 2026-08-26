@@ -667,15 +667,20 @@ function sUrl(id) { return APP_URL + '#' + id; }
 function closeAll() { document.querySelectorAll('.modal-bg').forEach(function(m) { m.classList.remove('open'); }); }
 function parseDateLocal(str) {
   if (!str) return null;
-  var s = String(str);
-  // Format ISO YYYY-MM-DD → construire en local pour éviter le décalage UTC
+  var s = String(str).trim();
+  // Format ISO YYYY-MM-DD (format cible - après fix serveur)
   var iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (iso) return new Date(parseInt(iso[1]), parseInt(iso[2])-1, parseInt(iso[3]));
-  // Google Sheets Date object → utiliser directement
-  if (s.indexOf('GMT') > -1 || s.indexOf('Sat') > -1 || s.indexOf('Sun') > -1 || s.indexOf('Mon') > -1 || s.indexOf('Tue') > -1 || s.indexOf('Wed') > -1 || s.indexOf('Thu') > -1 || s.indexOf('Fri') > -1) {
-    var d = new Date(s); return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  }
-  return new Date(s);
+  // Format DD/MM/YYYY
+  var fr = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (fr) return new Date(parseInt(fr[3]), parseInt(fr[2])-1, parseInt(fr[1]));
+  // UTC ISO string (ancien format) : extraire YYYY-MM-DD sans appliquer timezone
+  var utc = s.match(/(\d{4})-(\d{2})-(\d{2})T/);
+  if (utc) return new Date(parseInt(utc[1]), parseInt(utc[2])-1, parseInt(utc[3]));
+  // Autres formats (Sat Sep 19 2026...) : reconstruire en local
+  var d = new Date(s);
+  if (!isNaN(d.getTime())) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  return null;
 }
 function fmtDate(d) {
   if (!d) return '';
