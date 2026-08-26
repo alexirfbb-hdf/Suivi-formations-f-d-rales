@@ -2022,7 +2022,18 @@ var convocIndex = -1; // index du présentiel en cours d'envoi
 
 function chargerConvocs() {
   var raw = currentSession.convocs_json || '';
+  // Nettoyer si c'est un tableau vide en string
+  if (raw === '[]' || raw === '') raw = '';
   try { convocs = raw ? JSON.parse(raw) : []; } catch(e) { convocs = []; }
+
+  // Si convocs vide mais programme_presentiel existe → proposer de synchroniser
+  if (!convocs.length && currentSession.programme_presentiel) {
+    document.getElementById('convoc-liste').innerHTML =
+      '<div class="info">Les présentiels ne sont pas encore configurés ici.<br>'
+      + 'Va dans <strong>✏️ Modifier la session</strong> → section "Dates de formation", '
+      + 'saisis tes présentiels et clique Enregistrer — ils apparaîtront ici automatiquement.</div>';
+    return;
+  }
   renderConvocListe();
 }
 
