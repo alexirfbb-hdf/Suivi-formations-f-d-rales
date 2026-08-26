@@ -1300,6 +1300,56 @@ function ouvrirTache(sessionId, subtab) {
   });
 }
 
+async function syncPresentielsDepuisProgramme() {
+  var prog = currentSession.programme_presentiel || '';
+  if (!prog) { toast('Aucun programme à synchroniser'); return; }
+
+  var lignes = prog.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+  var newConvocs = lignes.map(function(ligne) {
+    // Extraire la date : chercher un pattern de date dans la ligne
+    // Ex: "Samedi 19 septembre 2026 — de 9h00 à 17h30 (RDV 8h45) — Salle..."
+    // Ex: "Samedi 19 septembre 2026"
+    var moisFr = {janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};
+    var dateStr = '';
+    var horaires = '';
+    var lieu = '';
+
+    // Chercher jour mois année dans le texte
+    var m = ligne.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/i);
+    if (m) {
+      var mois = moisFr[m[2].toLowerCase()];
+      if (mois) {
+        var d = new Date(parseInt(m[3]), mois-1, parseInt(m[1]));
+        dateStr = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+      }
+    }
+
+    // Extraire horaires
+    var hm = ligne.match(/de\s+(\d{1,2}h\d{2})\s+à\s+(\d{1,2}h\d{2})(?:\s*\(RDV\s+(\d{1,2}h\d{2})\))?/i);
+    if (hm) {
+      horaires = hm[1] + ' à ' + hm[2] + (hm[3] ? ' (RDV ' + hm[3] + ')' : '');
+    }
+
+    // Lieu : après le dernier —
+    var parties = ligne.split('—');
+    if (parties.length >= 3) lieu = parties[parties.length-1].trim();
+    else if (parties.length === 2) lieu = parties[1].trim();
+
+    return { date: dateStr, horaires: horaires, lieu: lieu, stag: '', form: '' };
+  }).filter(function(c){ return c.date; });
+
+  if (!newConvocs.length) { toast('Aucune date trouvée dans le programme'); return; }
+
+  if (!confirm(newConvocs.length + ' présentiel(s) trouvé(s). Synchroniser ?')) return;
+
+  var json = JSON.stringify(newConvocs);
+  var res = await api('updateSession', { id: currentSession.id, fields: { convocs_json: json } });
+  if (res && res.error) { toast('Erreur: ' + res.error); return; }
+  currentSession.convocs_json = json;
+  chargerConvocs();
+  toast('✓ ' + newConvocs.length + ' présentiel(s) synchronisé(s)');
+}
+
 async function marquerTacheFaite(idx) {
   if (!window.tacheMarquer || !window.tacheMarquer[idx]) return;
   if (!confirm('Marquer cette tâche comme faite ?')) return;
@@ -2049,9 +2099,9 @@ function chargerConvocs() {
 
   if (!convocs.length && currentSession.programme_presentiel) {
     document.getElementById('convoc-liste').innerHTML =
-      '<div class="info">Les présentiels ne sont pas encore configurés ici.<br>'
-      + 'Va dans <strong>✏️ Modifier la session</strong> → section "Dates de formation", '
-      + 'saisis tes présentiels et clique Enregistrer — ils apparaîtront ici automatiquement.</div>';
+      '<div class="info">Les présentiels ont été saisis dans la session mais pas encore synchronisés ici.<br>'
+      + '<button class="btn-p" style="margin-top:8px;font-size:12px;" onclick="syncPresentielsDepuisProgramme()">↻ Synchroniser automatiquement</button>'
+      + '</div>';
     return;
   }
   if (!convocs.length) {
