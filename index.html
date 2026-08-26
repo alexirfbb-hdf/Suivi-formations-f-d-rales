@@ -1532,21 +1532,14 @@ function openNewSession() {
   document.getElementById('modal-session').classList.add('open');
 }
 
-function modifierSession() {
+async function modifierSession() {
   if (!currentSession) return;
   sessionEnCoursDeModif = currentSession.id;
-  loadAnnuaire();
+  await loadAnnuaire(); // attendre la fin avant de remplir le form
   var s = currentSession;
-  var set = function(id, val) { var el = document.getElementById(id); if (el && val) el.value = val; };
+  var set = function(id, val) { var el = document.getElementById(id); if (el && val !== undefined && val !== null) el.value = val; };
   set('f-code', s.code_kalisport);
   set('f-nom', s.nom);
-  // Forcer le type : chercher l'option correspondante dans le select
-  if (s.type) {
-    var typeEl = document.getElementById('f-type');
-    var opts = Array.from(typeEl.options);
-    var match = opts.find(function(o){ return o.value === s.type || o.text === s.type; });
-    if (match) typeEl.value = match.value;
-  }
   set('f-secteur', s.secteur);
   set('f-lieu', s.lieu);
   set('f-tarif', s.tarif);
@@ -1603,6 +1596,13 @@ function modifierSession() {
   document.querySelectorAll('[id$="-arr"]').forEach(function(a) { a.textContent = '▴'; });
   document.getElementById('modal-session-titre').textContent = 'Modifier la session';
   document.getElementById('btn-save-session').textContent = 'Enregistrer les modifications';
+  // Forcer le type EN DERNIER (après tous les autres set())
+  if (s.type) {
+    var typeEl = document.getElementById('f-type');
+    Array.from(typeEl.options).forEach(function(o) {
+      if (o.value === s.type || o.text === s.type) { typeEl.value = o.value; }
+    });
+  }
   document.getElementById('modal-session').classList.add('open');
 }
 
