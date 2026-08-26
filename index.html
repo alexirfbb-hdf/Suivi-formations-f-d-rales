@@ -381,7 +381,6 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
           <button class="btn-p" id="btn-convoc-stag" onclick="sendConvoc('stag')">Envoyer aux stagiaires</button>
           <button class="btn-p" id="btn-convoc-form" onclick="sendConvoc('form')" style="background:var(--terra);">Envoyer au formateur</button>
           <button class="btn-g" onclick="aperçuConvoc()">Aperçu</button>
-          <button class="btn-g" onclick="testM('convoc')">📧 Test</button>
           <button class="btn-g" onclick="fermerConvocForm()">Fermer</button>
         </div>
         <div id="r-cv" style="font-size:12px;color:var(--ink-s);"></div>
@@ -875,28 +874,9 @@ async function saveMailFields(bloc) {
   if (!currentSession) { toast('Aucune session ouverte'); return; }
   var fields = {};
   var label = '';
-  if (bloc === 'kal') {
-    fields.mail_session_kalisport = document.getElementById('m-kal-session').value;
-    fields.mail_formulaire = document.getElementById('m-kal-form').value;
-    fields.teachup_lien = document.getElementById('m-kal-tdb').value;
-    label = 'Kalisport';
-  } else if (bloc === 'fo') {
-    fields.mail_date_visio = document.getElementById('m-fo-date').value;
-    fields.mail_lien_visio = document.getElementById('m-fo-lien').value;
-    fields.mail_id_visio = document.getElementById('m-fo-id').value;
-    fields.lien_suivi_formateur = document.getElementById('m-fo-suivi').value;
-    label = 'infos formateur';
-  } else if (bloc === 'cv') {
-    fields.lieu = document.getElementById('m-cv-lieu').value;
-    fields.mail_date_visio_cv = document.getElementById('m-cv-visio-date').value;
-    fields.mail_lien_visio_cv = document.getElementById('m-cv-visio-lien').value;
-    label = 'convocation';
-  } else if (bloc === 'qs') {
-    fields.lien_qs_stag = document.getElementById('m-qs-stag').value;
-    fields.lien_qs_form = document.getElementById('m-qs-form').value;
-    fields.date_dernier_presentiel = document.getElementById('m-qs-date').value;
-    label = 'questionnaire';
-  }
+  // saveMailFields n'est plus nécessaire - tout est dans currentSession via saveSession
+  toast('Les infos sont sauvegardées via ✏️ Modifier la session');
+  return;
   if (!Object.keys(fields).length) { toast('Rien à enregistrer'); return; }
   var res = await api('updateSession', { id: currentSession.id, fields: fields });
   if (res && res.error) { toast('Erreur: ' + res.error); return; }
@@ -2177,14 +2157,12 @@ function ouvrirConvocForm(i, type) {
   convocIndex = i;
   var c = convocs[i];
   var typeLabel = type === 'stag' ? 'stagiaires' : 'formateur';
+  var dateAff = c.date ? (parseDateLocal(c.date) || {toLocaleDateString: function(){return c.date;}}).toLocaleDateString('fr-FR') : '';
   document.getElementById('convoc-form-titre').textContent =
-    'Convocation Présentiel ' + (i+1) + (c.date ? ' — ' + (parseDate(c.date)||{toLocaleDateString:function(){return c.date;}}).toLocaleDateString('fr-FR') : '') + ' → ' + typeLabel;
+    'Convocation Présentiel ' + (i+1) + (dateAff ? ' — ' + dateAff : '') + ' → ' + typeLabel;
   document.getElementById('btn-convoc-stag').style.display = type === 'stag' ? '' : 'none';
   document.getElementById('btn-convoc-form').style.display = type === 'form' ? '' : 'none';
   document.getElementById('r-cv').textContent = '';
-  // Pré-remplir lieu depuis la session
-  if (currentSession.lieu) document.getElementById('m-cv-lieu').value = currentSession.lieu;
-  if (currentSession.formateur_telephone) document.getElementById('m-cv-fb') && '';
   document.getElementById('convoc-form').style.display = 'block';
   document.getElementById('convoc-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -2235,22 +2213,22 @@ async function sendConvoc(type) {
 }
 function aperçuConvoc() {
   var s = currentSession;
-  var vt = document.getElementById('m-cv-visio-type').value;
-  var prog = (document.getElementById('m-cv-prog').value||'').split('\n').filter(function(l){return l.trim();});
-  var acces = (document.getElementById('m-cv-acces').value||'').split('\n').filter(function(l){return l.trim();});
+  var vt = s.mail_visio_type || '';
+  var prog = (s.programme_presentiel||'').split('\n').filter(function(l){return l.trim();});
+  var acces = (s.mail_acces||'').split('\n').filter(function(l){return l.trim();});
   var visioHtml = '';
-  if (vt === 'live') visioHtml = '<p><strong>Visioconférence d\'accueil :</strong> '+document.getElementById('m-cv-visio-date').value+'<br>Lien : '+document.getElementById('m-cv-visio-lien').value+'</p>';
-  if (vt === 'replay') visioHtml = '<p>Replay de la visioconférence disponible : <a href="'+document.getElementById('m-cv-visio-replay').value+'" style="color:#0059a9;">cliquez ici</a></p>';
+  if (vt === 'live') visioHtml = '<p><strong>Visioconférence d\'accueil :</strong> '+(s.mail_date_visio||'')+'<br>Lien : '+(s.mail_lien_visio||'')+'</p>';
+  if (vt === 'replay') visioHtml = '<p>Replay de la visioconférence disponible : <a href="'+(s.mail_visio_replay||'')+'" style="color:#0059a9;">cliquez ici</a></p>';
   document.getElementById('apercu-title').textContent = 'Aperçu convocation';
   document.getElementById('apercu-body').innerHTML =
     '<p style="color:#008000;font-weight:bold;text-align:center;">Institut Régional de Formation du Basketball — Hauts-de-France</p>' +
     '<p><strong>Madame / Monsieur [NOM STAGIAIRE]</strong><br>[Club]</p>' +
     '<h3 style="text-align:center;text-decoration:underline;">CONVOCATION</h3><h4 style="text-align:center;">'+s.nom+'</h4>' +
-    '<p>Nous avons le plaisir de vous confirmer votre inscription à la formation <strong>'+s.nom+'</strong>. Celle-ci se déroulera <strong>'+(document.getElementById('m-cv-dates').value||'…')+'</strong>.</p>' +
+    '<p>Nous avons le plaisir de vous confirmer votre inscription à la formation <strong>'+s.nom+'</strong>. Celle-ci se déroulera <strong>'+(s.dates_globales||'…')+'</strong>.</p>' +
     visioHtml +
     (prog.length?'<h4>Déroulement</h4><ol>'+prog.map(function(l){return '<li>'+l+'</li>';}).join('')+'</ol>':'') +
     (acces.length?'<p><u>Accès :</u></p><ul>'+acces.map(function(l){return '<li>'+l+'</li>';}).join('')+'</ul>':'') +
-    '<p><strong>'+s.formateur_civilite+' '+s.formateur_nom+'</strong> — '+s.formateur_email+'</p>' +
+    '<p><strong>'+(s.formateur_civilite||'')+' '+(s.formateur_nom||'')+'</strong> — '+(s.formateur_email||'')+'</p>' +
     '<p><strong>Alexandra GODART</strong> — 03 20 16 93 75 — agodart@hdfbasket.org</p>';
   document.getElementById('modal-apercu').classList.add('open');
 }
@@ -2266,15 +2244,15 @@ async function sendFormateur() {
 }
 function aperçuFormateur() {
   var s = currentSession;
-  var suivi = currentSession.lien_suivi_formateur || '';
+  var suivi = s.lien_suivi_formateur || '';
+  var visioType = s.mail_visio_type || '';
   document.getElementById('apercu-title').textContent = 'Aperçu mail formateur';
   document.getElementById('apercu-body').innerHTML =
     '<p>Bonjour <strong>'+(s.formateur_civilite||'')+' '+(s.formateur_nom||'')+'</strong>,</p>' +
     '<p>Informations pour votre intervention dans <strong>'+s.nom+'</strong>.</p>' +
-    (suivi ? '<div style="background:#f0f7f0;border:1px solid #c3dbc3;border-radius:7px;padding:12px;margin:10px 0;"><strong>📋 Votre espace de suivi (émargements, résultats) :</strong><br><a href="'+suivi+'" style="color:#0059a9;font-weight:bold;">'+suivi+'</a></div>' : '') +
-    '<p><strong>Visio :</strong> '+(document.getElementById('m-fo-date').value||'—')+'</p>' +
-    '<p><strong>Identifiants :</strong> '+(document.getElementById('m-fo-id').value||'—')+'</p>' +
-    '<p><strong>Teach Up :</strong> '+(s.teachup_id||'')+'</p>' +
+    (suivi ? '<div style="background:#f0f7f0;border:1px solid #c3dbc3;border-radius:7px;padding:12px;margin:10px 0;"><strong>Votre espace de suivi :</strong><br><a href="'+suivi+'" style="color:#0059a9;font-weight:bold;">Ouvrir le document</a></div>' : '') +
+    (visioType ? '<p><strong>Visio :</strong> '+(s.mail_date_visio||'—')+'</p>' : '') +
+    '<p><strong>Teach Up :</strong> '+(s.teachup_id||'—')+'</p>' +
     '<p><strong>Alexandra GODART</strong> — agodart@hdfbasket.org</p>';
   document.getElementById('modal-apercu').classList.add('open');
 }
