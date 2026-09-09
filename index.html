@@ -467,6 +467,15 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
             <datalist id="secteurs-dl"></datalist>
           </div>
           <div class="field"><label>Tarif (€)</label><input id="f-tarif" type="number" placeholder="170"></div>
+          <div class="field"><label>Repas (global)</label>
+            <select id="f-repas-global">
+              <option value="">—</option>
+              <option value="Repas prévu par l'organisateur">Repas prévu par l'organisateur</option>
+              <option value="Repas prévu par l'organisateur uniquement pour les journées complètes">Repas prévu par l'organisateur uniquement pour les journées complètes</option>
+              <option value="Prévoir votre repas par vos propres moyens">Prévoir votre repas par vos propres moyens</option>
+              <option value="Si vous n'avez pas réservé et payé vos repas en option lors de votre inscription, il faudra prévoir vos repas par vos propres moyens durant la formation">Sur option (si non réservé lors de l'inscription → repas à prévoir)</option>
+            </select>
+          </div>
         </div>
         <div class="field-row">
           <div class="field"><label>Date fin inscription</label><input id="f-finins" type="date"></div>
@@ -1615,7 +1624,7 @@ function renderPresentielsForms() {
       + '<input type="text" class="pres-lieu" data-i="'+i+'" value="'+(p.lieu||'')+'" placeholder="Lieu" style="flex:1;min-width:130px;font-size:12px;" onchange="updatePresentielForm('+i+')" title="Lieu">'
       + '<select class="pres-repas" data-i="'+i+'" style="flex:1;min-width:160px;font-size:11px;" onchange="updatePresentielForm('+i+')" title="Repas">'
       + '<option value="">-- Repas --</option>'
-      + ['Repas prévu par l\'organisateur','Repas prévu par l\'organisateur uniquement pour les journées complètes','Prévoir votre repas par vos propres moyens','Si vous n\'avez pas réservé et payé vos repas en option lors de votre inscription, il faudra prévoir vos repas par vos propres moyens durant la formation'].map(function(r){ return '<option value="'+r+'"'+(p.repas===r?' selected':'')+'>'+r.substring(0,40)+'…</option>'; }).join('')
+      + ['Repas prévu par l\'organisateur','Repas prévu par l\'organisateur uniquement pour les journées complètes','Prévoir votre repas par vos propres moyens','Si vous n\'avez pas réservé et payé vos repas en option lors de votre inscription, il faudra prévoir vos repas par vos propres moyens durant la formation'].map(function(r,ri){ var short=['Repas organisateur','Repas journées complètes','Repas par vos soins','Sur option'];return '<option value="'+r+'"'+(p.repas===r?' selected':'')+'>'+short[ri]+'</option>'; }).join('')
       + '</select>'
       + '<button type="button" style="padding:3px 8px;font-size:11px;border-radius:4px;border:1px solid var(--line);background:transparent;cursor:pointer;color:var(--terra);" onclick="supprimerPresentielForm('+i+')">✕</button>'
       + '</div>';
@@ -1738,6 +1747,7 @@ async function modifierSession() {
   set('f-finins', s.date_fin_inscription ? (s.date_fin_inscription+'').substring(0,10) : '');
   set('f-obs', s.observations);
   if (s.statut_stage) document.getElementById('f-statut').value = s.statut_stage;
+  if (s.repas_global) document.getElementById('f-repas-global').value = s.repas_global;
   // Dates & programme
   // Charger les présentiels depuis convocs_json
   formPresentiels = [];
@@ -1827,6 +1837,7 @@ async function saveSession() {
     secteur: g('f-secteur'),
     statut_stage: g('f-statut') || 'À venir',
     tarif: g('f-tarif') || '170',
+    repas_global: g('f-repas-global'),
     date_debut: autoDebut,
     date_fin: autoFin,
     date_fin_inscription: g('f-finins'),
