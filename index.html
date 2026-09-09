@@ -995,6 +995,8 @@ function remplacerVariables(template, s, presentiel) {
     '[ACCES_VOITURE]': s.mail_acces ? s.mail_acces.split('\n')[0] : '[ACCES_VOITURE]',
     '[GARE]': s.mail_acces ? (s.mail_acces.split('\n')[1]||'').replace(/.*gare\s*(de\s*)?/i,'').trim() : '[GARE]',
     '[MATERIEL]': s.mail_materiel || '[MATERIEL]',
+    '[LIEN_SUIVI_FORMATEUR]': s.lien_suivi_formateur || '[LIEN_SUIVI_FORMATEUR]',
+    '[LIEN_TDB_TEACHUP]': s.teachup_lien || '[LIEN_TDB_TEACHUP]',
     '[LIEN_FACEBOOK]': s.mail_fb || configData.lien_fb || 'https://www.facebook.com/groups/632709503927580/',
     '[LIEN_KALISPORT]': s.kalisport_lien || '[LIEN_KALISPORT]',
   };
