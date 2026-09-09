@@ -152,12 +152,12 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   <div class="scroll">
     <table class="tdb"><thead>
       <tr>
-        <th>Code</th><th>Formation</th><th>Formateur</th>
-        <th>Payés</th><th>Admis</th>
+        <th>Code Kalisport</th><th>Formateur</th>
+        <th>Payés</th><th>Admis ♂/♀</th>
         <th>Convoc.<br>Stag.</th><th>Convoc.<br>Form.</th>
         <th>QS Envoi 1</th><th>QS Relance</th>
         <th>Diplômes</th><th>Doc<br>salarié</th><th>Virement</th>
-        <th>Taux ♂</th><th>Taux ♀</th>
+        
         <th>Rém.</th><th>Observations</th>
         <th>Avancement</th><th>Dernier point</th><th></th>
       </tr>
@@ -242,6 +242,10 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <div class="field"><label style="color:var(--sage-d);font-weight:700;">Formateur — J-7</label><textarea id="cfg-mail-fo-j7" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
       <div class="field"><label style="color:var(--sage-d);font-weight:700;">QS — Stagiaires</label><textarea id="cfg-mail-qs" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
     </div>
+    <div class="field-row">
+      <div class="field"><label style="color:var(--terra);font-weight:700;">💶 Relance paiement — Avant formation</label><textarea id="cfg-mail-relance-avant" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
+      <div class="field"><label style="color:var(--terra);font-weight:700;">💶 Relance paiement — En cours de formation</label><textarea id="cfg-mail-relance-cours" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
+    </div>
     <div class="btn-row"><button class="btn-p" onclick="saveConfigMails()">💾 Enregistrer les modèles</button></div>
     <div id="r-cfg-mails" style="font-size:12px;color:var(--ink-s);"></div>
   </div>
@@ -265,7 +269,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   <div class="subtabs">
     <div class="stab active" data-s="stag" onclick="switchSub('stag')">Stagiaires</div>
     <div class="stab" data-s="mails" onclick="switchSub('mails')">Envoi mails</div>
-    <div class="stab" data-s="import" onclick="switchSub('import')">Importer</div>
+
   </div>
   <div class="subview active" id="sub-stag"><div id="stag-content"></div></div>
 
@@ -340,23 +344,31 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   </div>
   <div class="subview" id="sub-mails">
 
-    <!-- CLUBS -->
+    <!-- GÉNÉRER MAILS -->
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <h3 style="font-size:14px;margin:0;">📢 Communication ouverture aux clubs</h3>
-        <span id="st-clubs" class="badge neu">À faire</span>
+      <h3 style="font-size:14px;margin-bottom:8px;">📋 Générer les textes de mails</h3>
+      <div class="info">Texte prêt à copier-coller dans Kalisport ou ta boite mail. Rien n'est envoyé depuis l'app.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="btn-p" onclick="genererMail('bf-j10')">📧 BF — Bienvenue J-10</button>
+        <button class="btn-p" onclick="genererMail('detb-j10')">📧 DETB — Bienvenue J-10</button>
+        <button class="btn-s" onclick="genererMail('bf-j5')">📧 BF — J-5 Présentiel</button>
+        <button class="btn-s" onclick="genererMail('detb-j5')">📧 DETB — J-5 Présentiel</button>
+        <button class="btn-g" onclick="genererMail('relance-avant')">💶 Relance paiement (avant)</button>
+        <button class="btn-g" onclick="genererMail('relance-cours')">💶 Relance paiement (en cours)</button>
+        <button class="btn-g" onclick="genererMail('qs')">⭐ QS Stagiaires</button>
       </div>
-      <div class="info" id="prev-clubs" style="font-size:12px;"></div>
-      <div class="field-row">
-        <div class="field"><label>Email Christelle</label><input id="m-clubs-christelle" value="christelle.delaey@hdfbasket.org"></div>
-        <div class="field"><label>Email Martin</label><input id="m-clubs-martin" value="martin.weber@hdfbasket.org"></div>
+      <div id="j5-presentiel-sel" style="display:none;margin-bottom:10px;">
+        <label style="font-size:12.5px;font-weight:600;">Choisir le présentiel concerné :</label>
+        <div id="j5-pres-liste" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"></div>
       </div>
-      <div id="clubs-sessions-liste" style="margin:8px 0;"></div>
-      <div class="btn-row">
-        <button class="btn-s" onclick="sendClubs()">Envoyer à Christelle et Martin</button>
-        <button class="btn-g" onclick="testM('clubs')">📧 Test</button>
+      <div id="mail-genere-zone" style="display:none;margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span id="mail-genere-titre" style="font-size:13px;font-weight:600;color:var(--sage-d);"></span>
+          <button class="btn-p" style="font-size:12px;" onclick="copierMailGenere()">📋 Copier tout</button>
+        </div>
+        <textarea id="mail-genere-texte" style="width:100%;min-height:300px;font-size:12px;font-family:Arial,sans-serif;line-height:1.6;padding:10px;border:1px solid var(--line);border-radius:6px;" readonly></textarea>
+        <div id="r-mail-copie" style="font-size:12px;color:var(--sage-d);margin-top:4px;"></div>
       </div>
-      <div id="r-clubs" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
 
     <!-- KALISPORT -->
@@ -373,70 +385,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <div id="r-kal" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
 
-    <!-- RELANCE PAIEMENT -->
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:8px;">💶 Relance paiement</h3>
-      <div class="field"><label>Message complémentaire (optionnel)</label><input id="m-rel-comp"></div>
-      <div id="rel-liste" style="margin:8px 0;"></div>
-      <div class="btn-row">
-        <button class="btn-s" onclick="sendRelance()">Envoyer aux sélectionnés</button>
-        <button class="btn-g" onclick="toutCocher(true)">Tout cocher</button>
-        <button class="btn-g" onclick="toutCocher(false)">Tout décocher</button>
-        <button class="btn-g" onclick="testM('relance')">📧 Test</button>
-      </div>
-      <div id="r-rel" style="font-size:12px;color:var(--ink-s);"></div>
-    </div>
-
-    <!-- CONVOCATIONS -->
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <h3 style="font-size:14px;margin:0;">📋 Convocations — par présentiel</h3>
-      </div>
-      <div class="info">Programme et infos chargés depuis la Config session.</div>
-      <div id="convoc-liste" style="margin-bottom:10px;"></div>
-      <button class="btn-g" style="font-size:12px;" onclick="ajouterPresentiel()">+ Ajouter un présentiel</button>
-      <div id="convoc-form" style="display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:12px;">
-        <p id="convoc-form-titre" style="font-size:13px;font-weight:600;margin:0 0 8px;color:var(--sage-d);"></p>
-        <div class="field"><label>Message complémentaire (optionnel)</label><input id="m-cv-comp"></div>
-        <div class="btn-row">
-          <button class="btn-p" id="btn-convoc-stag" onclick="sendConvoc('stag')">Envoyer aux stagiaires</button>
-          <button class="btn-p" id="btn-convoc-form" onclick="sendConvoc('form')" style="background:var(--terra);">Envoyer au formateur</button>
-          <button class="btn-g" id="btn-apercu-stag" onclick="aperçuConvoc()">👁 Aperçu stagiaire</button>
-          <button class="btn-g" id="btn-apercu-form" onclick="aperçuConvocFormateur()">👁 Aperçu formateur</button>
-          <button class="btn-g" onclick="fermerConvocForm()">Fermer</button>
-        </div>
-        <div id="r-cv" style="font-size:12px;color:var(--ink-s);"></div>
-      </div>
-    </div>
-
-    <!-- GÉNÉRATION MAILS -->
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:8px;">📋 Générer les textes de mails</h3>
-      <div class="info">Le texte généré est à copier-coller directement dans Kalisport ou ta boite mail. Aucun mail n'est envoyé depuis l'app.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-        <button class="btn-p" onclick="genererMail('bf-j10')">📧 BF — Bienvenue J-10</button>
-        <button class="btn-p" onclick="genererMail('detb-j10')">📧 DETB — Bienvenue J-10</button>
-        <button class="btn-s" onclick="genererMail('bf-j5')">📧 BF — J-5 Présentiel</button>
-        <button class="btn-s" onclick="genererMail('detb-j5')">📧 DETB — J-5 Présentiel</button>
-        <button class="btn-g" onclick="genererMail('fo-j7')">📧 Formateur J-7</button>
-        <button class="btn-g" onclick="genererMail('qs')">📧 QS Stagiaires</button>
-      </div>
-      <!-- Sélecteur de présentiel pour J-5 -->
-      <div id="j5-presentiel-sel" style="display:none;margin-bottom:10px;">
-        <label style="font-size:12.5px;font-weight:600;">Choisir le présentiel concerné :</label>
-        <div id="j5-pres-liste" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"></div>
-      </div>
-      <div id="mail-genere-zone" style="display:none;margin-top:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <span id="mail-genere-titre" style="font-size:13px;font-weight:600;color:var(--sage-d);"></span>
-          <button class="btn-p" style="font-size:12px;" onclick="copierMailGenere()">📋 Copier tout</button>
-        </div>
-        <textarea id="mail-genere-texte" style="width:100%;min-height:280px;font-size:12px;font-family:Arial,sans-serif;line-height:1.6;padding:10px;border:1px solid var(--line);border-radius:6px;" readonly></textarea>
-        <div id="r-mail-copie" style="font-size:12px;color:var(--sage-d);margin-top:4px;"></div>
-      </div>
-    </div>
-
-    <!-- INFOS FORMATEUR J-7 -->
+    <!-- INFOS FORMATEUR J-7 — remonté ici -->
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <h3 style="font-size:14px;margin:0;">👨‍🏫 Infos stage → formateur (J-7)</h3>
@@ -449,6 +398,25 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
         <button class="btn-g" onclick="testM('formateur')">📧 Test</button>
       </div>
       <div id="r-fo" style="font-size:12px;color:var(--ink-s);"></div>
+    </div>
+
+    <!-- COMMUNICATION CLUBS -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="font-size:14px;margin:0;">📢 Communication ouverture aux clubs</h3>
+        <span id="st-clubs" class="badge neu">À faire</span>
+      </div>
+      <div class="info" id="prev-clubs" style="font-size:12px;"></div>
+      <div class="field-row">
+        <div class="field"><label>Email Christelle</label><input id="m-clubs-christelle" value="christelle.delaey@hdfbasket.org"></div>
+        <div class="field"><label>Email Martin</label><input id="m-clubs-martin" value="martin.weber@hdfbasket.org"></div>
+      </div>
+      <div id="clubs-sessions-liste" style="margin:8px 0;"></div>
+      <div class="btn-row">
+        <button class="btn-s" onclick="sendClubs()">Envoyer à Christelle et Martin</button>
+        <button class="btn-g" onclick="testM('clubs')">📧 Test</button>
+      </div>
+      <div id="r-clubs" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
 
     <!-- QUESTIONNAIRE SATISFACTION -->
@@ -468,35 +436,6 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 
   </div><!-- fin sub-mails -->
 
-  <div class="subview" id="sub-import">
-    <!-- Import stagiaires Kalisport -->
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:6px;">📥 Import liste Kalisport</h3>
-      <p style="font-size:12.5px;color:var(--ink-s);margin-top:0;">Colle le CSV Kalisport "Liste des participants". La ligne d'en-têtes doit commencer par ID, NOM_STAGE…</p>
-      <textarea id="csv-in" style="min-height:70px;font-family:monospace;font-size:11px;" placeholder="ID,NOM_STAGE,NOM_STAGIAIRE,PRENOM_STAGIAIRE,..."></textarea>
-      <div class="btn-row" style="margin-top:8px;"><button class="btn-p" onclick="importCSV()">Importer</button></div>
-      <div id="r-import" style="font-size:12px;color:var(--ink-s);"></div>
-    </div>
-
-    <!-- Import résultats formateur -->
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:6px;">🏆 Import résultats (admis / non admis)</h3>
-      <div class="info">
-        Exporte le Sheet de suivi formateur en CSV, colle-le ici.<br>
-        Le fichier doit contenir les colonnes : <strong>Nom</strong>, <strong>Prénom</strong>, <strong>Décision</strong><br>
-        Valeurs acceptées dans "Décision" : <code>Admis</code>, <code>Non admis</code>, <code>En attente</code>
-        <br><br>
-        <strong>Modèle de colonne "Décision" :</strong> <em>Admis / Non admis / En attente</em><br>
-        La correspondance se fait par Nom + Prénom.
-      </div>
-      <textarea id="csv-resultats" style="min-height:70px;font-family:monospace;font-size:11px;" placeholder="Nom,Prénom,Décision&#10;DUPONT,Marie,Admis&#10;MARTIN,Pierre,Non admis&#10;BERNARD,Sophie,Admis"></textarea>
-      <div class="btn-row" style="margin-top:8px;">
-        <button class="btn-p" onclick="importResultats()">Importer les résultats</button>
-        <button class="btn-g" onclick="telechargerModeleResultats()">📄 Télécharger le modèle CSV</button>
-      </div>
-      <div id="r-resultats" style="font-size:12px;color:var(--ink-s);"></div>
-    </div>
-  </div>
 
 </div><!-- fin view-detail -->
 
@@ -795,21 +734,15 @@ function renderTDB() {
     var admisM = Number(s.nb_admis_m) || 0;
     var admisF = Number(s.nb_admis_f) || 0;
 
-    // Payés
-    var payBadge = nb
-      ? '<span class="badge '+(payes===nb?'ok':payes>0?'warn':'ko')+'">' + payes + '/' + nb + '</span>'
-      : '<span class="badge neu">0</span>';
+    // Payé — saisie manuelle
+    var payVal = s.paiement_manuel || '';
+    var payComplet = payVal.toLowerCase() === 'complet' || payVal === '✓';
+    var payHtml = '<input type="text" value="'+(payVal).replace(/"/g,'&quot;')+'" placeholder="ex: 10/12" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'paiement_manuel\')">'
+      + (payComplet ? '' : '<button class="tdb-action" style="font-size:9px;margin-left:2px;" onclick="event.stopPropagation();marquerPayeComplet(\''+s.id+'\')">✓</button>');
 
-    // Admis total
-    var admisBadge = nb
-      ? '<span class="badge '+(admis===nb?'ok':admis>0?'warn':'ko')+'">' + admis + '/' + nb + '</span>'
-      : '<span class="badge neu">—</span>';
-
-    // Taux réussite M/F (admis/total par genre)
-    var txM = nbM > 0 ? admisM + '/' + nbM : '—';
-    var txF = nbF > 0 ? admisF + '/' + nbF : '—';
-    var txMColor = nbM > 0 ? (admisM === nbM ? '#166534' : admisM > 0 ? '#b45309' : '#991b1b') : 'var(--ink-s)';
-    var txFColor = nbF > 0 ? (admisF === nbF ? '#166534' : admisF > 0 ? '#b45309' : '#991b1b') : 'var(--ink-s)';
+    // Admis — saisie manuelle fusionnée (ex: 8♂/10 - 4♀/5)
+    var admisVal = s.admis_manuel || '';
+    var admisHtml = '<input type="text" value="'+admisVal.replace(/"/g,'&quot;')+'" placeholder="ex: 8♂/10" style="width:75px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'admis_manuel\')">';
 
     // Diplômes — menu déroulant
     var dipVal = s.statut_diplomes || '';
@@ -834,17 +767,16 @@ function renderTDB() {
     var virHtml = virList.map(function(v){return '<div style="font-size:10.5px;white-space:nowrap;">'+v+'</div>';}).join('');
     virHtml += '<button class="tdb-action" onclick="event.stopPropagation();openVirement(\''+s.id+'\')" title="Gérer les virements">+ vir.</button>';
 
-    // Nom cliquable
-    var nomHtml = s.kalisport_lien
-      ? '<a href="'+s.kalisport_lien+'" target="_blank" onclick="event.stopPropagation();" style="color:var(--sage-d);font-weight:600;text-decoration:none;">'+s.nom+'</a>'
-      : '<strong>'+s.nom+'</strong>';
+    // Lien Kalisport dans code
+    var codeHtml = s.kalisport_lien
+      ? '<a href="'+s.kalisport_lien+'" target="_blank" onclick="event.stopPropagation();" style="color:var(--sage-d);font-weight:600;text-decoration:none;">'+(s.code_kalisport||'—')+'</a>'
+      : '<strong>'+(s.code_kalisport||'—')+'</strong>';
 
     return '<tr onclick="openSession(\''+s.id+'\')" style="cursor:pointer;">'
-      + '<td><strong style="color:var(--sage-d);">'+(s.code_kalisport||'—')+'</strong></td>'
-      + '<td style="min-width:155px;">'+nomHtml+'<br><small style="color:var(--ink-s);">'+(s.secteur||'')+(s.date_debut?' · '+fmtDate(s.date_debut):'')+'</small></td>'
+      + '<td style="min-width:100px;">'+codeHtml+'<br><small style="color:var(--ink-s);">'+(s.secteur||'')+(s.date_debut?' · '+fmtDate(s.date_debut):'')+'</small></td>'
       + '<td style="white-space:nowrap;">'+(s.formateur_nom||'—')+'</td>'
-      + '<td>'+payBadge+'</td>'
-      + '<td>'+admisBadge+'</td>'
+      + '<td onclick="event.stopPropagation();">'+payHtml+'</td>'
+      + '<td onclick="event.stopPropagation();">'+admisHtml+'</td>'
       + '<td>'+badgeStat(s.statut_convocation)+'</td>'
       + '<td>'+badgeStat(s.statut_mail_formateur)+'</td>'
       + '<td>'+badgeStat(s.statut_qs_envoi1)+'</td>'
@@ -853,8 +785,8 @@ function renderTDB() {
       + '<td style="text-align:center;" onclick="event.stopPropagation();">'
         + '<input type="checkbox" class="chk" '+(s.doc_salarie?'checked':'')+' onchange="updSessionTDB(this,\''+s.id+'\',\'doc_salarie\')"></td>'
       + '<td onclick="event.stopPropagation();">'+virHtml+'</td>'
-      + '<td style="text-align:center;font-size:11px;color:'+txMColor+';">'+txM+'</td>'
-      + '<td style="text-align:center;font-size:11px;color:'+txFColor+';">'+txF+'</td>'
+
+
       + '<td style="text-align:center;" onclick="event.stopPropagation();">'
         + '<input type="checkbox" class="chk" '+(s.rem_formateur?'checked':'')+' onchange="updSessionTDB(this,\''+s.id+'\',\'rem_formateur\')"></td>'
       + '<td onclick="event.stopPropagation();">'
@@ -908,6 +840,14 @@ async function updDiplomes(el, id) {
   else toast('✓ Diplômes : ' + (val || 'À faire'));
 }
 
+async function marquerPayeComplet(id) {
+  var s = sessions.find(function(x){return x.id===id;});
+  if (s) s.paiement_manuel = 'Complet';
+  await api('updateSession', { id: id, fields: { paiement_manuel: 'Complet' } });
+  renderTDB();
+  toast('✓ Paiements : Complet');
+}
+
 async function updAvancement(el, id) {
   var val = el.value;
   var s = sessions.find(function(x) { return x.id === id; });
@@ -919,20 +859,19 @@ async function updAvancement(el, id) {
 }
 
 async function saveConfigMails() {
-  var keys = ['bf_j10','detb_j10','bf_j5','detb_j5','fo_j7','qs'];
+  var keys = ['bf_j10','detb_j10','bf_j5','detb_j5','fo_j7','qs','relance_avant','relance_cours'];
   for (var k of keys) {
-    var el = document.getElementById('cfg-mail-'+k.replace('_','-'));
-    if (el) await api('setConfig', { cle: 'mail_'+k, valeur: el.value });
-    if (configData) configData['mail_'+k] = el ? el.value : '';
+    var el = document.getElementById('cfg-mail-'+k.replace(/_/g,'-'));
+    if (el) { await api('setConfig', { cle: 'mail_'+k, valeur: el.value }); if (configData) configData['mail_'+k] = el.value; }
   }
   document.getElementById('r-cfg-mails').textContent = '✓ Modèles enregistrés';
   toast('✓ Modèles de mails enregistrés');
 }
 
 function loadConfigMails() {
-  var keys = ['bf_j10','detb_j10','bf_j5','detb_j5','fo_j7','qs'];
+  var keys = ['bf_j10','detb_j10','bf_j5','detb_j5','fo_j7','qs','relance_avant','relance_cours'];
   keys.forEach(function(k) {
-    var el = document.getElementById('cfg-mail-'+k.replace('_','-'));
+    var el = document.getElementById('cfg-mail-'+k.replace(/_/g,'-'));
     if (el && configData && configData['mail_'+k]) el.value = configData['mail_'+k];
   });
 }
@@ -1030,10 +969,10 @@ function genererMail(type) {
     }
   }
 
-  var cle = 'mail_' + type.replace('-','_');
+  var cle = 'mail_' + type.replace(/-/g,'_');
   var template = configData[cle] || '';
   if (!template) {
-    toast('Modèle "' + type + '" vide — configure-le dans ⚙ Config → Modèles de mails');
+    toast('Modèle "' + type + '" vide — configure dans ⚙ Config → Modèles de mails');
     return;
   }
   var texte = remplacerVariables(template, s, null);
