@@ -153,8 +153,8 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <table class="tdb"><thead>
       <tr>
         <th>Code Kalisport</th><th>Formateur</th>
-        <th>Payés</th><th>Admis ♂/♀</th>
-        <th>Convoc.<br>Stag.</th><th>Convoc.<br>Form.</th>
+        <th>Payés</th><th>Admis ♂</th><th>Admis ♀</th>
+        <th>Prochain<br>présentiel</th>
         <th>QS Envoi 1</th><th>QS Relance</th>
         <th>Diplômes</th><th>Doc<br>salarié</th><th>Virement</th>
         
@@ -749,9 +749,32 @@ function renderTDB() {
     var payHtml = '<input type="text" value="'+(payVal).replace(/"/g,'&quot;')+'" placeholder="ex: 10/12" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'paiement_manuel\')">'
       + (payComplet ? '' : '<button class="tdb-action" style="font-size:9px;margin-left:2px;" onclick="event.stopPropagation();marquerPayeComplet(\''+s.id+'\')">✓</button>');
 
-    // Admis — saisie manuelle fusionnée (ex: 8♂/10 - 4♀/5)
-    var admisVal = s.admis_manuel || '';
-    var admisHtml = '<input type="text" value="'+admisVal.replace(/"/g,'&quot;')+'" placeholder="ex: 8♂/10" style="width:75px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'admis_manuel\')">';
+    // Admis ♂ et ♀ séparés
+    var admisM = s.admis_m_manuel || '';
+    var admisF = s.admis_f_manuel || '';
+    var admisMHtml = '<input type="text" value="'+admisM.replace(/"/g,'&quot;')+'" placeholder="9/10" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'admis_m_manuel\')">';
+    var admisFHtml = '<input type="text" value="'+admisF.replace(/"/g,'&quot;')+'" placeholder="8/8" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'admis_f_manuel\')">';
+    // Prochain présentiel
+    var prochainPres = '';
+    try {
+      var convJSON = s.convocs_json ? JSON.parse(s.convocs_json) : [];
+      var today = new Date(); today.setHours(0,0,0,0);
+      var futures = convJSON.filter(function(c){
+        if (!c.date) return false;
+        var d = parseDateLocal(c.date);
+        return d && d >= today;
+      }).sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
+      if (futures.length) {
+        var d = parseDateLocal(futures[0].date);
+        prochainPres = d ? d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : futures[0].date;
+        var diff = Math.ceil((d - today) / 86400000);
+        var color = diff <= 7 ? 'var(--terra)' : diff <= 14 ? '#b45309' : 'var(--sage-d)';
+        prochainPres = '<span style="color:'+color+';font-size:11px;font-weight:600;">'+prochainPres+'</span>'
+          + (diff<=14?'<br><small style="color:'+color+';">J-'+diff+'</small>':'');
+      } else if (convJSON.length) {
+        prochainPres = '<span style="font-size:10px;color:var(--ink-s);">Terminé</span>';
+      }
+    } catch(e) {}
 
     // Diplômes — menu déroulant
     var dipVal = s.statut_diplomes || '';
@@ -785,9 +808,9 @@ function renderTDB() {
       + '<td style="min-width:100px;">'+codeHtml+'<br><small style="color:var(--ink-s);">'+(s.secteur||'')+(s.date_debut?' · '+fmtDate(s.date_debut):'')+'</small></td>'
       + '<td style="white-space:nowrap;">'+(s.formateur_nom||'—')+'</td>'
       + '<td onclick="event.stopPropagation();">'+payHtml+'</td>'
-      + '<td onclick="event.stopPropagation();">'+admisHtml+'</td>'
-      + '<td>'+badgeStat(s.statut_convocation)+'</td>'
-      + '<td>'+badgeStat(s.statut_mail_formateur)+'</td>'
+      + '<td onclick="event.stopPropagation();">'+admisMHtml+'</td>'
+      + '<td onclick="event.stopPropagation();">'+admisFHtml+'</td>'
+      + '<td style="text-align:center;">'+prochainPres+'</td>'
       + '<td>'+badgeStat(s.statut_qs_envoi1)+'</td>'
       + '<td>'+badgeStat(s.statut_qs_relance)+'</td>'
       + '<td onclick="event.stopPropagation();">'+dipSelect+'</td>'
