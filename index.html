@@ -225,8 +225,29 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <div class="btn-row"><button class="btn-p" onclick="saveConfigPlanning()">Enregistrer tous les liens</button></div>
     <div id="r-cfg-plan" style="font-size:12px;color:var(--ink-s);"></div>
   </div>
+
+  <!-- MODÈLES DE MAILS -->
+  <div class="card">
+    <h3 style="font-size:14px;margin-bottom:6px;">✉️ Modèles de mails</h3>
+    <div class="info" style="font-size:11.5px;">Variables remplacées automatiquement : <code>[NOM_FORMATION]</code> <code>[DATE_PRESENTIEL]</code> <code>[HORAIRES]</code> <code>[LIEU]</code> <code>[REPAS]</code> <code>[LIEN_TEACHUP_STAG]</code> <code>[LIEN_REPLAY_VISIO]</code> <code>[CIVILITE_FORMATEUR]</code> <code>[NOM_FORMATEUR]</code> <code>[PRENOM_FORMATEUR]</code> <code>[EMAIL_FORMATEUR]</code> <code>[TEL_FORMATEUR]</code> <code>[CODE_MODULE]</code> <code>[INTITULE_MODULE]</code> <code>[RESP_NOM]</code> <code>[RESP_EMAIL]</code> <code>[RESP_TEL]</code> <code>[LIEN_QS]</code> <code>[PROGRAMME_COMPLET]</code></div>
+    <div class="field-row">
+      <div class="field"><label style="color:var(--sage-d);font-weight:700;">BF — J-10 Bienvenue stagiaires</label><textarea id="cfg-mail-bf-j10" style="min-height:200px;font-size:11px;font-family:monospace;"></textarea></div>
+      <div class="field"><label style="color:var(--sage-d);font-weight:700;">DETB — J-10 Bienvenue stagiaires</label><textarea id="cfg-mail-detb-j10" style="min-height:200px;font-size:11px;font-family:monospace;"></textarea></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label style="color:var(--sage-d);font-weight:700;">BF — J-5 Rappel présentiel</label><textarea id="cfg-mail-bf-j5" style="min-height:200px;font-size:11px;font-family:monospace;"></textarea></div>
+      <div class="field"><label style="color:var(--sage-d);font-weight:700;">DETB — J-5 Rappel présentiel</label><textarea id="cfg-mail-detb-j5" style="min-height:200px;font-size:11px;font-family:monospace;"></textarea></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label style="color:var(--sage-d);font-weight:700;">Formateur — J-7</label><textarea id="cfg-mail-fo-j7" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
+      <div class="field"><label style="color:var(--sage-d);font-weight:700;">QS — Stagiaires</label><textarea id="cfg-mail-qs" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
+    </div>
+    <div class="btn-row"><button class="btn-p" onclick="saveConfigMails()">💾 Enregistrer les modèles</button></div>
+    <div id="r-cfg-mails" style="font-size:12px;color:var(--ink-s);"></div>
+  </div>
+
   <div class="card" style="background:var(--sand);border:1px dashed var(--line);">
-    <p style="font-size:12.5px;color:var(--ink-s);margin:0;">ℹ️ Les liens des questionnaires de satisfaction sont <strong>uniques par session</strong> — à renseigner dans l'onglet "Envoi mails" de chaque session (bloc "Questionnaire de satisfaction").</p>
+    <p style="font-size:12.5px;color:var(--ink-s);margin:0;">ℹ️ Les liens des questionnaires de satisfaction sont <strong>uniques par session</strong> — à renseigner dans ✏️ Modifier la session.</p>
   </div>
 </div>
 
@@ -385,6 +406,33 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
           <button class="btn-g" onclick="fermerConvocForm()">Fermer</button>
         </div>
         <div id="r-cv" style="font-size:12px;color:var(--ink-s);"></div>
+      </div>
+    </div>
+
+    <!-- GÉNÉRATION MAILS -->
+    <div class="card">
+      <h3 style="font-size:14px;margin-bottom:8px;">📋 Générer les textes de mails</h3>
+      <div class="info">Le texte généré est à copier-coller directement dans Kalisport ou ta boite mail. Aucun mail n'est envoyé depuis l'app.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="btn-p" onclick="genererMail('bf-j10')">📧 BF — Bienvenue J-10</button>
+        <button class="btn-p" onclick="genererMail('detb-j10')">📧 DETB — Bienvenue J-10</button>
+        <button class="btn-s" onclick="genererMail('bf-j5')">📧 BF — J-5 Présentiel</button>
+        <button class="btn-s" onclick="genererMail('detb-j5')">📧 DETB — J-5 Présentiel</button>
+        <button class="btn-g" onclick="genererMail('fo-j7')">📧 Formateur J-7</button>
+        <button class="btn-g" onclick="genererMail('qs')">📧 QS Stagiaires</button>
+      </div>
+      <!-- Sélecteur de présentiel pour J-5 -->
+      <div id="j5-presentiel-sel" style="display:none;margin-bottom:10px;">
+        <label style="font-size:12.5px;font-weight:600;">Choisir le présentiel concerné :</label>
+        <div id="j5-pres-liste" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"></div>
+      </div>
+      <div id="mail-genere-zone" style="display:none;margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span id="mail-genere-titre" style="font-size:13px;font-weight:600;color:var(--sage-d);"></span>
+          <button class="btn-p" style="font-size:12px;" onclick="copierMailGenere()">📋 Copier tout</button>
+        </div>
+        <textarea id="mail-genere-texte" style="width:100%;min-height:280px;font-size:12px;font-family:Arial,sans-serif;line-height:1.6;padding:10px;border:1px solid var(--line);border-radius:6px;" readonly></textarea>
+        <div id="r-mail-copie" style="font-size:12px;color:var(--sage-d);margin-top:4px;"></div>
       </div>
     </div>
 
@@ -870,7 +918,159 @@ async function updAvancement(el, id) {
   else toast('✓ Avancement : ' + (val || 'À faire'));
 }
 
-// === ENREGISTREMENT CHAMPS MAILS ===
+async function saveConfigMails() {
+  var keys = ['bf_j10','detb_j10','bf_j5','detb_j5','fo_j7','qs'];
+  for (var k of keys) {
+    var el = document.getElementById('cfg-mail-'+k.replace('_','-'));
+    if (el) await api('setConfig', { cle: 'mail_'+k, valeur: el.value });
+    if (configData) configData['mail_'+k] = el ? el.value : '';
+  }
+  document.getElementById('r-cfg-mails').textContent = '✓ Modèles enregistrés';
+  toast('✓ Modèles de mails enregistrés');
+}
+
+function loadConfigMails() {
+  var keys = ['bf_j10','detb_j10','bf_j5','detb_j5','fo_j7','qs'];
+  keys.forEach(function(k) {
+    var el = document.getElementById('cfg-mail-'+k.replace('_','-'));
+    if (el && configData && configData['mail_'+k]) el.value = configData['mail_'+k];
+  });
+}
+
+// DÉTERMINER LE RESPONSABLE DETB selon le code CS
+function getResponsableDetb(type) {
+  var cs = parseInt((type||'').replace(/[^0-9]/g,''));
+  if (cs >= 1 && cs <= 4) return { nom:'Rémi DUSSART', email:'rdussart@hdfbasket.org', tel:'06 78 45 09 63' };
+  if (cs >= 5 && cs <= 6) return { nom:"Olivier D'HALLUIN", email:'odhalluin@hdfbasket.org', tel:'06 20 84 42 65' };
+  if (cs >= 7)            return { nom:'Ludovic PUIGCERBER', email:'lpuigcerber@hdfbasket.org', tel:'06 31 80 91 19' };
+  return { nom:'Alexandra GODART', email:'agodart@hdfbasket.org', tel:'03 20 16 93 75' };
+}
+
+function remplacerVariables(template, s, presentiel) {
+  if (!template) return '';
+  var isBF = (s.type||'').indexOf('Brevet') > -1;
+  var csMatch = (s.type||'').match(/CS(\d+)/);
+  var codeModule = csMatch ? 'CS'+csMatch[1] : (s.code_kalisport||'');
+  var resp = isBF
+    ? { nom:'Antoine CHELALA', email:'achelala@hdfbasket.org', tel:'' }
+    : getResponsableDetb(s.type);
+
+  // Programme complet
+  var convocs = [];
+  try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
+  var prog = convocs.filter(function(c){return c.date;}).map(function(c,i) {
+    var d = parseDateLocal(c.date);
+    var dateStr = d ? d.toLocaleDateString('fr-FR', {weekday:'long',day:'numeric',month:'long',year:'numeric'}) : c.date;
+    dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+    return (i+1) + '. Présentiel '+(i+1)+'\n   Le '+dateStr+(c.horaires?' de '+c.horaires:'')+(c.lieu?'\n   à '+c.lieu:'')+(c.repas?'\n   '+c.repas:'');
+  }).join('\n\n');
+
+  var vars = {
+    '[NOM_FORMATION]': s.nom || '',
+    '[CODE_MODULE]': codeModule,
+    '[INTITULE_MODULE]': s.nom ? s.nom.split('-').pop().trim() : '',
+    '[DATE_PRESENTIEL]': presentiel && presentiel.date ? (function(){
+      var d = parseDateLocal(presentiel.date);
+      return d ? d.toLocaleDateString('fr-FR', {weekday:'long',day:'numeric',month:'long',year:'numeric'}) : presentiel.date;
+    })() : '[DATE_PRESENTIEL]',
+    '[HORAIRES]': presentiel ? (presentiel.horaires||'[HORAIRES]') : '[HORAIRES]',
+    '[LIEU]': presentiel ? (presentiel.lieu||s.lieu||'[LIEU]') : (s.lieu||'[LIEU]'),
+    '[REPAS]': presentiel ? (presentiel.repas||'[REPAS]') : '[REPAS]',
+    '[LIEN_TEACHUP_STAG]': s.teachup_lien_stag || '[LIEN_TEACHUP_STAG]',
+    '[LIEN_REPLAY_VISIO]': s.mail_visio_replay || s.mail_lien_visio || '[LIEN_REPLAY_VISIO]',
+    '[CIVILITE_FORMATEUR]': s.formateur_civilite || 'Monsieur',
+    '[NOM_FORMATEUR]': s.formateur_nom || '[NOM_FORMATEUR]',
+    '[PRENOM_FORMATEUR]': s.formateur_prenom || '[PRENOM_FORMATEUR]',
+    '[EMAIL_FORMATEUR]': s.formateur_email || '[EMAIL_FORMATEUR]',
+    '[TEL_FORMATEUR]': s.formateur_telephone || '[TEL_FORMATEUR]',
+    '[RESP_NOM]': resp.nom,
+    '[RESP_EMAIL]': resp.email,
+    '[RESP_TEL]': resp.tel,
+    '[LIEN_QS]': s.lien_qs_stag || '[LIEN_QS]',
+    '[LIEN_PRESENTATION_DETB]': configData.info_detb || '[LIEN_PRESENTATION_DETB]',
+    '[LIEN_REPLAY_DETB]': configData.plan_detb || '[LIEN_REPLAY_DETB]',
+    '[LIEN_PLANNING_DETB]': configData.plan_bf || '[LIEN_PLANNING_DETB]',
+    '[PROGRAMME_COMPLET]': prog || '[PROGRAMME_COMPLET]',
+    '[NOM_SESSION_TEACHUP]': s.teachup_id || s.nom || '[NOM_SESSION_TEACHUP]',
+    '[ACCES_VOITURE]': s.mail_acces ? s.mail_acces.split('\n')[0] : '[ACCES_VOITURE]',
+    '[GARE]': s.mail_acces ? (s.mail_acces.split('\n')[1]||'').replace(/.*gare\s*(de\s*)?/i,'').trim() : '[GARE]',
+    '[MATERIEL]': s.mail_materiel || '[MATERIEL]',
+    '[LIEN_FACEBOOK]': s.mail_fb || configData.lien_fb || 'https://www.facebook.com/groups/632709503927580/',
+    '[LIEN_KALISPORT]': s.kalisport_lien || '[LIEN_KALISPORT]',
+  };
+
+  var result = template;
+  Object.keys(vars).forEach(function(k) {
+    result = result.split(k).join(vars[k]);
+  });
+  return result;
+}
+
+function genererMail(type) {
+  if (!currentSession) { toast('Ouvre une session'); return; }
+  var s = currentSession;
+  var isBF = (s.type||'').indexOf('Brevet') > -1;
+  var isJ5 = type.indexOf('j5') > -1;
+
+  // Pour J-5 : sélectionner le présentiel
+  if (isJ5) {
+    var convocs = [];
+    try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
+    document.getElementById('j5-presentiel-sel').style.display = convocs.length ? 'block' : 'none';
+    document.getElementById('j5-pres-liste').innerHTML = convocs.map(function(c, i) {
+      var d = parseDateLocal(c.date);
+      var lbl = d ? d.toLocaleDateString('fr-FR') : c.date;
+      return '<button class="btn-s" style="font-size:11px;padding:4px 10px;" onclick="genererMailPresentiel(\''+type+'\','+i+')">P'+(i+1)+' — '+lbl+'</button>';
+    }).join('');
+    if (convocs.length) {
+      document.getElementById('mail-genere-zone').style.display = 'none';
+      return;
+    }
+  }
+
+  var cle = 'mail_' + type.replace('-','_');
+  var template = configData[cle] || '';
+  if (!template) {
+    toast('Modèle "' + type + '" vide — configure-le dans ⚙ Config → Modèles de mails');
+    return;
+  }
+  var texte = remplacerVariables(template, s, null);
+  afficherMailGenere(type, texte);
+}
+
+function genererMailPresentiel(type, i) {
+  var s = currentSession;
+  var convocs = [];
+  try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
+  var pres = convocs[i] || null;
+  var cle = 'mail_' + type.replace('-','_');
+  var template = configData[cle] || '';
+  if (!template) { toast('Modèle vide — configure dans ⚙ Config'); return; }
+  var texte = remplacerVariables(template, s, pres);
+  document.getElementById('j5-presentiel-sel').style.display = 'none';
+  afficherMailGenere(type + ' — Présentiel '+(i+1), texte);
+}
+
+function afficherMailGenere(type, texte) {
+  var titres = {
+    'bf-j10':'BF — Mail de bienvenue J-10','detb-j10':'DETB — Mail de bienvenue J-10',
+    'fo-j7':'Formateur — J-7','qs':'QS Stagiaires'
+  };
+  document.getElementById('mail-genere-titre').textContent = titres[type] || type;
+  document.getElementById('mail-genere-texte').value = texte;
+  document.getElementById('mail-genere-zone').style.display = 'block';
+  document.getElementById('r-mail-copie').textContent = '';
+  document.getElementById('mail-genere-zone').scrollIntoView({ behavior:'smooth' });
+}
+
+function copierMailGenere() {
+  var ta = document.getElementById('mail-genere-texte');
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+  document.execCommand('copy');
+  document.getElementById('r-mail-copie').textContent = '✓ Copié ! Colle directement dans Kalisport.';
+  toast('✓ Mail copié dans le presse-papier');
+}
 async function saveMailFields(bloc) {
   if (!currentSession) { toast('Aucune session ouverte'); return; }
   var fields = {};
@@ -1472,6 +1672,10 @@ function renderPresentielsForms() {
       + '<input type="date" class="pres-date" data-i="'+i+'" value="'+(p.date||'')+'" style="width:140px;font-size:12px;" onchange="updatePresentielForm('+i+')" title="Date">'
       + buildHorairesSelect(i, p.horaires)
       + '<input type="text" class="pres-lieu" data-i="'+i+'" value="'+(p.lieu||'')+'" placeholder="Lieu" style="flex:1;min-width:130px;font-size:12px;" onchange="updatePresentielForm('+i+')" title="Lieu">'
+      + '<select class="pres-repas" data-i="'+i+'" style="flex:1;min-width:160px;font-size:11px;" onchange="updatePresentielForm('+i+')" title="Repas">'
+      + '<option value="">-- Repas --</option>'
+      + ['Repas prévu par l\'organisateur','Repas prévu par l\'organisateur uniquement pour les journées complètes','Prévoir votre repas par vos propres moyens','Si vous n\'avez pas réservé et payé vos repas en option lors de votre inscription, il faudra prévoir vos repas par vos propres moyens durant la formation'].map(function(r){ return '<option value="'+r+'"'+(p.repas===r?' selected':'')+'>'+r.substring(0,40)+'…</option>'; }).join('')
+      + '</select>'
       + '<button type="button" style="padding:3px 8px;font-size:11px;border-radius:4px;border:1px solid var(--line);background:transparent;cursor:pointer;color:var(--terra);" onclick="supprimerPresentielForm('+i+')">✕</button>'
       + '</div>';
   }).join('');
@@ -1482,8 +1686,10 @@ function updatePresentielForm(i) {
   if (formPresentiels[i]) {
     var dateEl = document.querySelectorAll('.pres-date')[i];
     var lieuEl = document.querySelectorAll('.pres-lieu')[i];
+    var repasEl = document.querySelectorAll('.pres-repas')[i];
     if (dateEl) formPresentiels[i].date = dateEl.value;
     if (lieuEl) formPresentiels[i].lieu = lieuEl.value;
+    if (repasEl) formPresentiels[i].repas = repasEl.value;
     formPresentiels[i].horaires = horairesFromInputs(i);
   }
   var datesSorted = formPresentiels.map(function(p){return p.date;}).filter(Boolean).sort();
@@ -1503,6 +1709,7 @@ function getPresentielsPourSave() {
   // Lire DIRECTEMENT le DOM — source de vérité finale
   var dates = document.querySelectorAll('.pres-date');
   var lieus = document.querySelectorAll('.pres-lieu');
+  var repasEls = document.querySelectorAll('.pres-repas');
   var result = [];
   for (var i = 0; i < dates.length; i++) {
     var stag = (formPresentiels[i] && formPresentiels[i].stag) || '';
@@ -1511,6 +1718,7 @@ function getPresentielsPourSave() {
       date: dates[i].value || '',
       horaires: horairesFromInputs(i),
       lieu: lieus[i] ? lieus[i].value : '',
+      repas: repasEls[i] ? repasEls[i].value : '',
       stag: stag,
       form: form
     });
@@ -1927,6 +2135,7 @@ async function loadConfig() {
   if (configData.info_detb) document.getElementById('cfg-info-detb').value = configData.info_detb;
   if (configData.plan_int_bf) document.getElementById('cfg-plan-int-bf').value = configData.plan_int_bf;
   if (configData.plan_int_detb) document.getElementById('cfg-plan-int-detb').value = configData.plan_int_detb;
+  loadConfigMails();
   updateSecteursDatalist();
 }
 
