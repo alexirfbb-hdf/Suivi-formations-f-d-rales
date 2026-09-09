@@ -698,7 +698,7 @@ function switchSub(name) {
   document.querySelectorAll('.subview').forEach(function(v) { v.classList.remove('active'); });
   document.getElementById('sub-' + name).classList.add('active');
   if (name === 'stag') renderStag();
-  if (name === 'mails') { prefillMails(); renderRelListe(); chargerConvocs(); }
+  if (name === 'mails') { prefillMails(); renderRelListe(); }
 }
 
 // === TABLEAU DE BORD ===
@@ -1477,7 +1477,6 @@ async function syncPresentielsDepuisProgramme() {
   var res = await api('updateSession', { id: currentSession.id, fields: { convocs_json: json } });
   if (res && res.error) { toast('Erreur: ' + res.error); return; }
   currentSession.convocs_json = json;
-  chargerConvocs();
   toast('✓ ' + newConvocs.length + ' présentiel(s) synchronisé(s)');
 }
 
@@ -2608,25 +2607,7 @@ function parseCSV(text) {
     return obj;
   });
 }
-async function importCSV() {
-  var text = document.getElementById('csv-in').value;
-  if (!text.trim()) { toast('Colle un CSV'); return; }
-  var raw = parseCSV(text);
-  var mapped = raw.filter(function(r){return r['ID']||r['NOM_STAGIAIRE'];}).map(function(row) {
-    var obj = {};
-    Object.keys(CSV_MAP).forEach(function(k) { var found=Object.keys(row).find(function(rk){return rk.trim().toUpperCase()===k.toUpperCase();}); obj[CSV_MAP[k]]=found?row[found]:''; });
-    var rv=(obj.repas||'').toLowerCase();
-    obj.repas=rv.indexOf('inclure')>-1||rv==='oui'?'Oui':'Non';
-    return obj;
-  });
-  document.getElementById('r-import').textContent = 'Import…';
-  var res = await api('importStagiaires',{session_id:currentSession.id,stagiaires:mapped});
-  document.getElementById('r-import').textContent = (res.created||0)+' créé(s), '+(res.updated||0)+' mis à jour.';
-  toast('Import terminé');
-  openSession(currentSession.id);
-}
 
-// ======== IMPORT RÉSULTATS ========
 function telechargerModeleResultats() {
   var stag = actifs();
   var lignes = ['Nom,Prénom,Décision'];
