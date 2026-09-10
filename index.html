@@ -117,6 +117,11 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   <div class="tab" data-view="annuaire" onclick="switchView('annuaire')">Formateurs</div>
   <div class="tab" data-view="config" onclick="switchView('config')">⚙ Config</div>
 </div>
+<!-- Barre session rapide — visible seulement quand une session est ouverte -->
+<div id="session-bar" style="display:none;background:var(--sand-d);border-bottom:1px solid var(--line);padding:8px 20px;">
+  <div style="font-size:13px;font-weight:700;color:var(--sage-d);margin-bottom:5px;" id="session-bar-titre"></div>
+  <div id="session-bar-liens" style="display:flex;gap:7px;flex-wrap:wrap;"></div>
+</div>
 <main>
 
 <!-- TÂCHES -->
@@ -267,13 +272,10 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   </div>
   <div id="det-liens-rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
   <div class="subtabs">
-    <div class="stab active" data-s="stag" onclick="switchSub('stag')">Stagiaires</div>
-    <div class="stab" data-s="mails" onclick="switchSub('mails')">Envoi mails</div>
+    <div class="stab active" data-s="mails" onclick="switchSub('mails')">✉️ Modèles mails</div>
 
   </div>
-  <div class="subview active" id="sub-stag"><div id="stag-content"></div></div>
-
-  <!-- CONFIG SESSION -->
+<!-- CONFIG SESSION -->
   <div class="subview" id="sub-config-session">
     <div class="card">
       <h3 style="font-size:14px;margin-bottom:12px;">Informations Kalisport</h3>
@@ -1108,17 +1110,25 @@ function renderTaches() {
   sessions.filter(function(s){ return s.statut_stage !== 'Archivé'; }).forEach(function(s) {
     var code = s.code_kalisport || s.nom || '—';
 
-    // Convocations par présentiel
     var convocs = [];
     try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
+
     convocs.forEach(function(c, i) {
-      var dateP = parseDate(c.date);
-      var j7 = dateP ? new Date(dateP.getTime() - 7*86400000) : null;
-      var dateAff = dateP ? dateP.toLocaleDateString('fr-FR') : (c.date || '');
-      var pLabel = 'Présentiel '+(i+1)+(dateAff?' — '+dateAff:'');
+      var dateP = parseDateLocal(c.date);
+      if (!dateP) return;
+      var isP1 = (i === 0);
+      var jourAvantStag = isP1 ? 9 : 5;
+      var jourAvantForm = 5;
+      var echeanceStag = new Date(dateP.getTime() - jourAvantStag * 86400000);
+      var echeanceForm = new Date(dateP.getTime() - jourAvantForm * 86400000);
+      var d = parseDateLocal(c.date);
+      var dateAff = d ? d.toLocaleDateString('fr-FR') : c.date;
+      var pLabel = 'Présentiel ' + (i+1) + (dateAff ? ' — ' + dateAff : '');
+
+      // Convoc stagiaires : J-9 pour P1, J-5 pour les autres
       if (c.stag !== 'Envoyé') {
-        taches.push({ done:false, urgence:getUrgence(today,j7,dateP), echeance:j7, icon:'📋',
-          titre:'Convocation '+pLabel+' → stagiaires', meta:code,
+        taches.push({ done:false, urgence:getUrgence(today, echeanceStag, dateP), echeance:echeanceStag, icon:'📋',
+          titre:'Convocation ' + pLabel + ' → stagiaires (J-' + jourAvantStag + ')', meta:code,
           action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
           marquer:function(sid,ci,conv){return async function(){
             conv[ci].stag='Envoyé';
@@ -1126,77 +1136,85 @@ function renderTaches() {
             await reloadTaches();
           };}(s.id,i,convocs)
         });
-      } else { taches.push({ done:true, urgence:'fait', echeance:j7, icon:'✅', titre:'Convocation '+pLabel+' → stagiaires', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) }); }
-      if (c.form !== 'Envoyé') {
-        taches.push({ done:false, urgence:getUrgence(today,j7,dateP), echeance:j7, icon:'👨‍🏫',
-          titre:'Convocation '+pLabel+' → formateur', meta:code,
-          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-          marquer:function(sid,ci,conv){return async function(){
-            conv[ci].form='Envoyé';
-            await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv)}});
-            await reloadTaches();
-          };}(s.id,i,convocs)
-        });
-      } else { taches.push({ done:true, urgence:'fait', echeance:j7, icon:'✅', titre:'Convocation '+pLabel+' → formateur', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) }); }
+      } else {
+        taches.push({ done:true, urgence:'fait', echeance:echeanceStag, icon:'✅',
+          titre:'Convocation ' + pLabel + ' → stagiaires', meta:code,
+          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+      }
+
+      // Convoc formateur : J-5, sauf P1 (pas de convoc form pour P1)
+      if (!isP1) {
+        if (c.form !== 'Envoyé') {
+          taches.push({ done:false, urgence:getUrgence(today, echeanceForm, dateP), echeance:echeanceForm, icon:'👨‍🏫',
+            titre:'Convocation ' + pLabel + ' → formateur (J-5)', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+            marquer:function(sid,ci,conv){return async function(){
+              conv[ci].form='Envoyé';
+              await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv)}});
+              await reloadTaches();
+            };}(s.id,i,convocs)
+          });
+        } else {
+          taches.push({ done:true, urgence:'fait', echeance:echeanceForm, icon:'✅',
+            titre:'Convocation ' + pLabel + ' → formateur', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+        }
+      }
     });
-    if (!convocs.length && s.statut_convocation !== 'Envoyé') {
-      var dateD = s.date_debut ? parseDateLocal(String(s.date_debut)) : null;
-      var j7D = dateD ? new Date(dateD.getTime() - 7*86400000) : null;
-      taches.push({ done:false, urgence:getUrgence(today,j7D,dateD), echeance:j7D, icon:'📋',
-        titre:'Convocation stagiaires', meta:code+' — Configure les présentiels',
-        action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-        marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_convocation:'Envoyé'}}); await reloadTaches(); };}(s.id)
-      });
+
+    // Infos formateur J-9 avant P1
+    if (s.statut_mail_formateur !== 'Envoyé' && convocs.length > 0) {
+      var dateP1 = parseDateLocal(convocs[0].date);
+      if (dateP1) {
+        var j9F = new Date(dateP1.getTime() - 9 * 86400000);
+        taches.push({ done:false, urgence:getUrgence(today, j9F, dateP1), echeance:j9F, icon:'👨‍🏫',
+          titre:'Infos stage → formateur (J-9)', meta:code,
+          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+          marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_mail_formateur:'Envoyé'}}); await reloadTaches(); };}(s.id)
+        });
+      }
+    } else if (s.statut_mail_formateur === 'Envoyé' && convocs.length > 0) {
+      var dateP1b = parseDateLocal(convocs[0].date);
+      if (dateP1b) {
+        var j9Fb = new Date(dateP1b.getTime() - 9 * 86400000);
+        taches.push({ done:true, urgence:'fait', echeance:j9Fb, icon:'✅',
+          titre:'Infos formateur envoyées', meta:code,
+          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+      }
     }
 
-    // Infos formateur
-    if (s.statut_mail_formateur !== 'Envoyé') {
-      var dateD2 = s.date_debut ? parseDateLocal(String(s.date_debut)) : null;
-      var j7F = dateD2 ? new Date(dateD2.getTime() - 7*86400000) : null;
-      taches.push({ done:false, urgence:getUrgence(today,j7F,dateD2), echeance:j7F, icon:'👨‍🏫',
-        titre:'Infos stage → formateur (J-7)', meta:code,
-        action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-        marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_mail_formateur:'Envoyé'}}); await reloadTaches(); };}(s.id)
-      });
-    } else { taches.push({ done:true, urgence:'fait', echeance:null, icon:'✅', titre:'Infos formateur envoyées', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) }); }
-
-    // QS
+    // QS Envoi 1 : J+1 après dernier présentiel
     var dateDernier = s.date_dernier_presentiel ? parseDateLocal(String(s.date_dernier_presentiel)) : null;
+    if (!dateDernier && convocs.length > 0) {
+      var dates = convocs.map(function(c){return parseDateLocal(c.date);}).filter(Boolean).sort(function(a,b){return b-a;});
+      if (dates.length) dateDernier = dates[0];
+    }
     if (dateDernier) {
       var j1 = new Date(dateDernier.getTime() + 86400000);
       if (s.statut_qs_envoi1 !== 'Envoyé') {
         taches.push({ done:false, urgence:today >= j1 ? 'orange' : 'gris', echeance:j1, icon:'⭐',
-          titre:'QS — Envoi 1', meta:code,
+          titre:'QS — Envoi 1 (J+1)', meta:code,
           action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
           marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_qs_envoi1:'Envoyé'}}); await reloadTaches(); };}(s.id)
         });
       } else {
-        taches.push({ done:true, urgence:'fait', echeance:j1, icon:'✅', titre:'QS Envoi 1 envoyé', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
-        var j30 = new Date(dateDernier.getTime() + 30*86400000);
+        taches.push({ done:true, urgence:'fait', echeance:j1, icon:'✅',
+          titre:'QS Envoi 1 envoyé', meta:code,
+          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+        // QS Relance J+30
+        var j30 = new Date(dateDernier.getTime() + 30 * 86400000);
         if (s.statut_qs_relance !== 'Envoyé') {
           taches.push({ done:false, urgence:today >= j30 ? 'orange' : 'gris', echeance:j30, icon:'🔄',
-            titre:'QS — Relance', meta:code,
+            titre:'QS — Relance (J+30)', meta:code,
             action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
             marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_qs_relance:'Envoyé'}}); await reloadTaches(); };}(s.id)
           });
-        } else { taches.push({ done:true, urgence:'fait', echeance:j30, icon:'✅', titre:'QS Relance envoyée', meta:code, action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) }); }
+        } else {
+          taches.push({ done:true, urgence:'fait', echeance:j30, icon:'✅',
+            titre:'QS Relance envoyée', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+        }
       }
-    }
-
-    // Clubs
-    if (s.statut_mail_clubs !== 'Envoyé' && s.statut_stage === 'À venir') {
-      taches.push({ done:false, urgence:'gris', echeance:null, icon:'📢', titre:'Communication ouverture clubs', meta:code,
-        action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-        marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_mail_clubs:'Envoyé'}}); await reloadTaches(); };}(s.id)
-      });
-    }
-
-    // Diplômes
-    if (s.statut_diplomes && s.statut_diplomes !== 'Complet' && s.statut_stage === 'Terminé') {
-      taches.push({ done:false, urgence:'orange', echeance:null, icon:'🎓', titre:'Diplômes — '+s.statut_diplomes, meta:code,
-        action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-        marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_diplomes:'Complet'}}); await reloadTaches(); };}(s.id)
-      });
     }
   });
 
@@ -1213,7 +1231,6 @@ function renderTaches() {
   var aFaire = taches.filter(function(t){return !t.done;});
   var faites = taches.filter(function(t){return t.done;});
 
-  // Grouper par période
   var groupes = [
     { label:'🔴 En retard ou cette semaine', test:function(t){
       if (!t.echeance) return false;
@@ -1230,13 +1247,12 @@ function renderTaches() {
       var diff = Math.ceil((t.echeance - today)/86400000);
       return diff > 14 && diff <= 31;
     }, couleur:'#f0f9ff', border:'#bae6fd' },
-    { label:'📋 Sans échéance ou plus tard', test:function(t){
+    { label:'📋 Plus tard', test:function(t){
       if (!t.echeance) return true;
       return Math.ceil((t.echeance - today)/86400000) > 31;
     }, couleur:'var(--sand)', border:'var(--line)' }
   ];
 
-  // Comptes pour résumé
   var nbUrgent = taches.filter(function(t){return !t.done && t.urgence==='rouge';}).length;
   var header = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">'
     + '<div class="stat"><div class="n" style="color:'+(nbUrgent?'var(--terra)':'var(--sage-d)')+'">'+aFaire.length+'</div><div class="l">À faire</div></div>'
@@ -1245,6 +1261,7 @@ function renderTaches() {
     + '</div>';
 
   window.tacheActions = [];
+  window.tacheMarquer = [];
   var html = header;
   var affichees = 0;
 
@@ -1253,12 +1270,11 @@ function renderTaches() {
     if (!items.length) return;
     affichees += items.length;
     html += '<div style="margin-bottom:20px;">'
-      + '<div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid '+g.border+';background:'+g.couleur+';padding:6px 10px;border-radius:6px;">'
-      + g.label + ' <span style="font-weight:400;color:var(--ink-s);">('+items.length+')</span></div>';
+      + '<div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:6px 10px;border-radius:6px;background:'+g.couleur+';border-bottom:2px solid '+g.border+';">'
+      + g.label + ' <span style="font-weight:400;">(' + items.length + ')</span></div>';
     items.forEach(function(t) {
       var idx = window.tacheActions.length;
       window.tacheActions.push(t.action);
-      window.tacheMarquer = window.tacheMarquer || [];
       var idxM = window.tacheMarquer.length;
       window.tacheMarquer.push(t.marquer || null);
       var dateStr = t.echeance ? fmtDate(t.echeance) : '';
@@ -1277,7 +1293,6 @@ function renderTaches() {
     html += '<div class="card" style="text-align:center;padding:40px;color:var(--ink-s);">🎉 Aucune tâche en attente !</div>';
   }
 
-  // Faites (si option cochée)
   if (showDone && faites.length) {
     html += '<div style="margin-top:20px;opacity:.6;">'
       + '<div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">✅ Faites ('+faites.length+')</div>';
@@ -1293,130 +1308,6 @@ function renderTaches() {
 
   document.getElementById('taches-content').innerHTML = html;
 }
-  var taches = [];
-
-  sessions.filter(function(s){ return s.statut_stage !== 'Archivé'; }).forEach(function(s) {
-    var code = s.code_kalisport || s.nom || '—';
-
-    // --- Convocations par présentiel ---
-    var convocs = [];
-    try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
-    convocs.forEach(function(c, i) {
-      var dateP = parseDate(c.date);
-      var j7 = dateP ? new Date(dateP.getTime() - 7*86400000) : null;
-      var j14 = dateP ? new Date(dateP.getTime() - 14*86400000) : null;
-      var dp = parseDate(c.date); var pLabel = 'Présentiel '+(i+1)+(dp?' — '+dp.toLocaleDateString('fr-FR'):(c.date?(' — '+c.date):''));
-
-      if (c.stag !== 'Envoyé') {
-        var done = false;
-        var echeance = j7 || null;
-        var urgence = getUrgence(today, echeance, dateP);
-        taches.push({ done: done, urgence: urgence, echeance: echeance,
-          icon: urgence === 'rouge' ? '🔴' : urgence === 'orange' ? '🟡' : '📋',
-          titre: 'Convocation '+pLabel+' → stagiaires',
-          meta: code + (urgence === 'rouge' ? ' — EN RETARD ou J-7 !' : urgence === 'orange' ? ' — dans moins de 14 jours' : ''),
-          action: function(sid, ii) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id, i)
-        });
-      }
-      if (c.form !== 'Envoyé') {
-        var echeanceF = j7 || null;
-        var urgenceF = getUrgence(today, echeanceF, dateP);
-        taches.push({ done: false, urgence: urgenceF, echeance: echeanceF,
-          icon: '👨‍🏫',
-          titre: 'Convocation '+pLabel+' → formateur',
-          meta: code,
-          action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-        });
-      }
-      if (c.stag === 'Envoyé') {
-        taches.push({ done: true, urgence: 'fait', echeance: j7,
-          icon: '✅', titre: 'Convocation '+pLabel+' → stagiaires', meta: code,
-          action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-        });
-      }
-      if (c.form === 'Envoyé') {
-        taches.push({ done: true, urgence: 'fait', echeance: j7,
-          icon: '✅', titre: 'Convocation '+pLabel+' → formateur', meta: code,
-          action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-        });
-      }
-    });
-
-    // Fallback: convocation globale si pas de présentiels configurés
-    if (!convocs.length) {
-      var dateD = s.date_debut ? parseDateLocal(String(s.date_debut)) : null;
-      var j7D = dateD ? new Date(dateD.getTime() - 7*86400000) : null;
-      if (s.statut_convocation !== 'Envoyé') {
-        taches.push({ done: false, urgence: getUrgence(today, j7D, dateD), echeance: j7D,
-          icon: '📋', titre: 'Convocation stagiaires', meta: code+' — Configure les présentiels dans Envoi mails',
-          action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-        });
-      }
-    }
-
-    // --- Infos formateur J-7 ---
-    if (s.statut_mail_formateur !== 'Envoyé') {
-      var dateD2 = s.date_debut ? parseDateLocal(String(s.date_debut)) : null;
-      var j7F = dateD2 ? new Date(dateD2.getTime() - 7*86400000) : null;
-      taches.push({ done: false, urgence: getUrgence(today, j7F, dateD2), echeance: j7F,
-        icon: '👨‍🏫', titre: 'Infos stage → formateur (J-7)', meta: code,
-        action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-      });
-    } else {
-      taches.push({ done: true, urgence: 'fait', echeance: null,
-        icon: '✅', titre: 'Infos formateur envoyées', meta: code,
-        action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-      });
-    }
-
-    // --- QS Envoi 1 ---
-    var dateDernier = s.date_dernier_presentiel ? parseDateLocal(String(s.date_dernier_presentiel)) : null;
-    if (dateDernier) {
-      var j1 = new Date(dateDernier.getTime() + 86400000);
-      if (s.statut_qs_envoi1 !== 'Envoyé') {
-        var urgQs = today >= j1 ? 'orange' : 'gris';
-        taches.push({ done: false, urgence: urgQs, echeance: j1,
-          icon: '⭐', titre: 'Questionnaire satisfaction — Envoi 1', meta: code,
-          action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-        });
-      } else {
-        taches.push({ done: true, urgence: 'fait', echeance: j1,
-          icon: '✅', titre: 'QS Envoi 1 envoyé', meta: code,
-          action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-        });
-        // QS Relance
-        var j30 = new Date(dateDernier.getTime() + 30*86400000);
-        if (s.statut_qs_relance !== 'Envoyé') {
-          var urgRel = today >= j30 ? 'orange' : 'gris';
-          taches.push({ done: false, urgence: urgRel, echeance: j30,
-            icon: '🔄', titre: 'Questionnaire satisfaction — Relance', meta: code,
-            action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-          });
-        } else {
-          taches.push({ done: true, urgence: 'fait', echeance: j30,
-            icon: '✅', titre: 'QS Relance envoyée', meta: code,
-            action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-          });
-        }
-      }
-    }
-
-    // --- Communication clubs ---
-    if (s.statut_mail_clubs !== 'Envoyé' && s.statut_stage === 'À venir') {
-      taches.push({ done: false, urgence: 'gris', echeance: null,
-        icon: '📢', titre: 'Communication ouverture clubs', meta: code,
-        action: function(sid) { return function() { ouvrirTache(sid, 'mails'); }; }(s.id)
-      });
-    }
-
-    // --- Diplômes ---
-    if (s.statut_diplomes && s.statut_diplomes !== 'Complet' && s.statut_stage === 'Terminé') {
-      taches.push({ done: false, urgence: 'orange', echeance: null,
-        icon: '🎓', titre: 'Envoi diplômes — ' + (s.statut_diplomes || 'À faire'), meta: code,
-        action: function(sid) { return function() { ouvrirTache(sid, 'tdb'); }; }(s.id)
-      });
-    }
-  });
 
 function getUrgence(today, echeance, dateFin) {
   if (!echeance && !dateFin) return 'gris';
@@ -1962,24 +1853,28 @@ async function openSession(id) {
     document.getElementById('det-title').textContent = currentSession.nom;
     document.getElementById('det-sub').textContent =
       (currentSession.code_kalisport||'') + ' · ' + (currentSession.type||'') + ' · ' +
-      (currentSession.formateur_civilite||'') + ' ' + (currentSession.formateur_nom||'') +
-      ' · ' + currentStag.length + ' stagiaire(s)';
+      (currentSession.formateur_civilite||'') + ' ' + (currentSession.formateur_nom||'');
 
-    // Boutons d'accès rapide
-    var liens = [
-      { label: '🔗 Kalisport', url: currentSession.mail_session_kalisport || currentSession.kalisport_lien, title: 'Ouvrir la page session Kalisport' },
-      { label: '📋 Suivi formateur', url: currentSession.lien_suivi_formateur, title: 'Ouvrir le Google Sheet de suivi' },
-      { label: '📚 Teach Up formateur', url: currentSession.teachup_lien, title: 'Tableau de bord Teach Up formateur' }
-    ].filter(function(l) { return l.url; });
-    document.getElementById('det-liens-rapides').innerHTML = liens.map(function(l) {
-      return '<a href="' + l.url + '" target="_blank" title="' + l.title + '" '
-        + 'style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;'
-        + 'background:var(--sand-d);border:1px solid var(--line);font-size:12px;color:var(--ink);text-decoration:none;white-space:nowrap;"'
+    // Barre session rapide sous la nav
+    var lienStyle = 'display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:16px;'
+      + 'background:var(--white);border:1px solid var(--line);font-size:12px;color:var(--ink);text-decoration:none;white-space:nowrap;cursor:pointer;';
+    var liensBar = [
+      { label: '🔗 Kalisport', url: currentSession.mail_session_kalisport || currentSession.kalisport_lien },
+      { label: '📋 Suivi formateur', url: currentSession.lien_suivi_formateur },
+      { label: '📚 Teach Up', url: currentSession.teachup_lien_stag || currentSession.teachup_lien },
+    ].filter(function(l) { return l.url; }).map(function(l) {
+      return '<a href="' + l.url + '" target="_blank" style="' + lienStyle + '"'
         + ' onmouseover="this.style.borderColor=\'var(--sage)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
         + l.label + '</a>';
-    }).join('');
+    });
+    liensBar.push('<span style="' + lienStyle + ';background:var(--sage-d);color:#fff;border-color:var(--sage-d);" onclick="switchView(\'session\');switchSub(\'mails\')">✉️ Modèles mails</span>');
+    document.getElementById('session-bar-titre').textContent = currentSession.nom || '';
+    document.getElementById('session-bar-liens').innerHTML = liensBar.join('');
+    document.getElementById('session-bar').style.display = 'block';
+    // Liens dans la session aussi
+    document.getElementById('det-liens-rapides').innerHTML = document.getElementById('session-bar-liens').innerHTML;
 
-    switchSub('stag');
+    switchSub('mails');
   } catch(e) {
     document.getElementById('det-title').textContent = 'Erreur';
     document.getElementById('det-sub').textContent = e.message;
