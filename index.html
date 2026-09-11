@@ -366,9 +366,16 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <div id="mail-genere-zone" style="display:none;margin-top:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <span id="mail-genere-titre" style="font-size:13px;font-weight:600;color:var(--sage-d);"></span>
-          <button class="btn-p" style="font-size:12px;" onclick="copierMailGenere()">📋 Copier tout</button>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-g" style="font-size:12px;" onclick="copierMailGenere()">📋 Copier (texte brut)</button>
+            <button class="btn-s" style="font-size:12px;" onclick="copierMailGenereHTML()">📋 Copier (mis en forme)</button>
+          </div>
         </div>
-        <textarea id="mail-genere-texte" style="width:100%;min-height:300px;font-size:12px;font-family:Arial,sans-serif;line-height:1.6;padding:10px;border:1px solid var(--line);border-radius:6px;" readonly></textarea>
+        <!-- Aperçu formaté -->
+        <div id="mail-genere-apercu" style="width:100%;min-height:280px;font-size:12px;font-family:Arial,sans-serif;line-height:1.6;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--white);white-space:pre-wrap;overflow:auto;"></div>
+        <!-- Textarea cachée pour la copie -->
+        <textarea id="mail-genere-texte" style="position:absolute;left:-9999px;" readonly></textarea>
+        <div style="font-size:11px;color:var(--ink-s);margin-top:4px;">Mise en forme : <code>**gras**</code> → <strong>gras</strong> · <code>__souligné__</code> → <u>souligné</u> · <code>*italique*</code> → <em>italique</em></div>
         <div id="r-mail-copie" style="font-size:12px;color:var(--sage-d);margin-top:4px;"></div>
       </div>
     </div>
@@ -874,6 +881,21 @@ async function updDiplomes(el, id) {
   else toast('✓ Diplômes : ' + (val || 'À faire'));
 }
 
+async function updSessionTDB(el, id, field) {
+  var val = el.type === 'checkbox' ? (el.checked ? 'Oui' : '') : el.value;
+  var s = sessions.find(function(x){return x.id===id;});
+  if (s) s[field] = val;
+  var fields = {}; fields[field] = val;
+  var res = await api('updateSession', { id: id, fields: fields });
+  if (res && res.error) {
+    toast('⚠️ Erreur: ' + res.error);
+  } else {
+    // Petit feedback visuel
+    el.style.background = '#d4edda';
+    setTimeout(function(){ el.style.background = ''; }, 800);
+  }
+}
+
 async function marquerPayeComplet(id) {
   var s = sessions.find(function(x){return x.id===id;});
   if (s) s.paiement_manuel = 'Complet';
@@ -1021,9 +1043,12 @@ function genererMail(type) {
   }
 
   var cle = 'mail_' + type.replace(/-/g,'_');
-  var template = configData[cle] || '';
+  // Lire depuis la textarea si visible, sinon depuis configData
+  var textareaId = 'cfg-mail-' + type;
+  var el = document.getElementById(textareaId);
+  var template = (el && el.value.trim()) ? el.value : (configData[cle] || '');
   if (!template) {
-    toast('Modèle "' + type + '" vide — configure dans ⚙ Config → Modèles de mails');
+    toast('Modèle "' + type + '" vide — colle le texte dans ⚙ Config → Modèles de mails');
     return;
   }
 
@@ -1217,6 +1242,46 @@ function renderTaches() {
         taches.push({ done:true, urgence:'fait', echeance:j9Fb, icon:'✅',
           titre:'Infos formateur envoyées', meta:code,
           action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+      }
+    }
+
+    // Relance paiements manquants J-9 avant P1
+    if (convocs.length > 0) {
+      var dateP1r = parseDateLocal(convocs[0].date);
+      if (dateP1r) {
+        var j9R = new Date(dateP1r.getTime() - 9 * 86400000);
+        var relanceFaite = s.relance_paiement_fait === 'Oui';
+        if (!relanceFaite) {
+          taches.push({ done:false, urgence:getUrgence(today, j9R, dateP1r), echeance:j9R, icon:'💶',
+            titre:'Relance paiements manquants (J-9)', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+            marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{relance_paiement_fait:'Oui'}}); await reloadTaches(); };}(s.id)
+          });
+        } else {
+          taches.push({ done:true, urgence:'fait', echeance:j9R, icon:'✅',
+            titre:'Relance paiements effectuée', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+        }
+      }
+    }
+
+    // Contrôle prérequis J-9 avant P1
+    if (convocs.length > 0) {
+      var dateP1c = parseDateLocal(convocs[0].date);
+      if (dateP1c) {
+        var j9C = new Date(dateP1c.getTime() - 9 * 86400000);
+        var prereqFait = s.prereq_controle_fait === 'Oui';
+        if (!prereqFait) {
+          taches.push({ done:false, urgence:getUrgence(today, j9C, dateP1c), echeance:j9C, icon:'✔️',
+            titre:'Contrôler les prérequis stagiaires (J-9)', meta:code,
+            action:function(sid){return function(){switchView('session'); openSession(sid);};}(s.id),
+            marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{prereq_controle_fait:'Oui'}}); await reloadTaches(); };}(s.id)
+          });
+        } else {
+          taches.push({ done:true, urgence:'fait', echeance:j9C, icon:'✅',
+            titre:'Prérequis contrôlés', meta:code,
+            action:function(sid){return function(){switchView('session'); openSession(sid);};}(s.id) });
+        }
       }
     }
 
