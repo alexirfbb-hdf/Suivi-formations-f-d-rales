@@ -1012,6 +1012,14 @@ function genererMail(type) {
     }
   }
 
+  // Pour J-10 : utiliser automatiquement le 1er présentiel
+  var presAuto = null;
+  if (type === 'bf-j10' || type === 'detb-j10') {
+    var convAuto = [];
+    try { if (s.convocs_json) convAuto = JSON.parse(s.convocs_json); } catch(e) {}
+    if (convAuto.length) presAuto = convAuto[0];
+  }
+
   var cle = 'mail_' + type.replace(/-/g,'_');
   var template = configData[cle] || '';
   if (!template) {
@@ -1038,7 +1046,7 @@ function genererMail(type) {
     else if (convR2.length) presRelance = convR2[convR2.length-1];
   }
 
-  var texte = remplacerVariables(template, s, presRelance);
+  var texte = remplacerVariables(template, s, presRelance || presAuto);
   afficherMailGenere(type, texte);
 }
 
