@@ -1018,7 +1018,27 @@ function genererMail(type) {
     toast('Modèle "' + type + '" vide — configure dans ⚙ Config → Modèles de mails');
     return;
   }
-  var texte = remplacerVariables(template, s, null);
+
+  // Pour les relances : déterminer automatiquement le bon présentiel
+  var presRelance = null;
+  if (type === 'relance-avant') {
+    // Premier présentiel
+    var convR = [];
+    try { if (s.convocs_json) convR = JSON.parse(s.convocs_json); } catch(e) {}
+    if (convR.length) presRelance = convR[0];
+  } else if (type === 'relance-cours') {
+    // Prochain présentiel à venir
+    var convR2 = [];
+    try { if (s.convocs_json) convR2 = JSON.parse(s.convocs_json); } catch(e) {}
+    var today2 = new Date(); today2.setHours(0,0,0,0);
+    var futures = convR2.filter(function(c){
+      var d = parseDateLocal(c.date); return d && d >= today2;
+    }).sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
+    if (futures.length) presRelance = futures[0];
+    else if (convR2.length) presRelance = convR2[convR2.length-1];
+  }
+
+  var texte = remplacerVariables(template, s, presRelance);
   afficherMailGenere(type, texte);
 }
 
