@@ -861,9 +861,13 @@ async function pointerSession(id) {
   var iso = today.getFullYear() + '-' + ('0'+(today.getMonth()+1)).slice(-2) + '-' + ('0'+today.getDate()).slice(-2);
   var s = sessions.find(function(x){return x.id===id;});
   if (s) s.date_revue = iso;
-  await api('updateSession', { id: id, fields: { date_revue: iso } });
-  renderTDB();
-  toast('✓ Point fait le ' + today.toLocaleDateString('fr-FR'));
+  var res = await api('updateSession', { id: id, fields: { date_revue: iso } });
+  if (res && res.error) {
+    toast('⚠️ Erreur: ' + res.error + ' — vérifie que la colonne date_revue existe dans le Sheet');
+  } else {
+    renderTDB();
+    toast('✓ Point fait le ' + today.toLocaleDateString('fr-FR'));
+  }
 }
 
 function badgeStat(v) {
