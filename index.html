@@ -704,7 +704,14 @@ function fmtDate(d) {
 function switchView(name) {
   document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
   document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.view === name); });
-  document.getElementById('view-' + name).classList.add('active');
+  var el = document.getElementById('view-' + name);
+  if (el) el.classList.add('active');
+  // Masquer la barre session si on quitte la session
+  if (name !== 'session') {
+    document.getElementById('session-bar').style.display = 'none';
+  } else if (currentSession) {
+    document.getElementById('session-bar').style.display = 'block';
+  }
   if (name === 'taches') { window.location.hash = ''; renderTaches(); }
   if (name === 'tdb') { window.location.hash = ''; loadSessions(); }
   if (name === 'annuaire') { window.location.hash = ''; loadAnnuaire(); }
