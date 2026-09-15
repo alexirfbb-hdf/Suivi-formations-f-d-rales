@@ -715,7 +715,7 @@ function switchSub(name) {
   document.querySelectorAll('.subview').forEach(function(v) { v.classList.remove('active'); });
   document.getElementById('sub-' + name).classList.add('active');
   if (name === 'stag') renderStag();
-  if (name === 'mails') { prefillMails(); renderRelListe(); }
+  if (name === 'mails') { prefillMails(); renderRelListe(); renderClubsListe(); }
 }
 
 // === TABLEAU DE BORD ===
