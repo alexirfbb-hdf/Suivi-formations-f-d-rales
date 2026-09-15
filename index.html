@@ -704,7 +704,7 @@ function switchView(name) {
   if (name === 'taches') { window.location.hash = ''; renderTaches(); }
   if (name === 'tdb') { window.location.hash = ''; loadSessions(); }
   if (name === 'annuaire') { window.location.hash = ''; loadAnnuaire(); }
-  if (name === 'config') { window.location.hash = ''; if (!configData) loadConfig(); else if (!configMailsLoaded) loadConfigMails(); }
+  if (name === 'config') { window.location.hash = ''; if (!configData) loadConfig(); else loadConfigMails(); }
 }
 function switchSub(name) {
   document.querySelectorAll('.stab').forEach(function(t) { t.classList.toggle('active', t.dataset.s === name); });
@@ -929,11 +929,11 @@ function loadConfigMails() {
   MAIL_KEYS.forEach(function(k) {
     var el = document.getElementById('cfg-mail-'+k.replace(/_/g,'-'));
     if (!el) return;
-    // Priorité : localStorage > Sheet
-    var local = localStorage.getItem('irfbb_mail_'+k);
+    // Priorité : configData (Sheet) > localStorage
     var fromSheet = configData && configData['mail_'+k];
-    if (local) el.value = local;
-    else if (fromSheet) el.value = fromSheet;
+    var local = '';
+    try { local = localStorage.getItem('irfbb_mail_'+k) || ''; } catch(e) {}
+    el.value = fromSheet || local || '';
   });
   configMailsLoaded = true;
 }
@@ -2743,8 +2743,14 @@ async function importResultats() {
 // === INIT ===
 async function init() {
   var hash = window.location.hash.replace('#','');
-  // Charger config et sessions en parallèle au démarrage
-  await Promise.all([loadConfig(), hash && hash.charAt(0) === 'S' ? openSession(hash) : loadSessions()]);
+  // Un seul appel API pour sessions + config
+  var data = await api('getInit');
+  sessions = Array.isArray(data.sessions) ? data.sessions : [];
+  configData = data.config || {};
+  loadConfigMails();
+  renderTDB();
+  renderTaches();
+  if (hash && hash.charAt(0) === 'S') { await openSession(hash); }
 }
 init();
 </script>
