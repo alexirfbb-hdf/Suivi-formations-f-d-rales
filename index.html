@@ -267,24 +267,19 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <p style="font-size:12.5px;color:var(--ink-s);margin:0;">ℹ️ Les liens des questionnaires de satisfaction sont <strong>uniques par session</strong> — à renseigner dans ✏️ Modifier la session.</p>
   </div>
 
-<!-- DETAIL SESSION -->
-<div class="view" id="view-session">
-  <div style="margin-bottom:12px;">
-    <h2 id="det-title" style="font-size:19px;margin-bottom:3px;"></h2>
-    <div id="det-sub" style="color:var(--ink-s);font-size:12px;margin-bottom:14px;"></div>
-    <div id="det-liens-rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn-g" style="font-size:12px;padding:5px 12px;" onclick="modifierSession()">✏️ Modifier la session</button>
-    </div>
+<!-- SESSION OVERLAY (plein écran) -->
+<div id="session-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f3f0;z-index:500;overflow-y:auto;padding:0;">
+  <!-- Barre du haut -->
+  <div style="background:var(--white);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;">
+    <button onclick="fermerSession()" style="background:none;border:1px solid var(--line);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:13px;color:var(--ink-s);">← Tableau de bord</button>
+    <span id="det-title" style="font-size:15px;font-weight:700;color:var(--sage-d);"></span>
+    <span id="det-sub" style="font-size:12px;color:var(--ink-s);"></span>
+    <div style="margin-left:auto;display:flex;gap:6px;" id="det-liens-rapides"></div>
+    <button class="btn-g" style="font-size:12px;" onclick="modifierSession()">✏️ Modifier</button>
   </div>
-
-  <!-- SUBTABS -->
-  <div style="display:flex;gap:4px;border-bottom:2px solid var(--line);margin-bottom:16px;">
-    <div class="stab active" data-s="mails" onclick="switchSub('mails')" style="padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600;">✉️ Modèles mails</div>
-  </div>
-
-  <!-- MAILS -->
-  <div class="subview active" id="sub-mails">
+  <!-- Contenu -->
+  <div style="padding:16px 20px;max-width:1200px;margin:0 auto;">
+      <div class="subview active" id="sub-mails">
     <!-- GÉNÉRER MAILS -->
     <div class="card">
       <h3 style="font-size:14px;margin-bottom:8px;">📋 Générer les textes de mails</h3>
@@ -383,8 +378,10 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     </div>
 
   </div><!-- fin sub-mails -->
-
+  </div>
 </div>
+
+
 
 <!-- MODAL NOUVELLE SESSION / MODIFICATION -->
 <div class="modal-bg" id="modal-session">
@@ -1511,12 +1508,12 @@ async function syncPresentielsDepuisProgramme() {
 
 
 function fermerSession() {
-  currentSession = null;
-  currentStag = [];
-  window.location.hash = '';
+  document.getElementById('session-overlay').style.display = 'none';
   document.getElementById('tab-session').style.display = 'none';
   document.getElementById('session-bar').style.display = 'none';
-  switchView('tdb');
+  window.location.hash = '';
+  currentSession = null;
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.view === 'tdb'); });
 }
 
 async function marquerTacheFaite(idx) {
@@ -1941,54 +1938,30 @@ async function saveSession() {
 
 // === DETAIL SESSION ===
 async function openSession(id) {
-  // Masquer toutes les vues et afficher uniquement view-session
-  document.querySelectorAll('.view').forEach(function(v) { v.style.display = 'none'; });
-  document.getElementById('view-session').style.display = 'block';
+  document.getElementById('session-overlay').style.display = 'block';
   document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.view === 'session'); });
   document.getElementById('tab-session').style.display = '';
   window.location.hash = id;
-
   document.getElementById('det-title').textContent = 'Chargement…';
   document.getElementById('det-sub').textContent = '';
   document.getElementById('det-liens-rapides').innerHTML = '';
-
   try {
     var data = await api('getSession', { id: id });
     if (data.error) throw new Error(data.error);
     currentSession = data.session;
     currentStag = data.stagiaires || [];
-
     var s = currentSession;
     document.getElementById('det-title').textContent = s.nom || '';
-    document.getElementById('det-sub').textContent =
-      [s.code_kalisport, s.type, (s.formateur_civilite||'') + ' ' + (s.formateur_nom||''),
-       s.secteur, s.dates_globales].filter(Boolean).join(' · ');
-
-    // Onglet nav
+    document.getElementById('det-sub').textContent = [s.code_kalisport, s.type, (s.formateur_civilite||'')+' '+(s.formateur_nom||''), s.secteur].filter(Boolean).join(' · ');
     document.getElementById('tab-session-label').textContent = s.code_kalisport || s.nom || 'Session';
-
-    // Liens rapides
-    var lStyle = 'display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;background:var(--sand-d);border:1px solid var(--line);font-size:13px;color:var(--ink);text-decoration:none;cursor:pointer;white-space:nowrap;';
+    var lStyle = 'display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:16px;background:var(--sand-d);border:1px solid var(--line);font-size:12px;color:var(--ink);text-decoration:none;cursor:pointer;';
     var liens = [];
-    if (s.mail_session_kalisport || s.kalisport_lien)
-      liens.push('<a href="'+(s.mail_session_kalisport||s.kalisport_lien)+'" target="_blank" style="'+lStyle+'">🔗 Kalisport</a>');
-    if (s.lien_suivi_formateur)
-      liens.push('<a href="'+s.lien_suivi_formateur+'" target="_blank" style="'+lStyle+'">📋 Suivi formateur</a>');
-    if (s.teachup_lien_stag || s.teachup_lien)
-      liens.push('<a href="'+(s.teachup_lien_stag||s.teachup_lien)+'" target="_blank" style="'+lStyle+'">📚 Teach Up</a>');
+    if (s.mail_session_kalisport || s.kalisport_lien) liens.push('<a href="'+(s.mail_session_kalisport||s.kalisport_lien)+'" target="_blank" style="'+lStyle+'">🔗 Kalisport</a>');
+    if (s.lien_suivi_formateur) liens.push('<a href="'+s.lien_suivi_formateur+'" target="_blank" style="'+lStyle+'">📋 Suivi</a>');
+    if (s.teachup_lien_stag||s.teachup_lien) liens.push('<a href="'+(s.teachup_lien_stag||s.teachup_lien)+'" target="_blank" style="'+lStyle+'">📚 Teach Up</a>');
     document.getElementById('det-liens-rapides').innerHTML = liens.join('');
-
-    // Session bar sous la nav
-    document.getElementById('session-bar-titre').textContent = s.nom || '';
-    document.getElementById('session-bar-liens').innerHTML = liens.join('') +
-      '<span style="'+lStyle+';background:var(--sage-d);color:#fff;border-color:var(--sage-d);" onclick="switchView(\'session\')">✉️ Modèles mails</span>';
-    document.getElementById('session-bar').style.display = 'block';
-
     switchSub('mails');
-  } catch(e) {
-    document.getElementById('det-title').textContent = 'Erreur';
-    document.getElementById('det-sub').textContent = e.message;
-  }
+  } catch(e) { document.getElementById('det-title').textContent = 'Erreur: '+e.message; }
 }
 function actifs() { return currentStag.filter(function(s) { return s.statut !== 'Annulé' && s.statut !== 'Reporté'; }); }
 
