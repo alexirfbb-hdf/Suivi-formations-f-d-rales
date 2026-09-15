@@ -1981,7 +1981,7 @@ async function openSession(id) {
     document.getElementById('session-bar-liens').innerHTML = liensBar.join('');
     document.getElementById('session-bar').style.display = 'block';
     // Liens dans la session aussi
-    document.getElementById('det-liens-rapides').innerHTML = document.getElementById('session-bar-liens').innerHTML;
+    var _dlr = document.getElementById('det-liens-rapides'); var _sbl = document.getElementById('session-bar-liens'); if (_dlr && _sbl) _dlr.innerHTML = _sbl.innerHTML;
 
     switchSub('mails');
   } catch(e) {
@@ -1995,7 +1995,7 @@ function actifs() { return currentStag.filter(function(s) { return s.statut !== 
 
 function renderStag() {
   var all = currentStag;
-  if (!all.length) { document.getElementById('stag-content').innerHTML = '<div class="empty">Aucun stagiaire. Utilise l\'onglet Importer.</div>'; return; }
+  if (!all.length) { var _el_stagcontent = document.getElementById('stag-content'); if (_el_stagcontent) _el_stagcontent.innerHTML = '<div class="empty">Aucun stagiaire. Utilise l\'onglet Importer.</div>'; return; }
   var showA = document.getElementById('toggle-ann') ? document.getElementById('toggle-ann').checked : false;
   var vis = all.filter(function(s) { return showA || (s.statut !== 'Annulé' && s.statut !== 'Reporté'); });
   var act = actifs();
@@ -2026,7 +2026,7 @@ function renderStag() {
       '<td><input type="text" value="'+(s.note||'').replace(/"/g,'&quot;')+'" placeholder="Note…" style="font-size:11px;padding:2px 6px;width:130px;" onblur="updNote(\''+s.id+'\',this.value)" onkeydown="if(event.key===&quot;Enter&quot;)this.blur()"></td>' +
       '</tr>';
   }).join('');
-  document.getElementById('stag-content').innerHTML =
+  var _el_stagcontent = document.getElementById('stag-content'); if (_el_stagcontent) _el_stagcontent.innerHTML =
     '<div class="stats">' +
     '<div class="stat"><div class="n">'+act.length+'</div><div class="l">Actifs</div></div>' +
     '<div class="stat"><div class="n">'+m+'</div><div class="l">♂</div></div>' +
@@ -2043,23 +2043,23 @@ function renderStag() {
 
 function renderRepas() {
   var l = actifs();
-  if (!l.length) { document.getElementById('repas-content').innerHTML = '<div class="empty">Aucun stagiaire actif.</div>'; return; }
+  if (!l.length) { var _el_repascontent = document.getElementById('repas-content'); if (_el_repascontent) _el_repascontent.innerHTML = '<div class="empty">Aucun stagiaire actif.</div>'; return; }
   var nb = l.filter(function(s) { return s.repas === 'Oui'; }).length;
   var rows = l.map(function(s) {
     return '<tr><td><strong>'+(s.nom||'')+'</strong></td><td>'+(s.prenom||'')+'</td><td>'+(s.club||'')+'</td>' +
       '<td style="text-align:center;"><input type="checkbox" class="chk" '+(s.repas==='Oui'?'checked':'')+' onchange="updRepas(\''+s.id+'\',this.checked)"></td>' +
       '<td>'+(s.regime_alimentaire?'<span class="regime">⚠ '+s.regime_alimentaire+'</span>':'')+'</td></tr>';
   }).join('');
-  document.getElementById('repas-content').innerHTML =
+  var _el_repascontent = document.getElementById('repas-content'); if (_el_repascontent) _el_repascontent.innerHTML =
     '<div class="stats" style="margin-bottom:8px;"><div class="stat"><div class="n">'+nb+'</div><div class="l">Repas sur '+l.length+'</div></div></div>' +
     '<div class="scroll"><table><thead><tr><th>Nom</th><th>Prénom</th><th>Club</th><th>Repas ✓</th><th>Régime</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
 function renderTel() {
   var l = actifs();
-  if (!l.length) { document.getElementById('tel-content').innerHTML = '<div class="empty">Aucun stagiaire actif.</div>'; return; }
+  if (!l.length) { var _el_telcontent = document.getElementById('tel-content'); if (_el_telcontent) _el_telcontent.innerHTML = '<div class="empty">Aucun stagiaire actif.</div>'; return; }
   var rows = l.map(function(s) { return '<tr><td><strong>'+(s.nom||'')+'</strong> '+(s.prenom||'')+'</td><td>'+(s.club||'')+'</td><td>'+(s.telephone||'')+'</td><td>'+(s.email||'')+'</td></tr>'; }).join('');
-  document.getElementById('tel-content').innerHTML = '<div class="scroll"><table><thead><tr><th>Stagiaire</th><th>Club</th><th>Téléphone</th><th>Email</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  var _el_telcontent = document.getElementById('tel-content'); if (_el_telcontent) _el_telcontent.innerHTML = '<div class="scroll"><table><thead><tr><th>Stagiaire</th><th>Club</th><th>Téléphone</th><th>Email</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
 // === UPDATES STAGIAIRES ===
@@ -2252,7 +2252,8 @@ async function sendKalisport() {
 // === RELANCE PAIEMENT (lien individuel par stagiaire) ===
 function renderRelListe() {
   var l = actifs().filter(function(s) { return s.email; });
-  if (!l.length) { document.getElementById('rel-liste').innerHTML = '<div class="empty" style="padding:10px;">Aucun stagiaire actif avec email.</div>'; return; }
+  var relEl = document.getElementById('rel-liste'); if (!relEl) return;
+  if (!l.length) { relEl.innerHTML = '<div class="empty" style="padding:10px;">Aucun stagiaire actif avec email.</div>'; return; }
   var nonP = l.filter(function(s) { return (s.paiement_statut||'').toUpperCase() !== 'OK'; }).length;
   var rows = l.map(function(s) {
     var np = (s.paiement_statut||'').toUpperCase() !== 'OK';
