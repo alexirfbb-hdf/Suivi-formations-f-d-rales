@@ -1100,31 +1100,41 @@ function genererMail(type) {
 }
 
 function genererMailPresentiel(type, i) {
-  var s = currentSession;
-  var convocs = [];
-  try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
-  var pres = convocs[i] || null;
-  var cle = 'mail_' + type.replace(/-/g,'_');
-  // Lire depuis la textarea si remplie, sinon depuis configData
-  var textareaId = 'cfg-mail-' + type;
-  var el = document.getElementById(textareaId);
-  var template = (el && el.value.trim()) ? el.value : (configData[cle] || '');
-  if (!template) { toast('Modèle vide — colle le texte dans ⚙ Config'); return; }
-  var texte = remplacerVariables(template, s, pres);
-  document.getElementById('j5-presentiel-sel').style.display = 'none';
-  afficherMailGenere(type + ' — Présentiel '+(i+1), texte);
+  try {
+    var s = currentSession;
+    if (!s) { toast('Ouvre une session'); return; }
+    var convocs = [];
+    try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
+    var pres = convocs[i] || null;
+    var cle = 'mail_' + type.replace(/-/g,'_');
+    var textareaId = 'cfg-mail-' + type;
+    var el = document.getElementById(textareaId);
+    var template = (el && el.value.trim()) ? el.value : (configData && configData[cle] ? configData[cle] : '');
+    if (!template) { toast('Modèle "' + type + '" vide — va dans ⚙ Config pour le remplir'); return; }
+    var texte = remplacerVariables(template, s, pres);
+    var selEl = document.getElementById('j5-presentiel-sel');
+    if (selEl) selEl.style.display = 'none';
+    afficherMailGenere(type + ' — Présentiel '+(i+1), texte);
+  } catch(err) {
+    alert('Erreur: ' + err.message);
+  }
 }
 
 function afficherMailGenere(type, texte) {
   var titres = {
-    'bf-j10':'BF — Mail de bienvenue J-10','detb-j10':'DETB — Mail de bienvenue J-10',
-    'fo-j7':'Formateur — J-7','qs':'QS Stagiaires'
+    'bf-j10':'BF — Mail de bienvenue J-10', 'detb-j10':'DETB — Mail de bienvenue J-10',
+    'fo-j7':'Formateur — J-7', 'qs':'QS Stagiaires',
+    'relance-avant':'Relance paiement — Avant formation', 'relance-cours':'Relance paiement — En cours'
   };
   document.getElementById('mail-genere-titre').textContent = titres[type] || type;
+  // Zone visible
+  var apercu = document.getElementById('mail-genere-apercu');
+  if (apercu) apercu.textContent = texte;
+  // Textarea cachée pour copier
   document.getElementById('mail-genere-texte').value = texte;
   document.getElementById('mail-genere-zone').style.display = 'block';
   document.getElementById('r-mail-copie').textContent = '';
-  document.getElementById('mail-genere-zone').scrollIntoView({ behavior:'smooth' });
+  document.getElementById('mail-genere-zone').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function copierMailGenere() {
