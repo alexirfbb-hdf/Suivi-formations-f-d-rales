@@ -114,9 +114,13 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 </div>
 <div class="tabs">
   <div class="tab" data-view="taches" onclick="switchView('taches')">✅ Tâches</div>
-  <div class="tab" data-view="tdb" onclick="switchView('tdb')">Tableau de bord</div>
+  <div class="tab active" data-view="tdb" onclick="switchView('tdb')">Tableau de bord</div>
   <div class="tab" data-view="annuaire" onclick="switchView('annuaire')">Formateurs</div>
   <div class="tab" data-view="config" onclick="switchView('config')">⚙ Config</div>
+  <div class="tab" id="tab-session" data-view="session" onclick="switchView('session')" style="display:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+    <span id="tab-session-label">Session</span>
+    <span onclick="event.stopPropagation();fermerSession();" style="margin-left:6px;opacity:.6;font-size:11px;cursor:pointer;" title="Fermer">✕</span>
+  </div>
 </div>
 <!-- Barre session rapide — visible seulement quand une session est ouverte -->
 <div id="session-bar" style="display:none;background:var(--sand-d);border-bottom:1px solid var(--line);padding:8px 20px;">
@@ -265,7 +269,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 </div>
 
 <!-- DETAIL SESSION -->
-<div class="view" id="view-detail">
+<div class="view" id="view-session">
   <span class="back" onclick="switchView('tdb')">← Tableau de bord</span>
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
     <div>
@@ -1352,13 +1356,13 @@ function renderTaches() {
         if (!prereqFait) {
           taches.push({ done:false, urgence:getUrgence(today, j9C, dateP1c), echeance:j9C, icon:'✔️',
             titre:'Contrôler les prérequis stagiaires (J-9)', meta:code,
-            action:function(sid){return function(){switchView('session'); openSession(sid);};}(s.id),
+            action:function(sid){return function(){openSession(sid);};}(s.id),
             marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{prereq_controle_fait:'Oui'}}); await reloadTaches(); };}(s.id)
           });
         } else {
           taches.push({ done:true, urgence:'fait', echeance:j9C, icon:'✅',
             titre:'Prérequis contrôlés', meta:code,
-            action:function(sid){return function(){switchView('session'); openSession(sid);};}(s.id) });
+            action:function(sid){return function(){openSession(sid);};}(s.id) });
         }
       }
     }
@@ -1582,6 +1586,15 @@ function diagSession() {
     return c + ' : ' + etat;
   }).join('\n');
   alert('=== Diagnostic session ===\n\n' + rapport);
+}
+
+function fermerSession() {
+  currentSession = null;
+  currentStag = [];
+  window.location.hash = '';
+  document.getElementById('tab-session').style.display = 'none';
+  document.getElementById('session-bar').style.display = 'none';
+  switchView('tdb');
 }
 
 async function marquerTacheFaite(idx) {
@@ -2022,7 +2035,6 @@ async function saveSession() {
 // === DETAIL SESSION ===
 async function openSession(id) {
   window.location.hash = id;
-  switchView('detail');
   document.getElementById('det-title').textContent = 'Chargement…';
   document.getElementById('det-sub').textContent = '';
   try {
@@ -2030,12 +2042,17 @@ async function openSession(id) {
     if (data.error) throw new Error(data.error);
     currentSession = data.session;
     currentStag = data.stagiaires || [];
+
+    // Mettre à jour l'onglet session dans la nav
+    var codeLabel = currentSession.code_kalisport || currentSession.nom || 'Session';
+    document.getElementById('tab-session-label').textContent = codeLabel;
+    document.getElementById('tab-session').style.display = '';
     document.getElementById('det-title').textContent = currentSession.nom;
     document.getElementById('det-sub').textContent =
       (currentSession.code_kalisport||'') + ' · ' + (currentSession.type||'') + ' · ' +
       (currentSession.formateur_civilite||'') + ' ' + (currentSession.formateur_nom||'');
 
-    // Barre session rapide sous la nav
+    // Liens rapides
     var lienStyle = 'display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:16px;'
       + 'background:var(--white);border:1px solid var(--line);font-size:12px;color:var(--ink);text-decoration:none;white-space:nowrap;cursor:pointer;';
     var liensBar = [
@@ -2051,7 +2068,6 @@ async function openSession(id) {
     document.getElementById('session-bar-titre').textContent = currentSession.nom || '';
     document.getElementById('session-bar-liens').innerHTML = liensBar.join('');
     document.getElementById('session-bar').style.display = 'block';
-    // Liens dans la session aussi
     var _dlr = document.getElementById('det-liens-rapides'); var _sbl = document.getElementById('session-bar-liens'); if (_dlr && _sbl) _dlr.innerHTML = _sbl.innerHTML;
 
     switchSub('mails');
