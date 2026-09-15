@@ -269,90 +269,22 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 
 <!-- DETAIL SESSION -->
 <div class="view" id="view-session">
-  <span class="back" onclick="switchView('tdb')">← Tableau de bord</span>
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
-    <div>
-      <h2 id="det-title" style="font-size:19px;margin-bottom:3px;"></h2>
-      <div id="det-sub" style="color:var(--ink-s);font-size:12px;margin-bottom:10px;"></div>
+  <div style="margin-bottom:12px;">
+    <h2 id="det-title" style="font-size:19px;margin-bottom:3px;"></h2>
+    <div id="det-sub" style="color:var(--ink-s);font-size:12px;margin-bottom:14px;"></div>
+    <div id="det-liens-rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn-g" style="font-size:12px;padding:5px 12px;" onclick="modifierSession()">✏️ Modifier la session</button>
     </div>
-    <button class="btn-g" style="font-size:12px;padding:5px 12px;" onclick="modifierSession()">✏️ Modifier la session</button>
   </div>
-  <div id="det-liens-rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
-  <div class="subtabs">
-    <div class="stab active" data-s="mails" onclick="switchSub('mails')">✉️ Modèles mails</div>
 
+  <!-- SUBTABS -->
+  <div style="display:flex;gap:4px;border-bottom:2px solid var(--line);margin-bottom:16px;">
+    <div class="stab active" data-s="mails" onclick="switchSub('mails')" style="padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600;">✉️ Modèles mails</div>
   </div>
-<!-- CONFIG SESSION -->
-  <div class="subview" id="sub-config-session">
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:12px;">Informations Kalisport</h3>
-      <div class="field-row">
-        <div class="field"><label>Lien page session Kalisport</label><input id="cfg-s-kal-session" placeholder="https://hautsdefrancebasketball.kalisport.com/..."></div>
-        <div class="field"><label>Lien formulaire inscription</label><input id="cfg-s-kal-form" placeholder="https://..."></div>
-      </div>
-      <div class="field"><label>Tableau de bord Teach Up (spécifique à cette session)</label><input id="cfg-s-tup-lien" placeholder="https://ffbb.teachup.com/dashboard/..."></div>
-    </div>
 
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:12px;">Dates de formation</h3>
-      <p style="font-size:12px;color:var(--ink-s);margin-top:0;">Ces dates apparaissent dans le mail aux clubs et dans les convocations. Une ligne par présentiel.</p>
-      <div class="field"><label>Programme complet — une ligne par journée</label>
-        <textarea id="cfg-s-programme" style="min-height:100px;font-size:12px;" placeholder="Samedi 25 oct. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE&#10;Samedi 10 jan. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE&#10;Samedi 14 fév. de 9h à 17h (RDV 8h30) — SALLE XYZ, DUNKERQUE"></textarea></div>
-      <div class="field-row">
-        <div class="field"><label>Lieu de formation</label><input id="cfg-s-lieu"></div>
-        <div class="field"><label>Dates globales (ex : du 25 oct. au 14 fév.)</label><input id="cfg-s-dates-globales" placeholder="du 25 oct. 2025 au 14 fév. 2026"></div>
-      </div>
-      <div class="field"><label>Date du dernier présentiel <small style="color:var(--ink-s);">(pour déclencheur QS)</small></label><input id="cfg-s-date-dernier" type="date"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:12px;">Visioconférence de présentation <span style="font-size:11px;font-weight:400;color:var(--ink-s)">(BF uniquement)</span></h3>
-      <div class="field-row">
-        <div class="field"><label>Type</label>
-          <select id="cfg-s-visio-type">
-            <option value="">Pas de visio</option>
-            <option value="live">En direct</option>
-            <option value="replay">En replay</option>
-          </select></div>
-        <div class="field"><label>Date & heure (si direct)</label><input id="cfg-s-visio-date" placeholder="Vendredi 17 oct. à 19h00"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Lien connexion (si direct)</label><input id="cfg-s-visio-lien"></div>
-        <div class="field"><label>Lien replay (si replay)</label><input id="cfg-s-visio-replay"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:12px;">Infos pratiques (convocation)</h3>
-      <div class="field"><label>Infos accès — une ligne par moyen</label>
-        <textarea id="cfg-s-acces" style="min-height:60px;font-size:12px;" placeholder="En voiture : parking sur site&#10;En train : gare de…"></textarea></div>
-      <div class="field-row">
-        <div class="field"><label>Matériel à prévoir</label><input id="cfg-s-materiel" placeholder="Tenue sportive, prise de notes"></div>
-        <div class="field"><label>Lien Facebook covoiturage</label><input id="cfg-s-fb" value="https://www.facebook.com/groups/632709503927580/"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:12px;">Formateur</h3>
-      <div class="field"><label>Lien Google Sheet de suivi formateur (émargements, résultats)</label><input id="cfg-s-suivi-fo" placeholder="https://docs.google.com/spreadsheets/d/..."></div>
-    </div>
-
-    <div class="card">
-      <h3 style="font-size:14px;margin-bottom:12px;">Questionnaires de satisfaction</h3>
-      <div class="info">Liens uniques pour cette session.</div>
-      <div class="field-row">
-        <div class="field"><label>Lien questionnaire stagiaires</label><input id="cfg-s-qs-stag" placeholder="https://forms.gle/..."></div>
-        <div class="field"><label>Lien questionnaire formateur</label><input id="cfg-s-qs-form" placeholder="https://forms.gle/..."></div>
-      </div>
-    </div>
-
-    <div class="btn-row">
-      <button class="btn-p" onclick="saveConfigSession()">💾 Enregistrer toute la configuration</button>
-    </div>
-    <div id="r-config-session" style="font-size:12px;color:var(--ink-s);margin-top:6px;"></div>
-  </div>
-  <div class="subview" id="sub-mails">
-
+  <!-- MAILS -->
+  <div class="subview active" id="sub-mails">
     <!-- GÉNÉRER MAILS -->
     <div class="card">
       <h3 style="font-size:14px;margin-bottom:8px;">📋 Générer les textes de mails</h3>
@@ -452,10 +384,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 
   </div><!-- fin sub-mails -->
 
-
-</div><!-- fin view-detail -->
-
-</main>
+</div>
 
 <!-- MODAL NOUVELLE SESSION / MODIFICATION -->
 <div class="modal-bg" id="modal-session">
@@ -2017,39 +1946,42 @@ async function openSession(id) {
   document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.view === 'session'); });
   document.getElementById('tab-session').style.display = '';
   window.location.hash = id;
+
   document.getElementById('det-title').textContent = 'Chargement…';
   document.getElementById('det-sub').textContent = '';
+  document.getElementById('det-liens-rapides').innerHTML = '';
+
   try {
     var data = await api('getSession', { id: id });
     if (data.error) throw new Error(data.error);
     currentSession = data.session;
     currentStag = data.stagiaires || [];
 
-    // Mettre à jour l'onglet session dans la nav
-    var codeLabel = currentSession.code_kalisport || currentSession.nom || 'Session';
-    document.getElementById('tab-session-label').textContent = codeLabel;
-    document.getElementById('tab-session').style.display = '';
+    var s = currentSession;
+    document.getElementById('det-title').textContent = s.nom || '';
     document.getElementById('det-sub').textContent =
-      (currentSession.code_kalisport||'') + ' · ' + (currentSession.type||'') + ' · ' +
-      (currentSession.formateur_civilite||'') + ' ' + (currentSession.formateur_nom||'');
+      [s.code_kalisport, s.type, (s.formateur_civilite||'') + ' ' + (s.formateur_nom||''),
+       s.secteur, s.dates_globales].filter(Boolean).join(' · ');
+
+    // Onglet nav
+    document.getElementById('tab-session-label').textContent = s.code_kalisport || s.nom || 'Session';
 
     // Liens rapides
-    var lienStyle = 'display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:16px;'
-      + 'background:var(--white);border:1px solid var(--line);font-size:12px;color:var(--ink);text-decoration:none;white-space:nowrap;cursor:pointer;';
-    var liensBar = [
-      { label: '🔗 Kalisport', url: currentSession.mail_session_kalisport || currentSession.kalisport_lien },
-      { label: '📋 Suivi formateur', url: currentSession.lien_suivi_formateur },
-      { label: '📚 Teach Up', url: currentSession.teachup_lien_stag || currentSession.teachup_lien },
-    ].filter(function(l) { return l.url; }).map(function(l) {
-      return '<a href="' + l.url + '" target="_blank" style="' + lienStyle + '"'
-        + ' onmouseover="this.style.borderColor=\'var(--sage)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
-        + l.label + '</a>';
-    });
-    liensBar.push('<span style="' + lienStyle + ';background:var(--sage-d);color:#fff;border-color:var(--sage-d);" onclick="switchView(\'session\');switchSub(\'mails\')">✉️ Modèles mails</span>');
-    document.getElementById('session-bar-titre').textContent = currentSession.nom || '';
-    document.getElementById('session-bar-liens').innerHTML = liensBar.join('');
+    var lStyle = 'display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;background:var(--sand-d);border:1px solid var(--line);font-size:13px;color:var(--ink);text-decoration:none;cursor:pointer;white-space:nowrap;';
+    var liens = [];
+    if (s.mail_session_kalisport || s.kalisport_lien)
+      liens.push('<a href="'+(s.mail_session_kalisport||s.kalisport_lien)+'" target="_blank" style="'+lStyle+'">🔗 Kalisport</a>');
+    if (s.lien_suivi_formateur)
+      liens.push('<a href="'+s.lien_suivi_formateur+'" target="_blank" style="'+lStyle+'">📋 Suivi formateur</a>');
+    if (s.teachup_lien_stag || s.teachup_lien)
+      liens.push('<a href="'+(s.teachup_lien_stag||s.teachup_lien)+'" target="_blank" style="'+lStyle+'">📚 Teach Up</a>');
+    document.getElementById('det-liens-rapides').innerHTML = liens.join('');
+
+    // Session bar sous la nav
+    document.getElementById('session-bar-titre').textContent = s.nom || '';
+    document.getElementById('session-bar-liens').innerHTML = liens.join('') +
+      '<span style="'+lStyle+';background:var(--sage-d);color:#fff;border-color:var(--sage-d);" onclick="switchView(\'session\')">✉️ Modèles mails</span>';
     document.getElementById('session-bar').style.display = 'block';
-    var _dlr = document.getElementById('det-liens-rapides'); var _sbl = document.getElementById('session-bar-liens'); if (_dlr && _sbl) _dlr.innerHTML = _sbl.innerHTML;
 
     switchSub('mails');
   } catch(e) {
@@ -2057,8 +1989,6 @@ async function openSession(id) {
     document.getElementById('det-sub').textContent = e.message;
   }
 }
-
-// === STAGIAIRES ===
 function actifs() { return currentStag.filter(function(s) { return s.statut !== 'Annulé' && s.statut !== 'Reporté'; }); }
 
 
