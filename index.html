@@ -2034,6 +2034,8 @@ async function saveSession() {
 
 // === DETAIL SESSION ===
 async function openSession(id) {
+  // Switcher immédiatement vers l'onglet session
+  switchView('session');
   window.location.hash = id;
   document.getElementById('det-title').textContent = 'Chargement…';
   document.getElementById('det-sub').textContent = '';
@@ -2047,7 +2049,6 @@ async function openSession(id) {
     var codeLabel = currentSession.code_kalisport || currentSession.nom || 'Session';
     document.getElementById('tab-session-label').textContent = codeLabel;
     document.getElementById('tab-session').style.display = '';
-    document.getElementById('det-title').textContent = currentSession.nom;
     document.getElementById('det-sub').textContent =
       (currentSession.code_kalisport||'') + ' · ' + (currentSession.type||'') + ' · ' +
       (currentSession.formateur_civilite||'') + ' ' + (currentSession.formateur_nom||'');
