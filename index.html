@@ -727,9 +727,15 @@ function switchSub(name) {
 
 // === TABLEAU DE BORD ===
 async function loadSessions() {
+  // Si données récentes en mémoire, afficher directement sans recharger
+  if (sessions && sessions.length > 0) { renderTDB(); return; }
   document.getElementById('tdb-body').innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--ink-s);padding:24px;">Chargement…</td></tr>';
-  var data = await api('getSessions');
-  sessions = Array.isArray(data) ? data : [];
+  try {
+    var data = await api('getInit');
+    sessions = Array.isArray(data.sessions) ? data.sessions : [];
+    configData = data.config || {};
+    try { sessionStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData, ts: Date.now() })); } catch(e) {}
+  } catch(e) {}
   renderTDB();
 }
 
@@ -2471,14 +2477,34 @@ var CSV_MAP = {'ID':'kalisport_id','NOM_STAGIAIRE':'nom','PRENOM_STAGIAIRE':'pre
 
 async function init() {
   var hash = window.location.hash.replace('#','');
-  // Un seul appel API pour sessions + config
-  var data = await api('getInit');
-  sessions = Array.isArray(data.sessions) ? data.sessions : [];
-  configData = data.config || {};
-  loadConfigMails();
-  renderTDB();
-  renderTaches();
-  if (hash && hash.charAt(0) === 'S') { await openSession(hash); }
+
+  // 1. Afficher le cache immédiatement si disponible (affichage instantané)
+  try {
+    var raw = sessionStorage.getItem('irfbb_cache');
+    if (raw) {
+      var cached = JSON.parse(raw);
+      sessions = Array.isArray(cached.sessions) ? cached.sessions : [];
+      configData = cached.config || {};
+      loadConfigMails();
+      renderTDB();
+      renderTaches();
+      if (hash && hash.charAt(0) === 'S') openSession(hash);
+    }
+  } catch(e) {}
+
+  // 2. TOUJOURS charger les vraies données depuis le Sheet (mise à jour en temps réel)
+  try {
+    var data = await api('getInit');
+    sessions = Array.isArray(data.sessions) ? data.sessions : [];
+    configData = data.config || {};
+    try { sessionStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData })); } catch(e) {}
+    loadConfigMails();
+    renderTDB();
+    renderTaches();
+    if (hash && hash.charAt(0) === 'S') await openSession(hash);
+  } catch(e) {
+    if (!sessions.length) toast('⚠️ Erreur de chargement');
+  }
 }
 init();
 </script>
