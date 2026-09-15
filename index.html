@@ -359,8 +359,8 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       </div>
       <div id="clubs-sessions-liste" style="margin:8px 0;"></div>
       <div class="btn-row">
-        <button class="btn-s" onclick="sendClubs()">Envoyer à Christelle et Martin</button>
-        <button class="btn-g" onclick="testM('clubs')">📧 Test</button>
+        <button class="btn-p" onclick="genererMailClubs('christelle')">📋 Générer mail Christelle</button>
+        <button class="btn-s" onclick="genererMailClubs('martin')">📋 Générer mail Martin</button>
       </div>
       <div id="r-clubs" style="font-size:12px;color:var(--ink-s);"></div>
     </div>
@@ -2127,35 +2127,55 @@ function renderClubsListe() {
     '<div class="scroll"><table><thead><tr><th style="width:28px;">✓</th><th>Code</th><th>Type</th><th>Début</th><th>Lieu</th><th>Clôture</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
-async function sendClubs() {
+function genererMailClubs(dest) {
   var ids = Array.from(document.querySelectorAll('.clubs-chk:checked')).map(function(c){return c.dataset.id;});
-  if (!ids.length) { toast('Aucune session sélectionnée'); return; }
-  var sessionsRetenues = sessions.filter(function(s){return ids.indexOf(s.id)>-1;});
-  if (!confirm('Envoyer ' + sessionsRetenues.length + ' formation(s) à Christelle et Martin ?')) return;
-  var christelleEl = document.getElementById('m-clubs-christelle');
-  var martinEl = document.getElementById('m-clubs-martin');
-  var p = {
-    session_id: currentSession.id,
-    sessions_ids: ids,
-    christelle: christelleEl ? christelleEl.value : 'christelle.delaey@hdfbasket.org',
-    martin: martinEl ? martinEl.value : 'martin.weber@hdfbasket.org',
-    lien_inscription: '',
-    plan_bf: configData.plan_bf || '',
-    plan_detb: configData.plan_detb || '',
-    info_bf: configData.info_bf || '',
-    info_detb: configData.info_detb || '',
-    plan_int_bf: configData.plan_int_bf || '',
-    plan_int_detb: configData.plan_int_detb || ''
-  };
-  document.getElementById('r-clubs').textContent = 'Envoi…';
-  var res = await api('envoyerMailClubs', p);
-  document.getElementById('r-clubs').textContent = res.success ? ('Envoyé — ' + sessionsRetenues.length + ' formation(s) regroupées') : ('Erreur: '+(res.error||''));
-  if (res.success) {
-    toast('Mail clubs envoyé');
-    await api('updateSession', { id: currentSession.id, fields: { statut_mail_clubs: 'Envoyé' } });
-    currentSession.statut_mail_clubs = 'Envoyé';
-    prefillMails();
-  }
+  if (!ids.length) { toast('Aucune session cochée'); return; }
+  var sessionsChoisies = sessions.filter(function(s){ return ids.indexOf(s.id) > -1; });
+  if (!sessionsChoisies.length) { toast('Sessions introuvables'); return; }
+
+  var secteur = sessionsChoisies[0].secteur || '';
+  var nb = sessionsChoisies.length;
+  var motNouv = nb > 1 ? 'De nouvelles sessions' : 'Une nouvelle session';
+
+  // Construire le texte du mail
+  var blocs = sessionsChoisies.map(function(s) {
+    var prog = (s.programme_presentiel || '').split('\n').filter(function(l){return l.trim();});
+    var lien = s.mail_formulaire || '';
+    var tarif = s.tarif ? s.tarif + ' €' : '—';
+    var cloture = s.date_fin_inscription ? fmtDate(s.date_fin_inscription) : '—';
+    var txt = '\n---\n';
+    txt += (s.type || 'Formation') + ' — ' + (s.secteur || '') + '\n';
+    txt += 'Prix : ' + tarif + '\n';
+    if (prog.length) { txt += 'Planning :\n'; prog.forEach(function(l){ txt += '  • ' + l + '\n'; }); }
+    txt += 'Date de clôture des inscriptions : ' + cloture + '\n';
+    if (lien) txt += 'INSCRIPTION EN LIGNE : ' + lien + '\n';
+    return txt;
+  }).join('');
+
+  var sujet = 'IRFBB - Nouvelles sessions de formation' + (secteur ? ' — ' + secteur : '');
+
+  var texteChristelle = 'Bonjour Christelle,\n\nPeux-tu envoyer le mail ci-dessous à tous les clubs du secteur ' + secteur + ' stp ? Merci !\n\n---\n\n'
+    + 'Bonjour,\n\n' + motNouv + ' de formation vient d\'être programmée' + (nb > 1 ? 's' : '') + (secteur ? ' dans votre secteur (' + secteur + ')' : '') + '.\n'
+    + 'Merci de bien vouloir faire suivre cette information à vos licenciés potentiellement intéressés.\n'
+    + blocs
+    + '\nBien cordialement,\n\nAlexandra GODART\nCoordinatrice des actions de formation — IRFBB Hauts-de-France\n03 20 16 93 75 — agodart@hdfbasket.org';
+
+  var texteMartin = 'Salut Martin,\n\nPeux-tu ajouter ' + (nb > 1 ? 'ces ' + nb + ' stages' : 'ce stage') + ' au site ? Merci !\n'
+    + blocs
+    + '\nAlexandra GODART — agodart@hdfbasket.org';
+
+  var texte = dest === 'christelle' ? texteChristelle : texteMartin;
+  var titre = dest === 'christelle' ? 'Mail Christelle — ' + secteur : 'Mail Martin — ' + secteur;
+
+  // Afficher dans la zone de génération commune
+  document.getElementById('mail-genere-titre').textContent = sujet + ' (' + dest + ')';
+  var apercu = document.getElementById('mail-genere-apercu');
+  if (apercu) apercu.textContent = texte;
+  document.getElementById('mail-genere-texte').value = texte;
+  document.getElementById('mail-genere-zone').style.display = 'block';
+  document.getElementById('r-mail-copie').textContent = '';
+  document.getElementById('mail-genere-zone').scrollIntoView({ behavior:'smooth' });
+  document.getElementById('r-clubs').textContent = '✓ Texte généré — copie et envoie depuis Outlook';
 }
 
 // === MAIL KALISPORT ===
