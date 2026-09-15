@@ -941,7 +941,11 @@ function loadConfigMails() {
   var keys = ['bf_j10','detb_j10','bf_j5','detb_j5','fo_j7','qs','relance_avant','relance_cours'];
   keys.forEach(function(k) {
     var el = document.getElementById('cfg-mail-'+k.replace(/_/g,'-'));
-    if (el && configData && configData['mail_'+k]) el.value = configData['mail_'+k];
+    if (el && configData && configData['mail_'+k]) {
+      // Ne réécrire que si la valeur configData est non vide
+      // et que la textarea est vide (évite d'écraser ce que l'utilisateur a tapé)
+      if (!el.value.trim()) el.value = configData['mail_'+k];
+    }
   });
 }
 
