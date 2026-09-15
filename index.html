@@ -1216,35 +1216,76 @@ function renderTaches() {
       var dateP = parseDateLocal(c.date);
       if (!dateP) return;
       var isP1 = (i === 0);
-      var jourAvantStag = isP1 ? 9 : 5;
-      var jourAvantForm = 5;
-      var echeanceStag = new Date(dateP.getTime() - jourAvantStag * 86400000);
-      var echeanceForm = new Date(dateP.getTime() - jourAvantForm * 86400000);
       var d = parseDateLocal(c.date);
       var dateAff = d ? d.toLocaleDateString('fr-FR') : c.date;
       var pLabel = 'Présentiel ' + (i+1) + (dateAff ? ' — ' + dateAff : '');
 
-      // Convoc stagiaires : J-9 pour P1, J-5 pour les autres
-      if (c.stag !== 'Envoyé') {
-        taches.push({ done:false, urgence:getUrgence(today, echeanceStag, dateP), echeance:echeanceStag, icon:'📋',
-          titre:'Convocation ' + pLabel + ' → stagiaires (J-' + jourAvantStag + ')', meta:code,
-          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-          marquer:function(sid,ci,conv){return async function(){
-            conv[ci].stag='Envoyé';
-            await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv),statut_convocation:'Envoyé'}});
-            await reloadTaches();
-          };}(s.id,i,convocs)
-        });
-      } else {
-        taches.push({ done:true, urgence:'fait', echeance:echeanceStag, icon:'✅',
-          titre:'Convocation ' + pLabel + ' → stagiaires', meta:code,
-          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+      // P1 uniquement : mail bienvenue J-9
+      if (isP1) {
+        var echeanceJ9 = new Date(dateP.getTime() - 9 * 86400000);
+        if (c.stag !== 'Envoyé') {
+          taches.push({ done:false, urgence:getUrgence(today, echeanceJ9, dateP), echeance:echeanceJ9, icon:'📧',
+            titre:'Mail bienvenue ' + pLabel + ' → stagiaires (J-9)', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+            marquer:function(sid,ci,conv){return async function(){
+              conv[ci].stag='Envoyé';
+              await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv),statut_convocation:'Envoyé'}});
+              await reloadTaches();
+            };}(s.id,i,convocs)
+          });
+        } else {
+          taches.push({ done:true, urgence:'fait', echeance:echeanceJ9, icon:'✅',
+            titre:'Mail bienvenue P1 envoyé', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+        }
       }
 
-      // Convoc formateur : J-5, sauf P1 (pas de convoc form pour P1)
-      if (!isP1) {
+      // TOUS les présentiels : mail rappel J-5
+      var echeanceJ5 = new Date(dateP.getTime() - 5 * 86400000);
+      var rappelFait = isP1 ? (c.rappel_j5 === 'Envoyé') : (c.stag === 'Envoyé' && !isP1);
+      // Pour P2+ on utilise stag comme indicateur du rappel J-5
+      // Pour P1 on utilise un champ dédié rappel_j5
+      var rappelIcone = isP1 ? '📋' : '📋';
+      var rappelTitre = 'Mail rappel J-5 ' + pLabel + ' → stagiaires';
+      if (isP1) {
+        // P1 J-5 = rappel séparé du bienvenue J-9
+        var rappelP1Fait = c.rappel_j5 === 'Envoyé';
+        if (!rappelP1Fait) {
+          taches.push({ done:false, urgence:getUrgence(today, echeanceJ5, dateP), echeance:echeanceJ5, icon:'📋',
+            titre:rappelTitre + ' (J-5)', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+            marquer:function(sid,ci,conv){return async function(){
+              conv[ci].rappel_j5='Envoyé';
+              await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv)}});
+              await reloadTaches();
+            };}(s.id,i,convocs)
+          });
+        } else {
+          taches.push({ done:true, urgence:'fait', echeance:echeanceJ5, icon:'✅',
+            titre:'Rappel J-5 P1 envoyé', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+        }
+      } else {
+        // P2+ : stag = rappel J-5
+        if (c.stag !== 'Envoyé') {
+          taches.push({ done:false, urgence:getUrgence(today, echeanceJ5, dateP), echeance:echeanceJ5, icon:'📋',
+            titre:'Mail rappel J-5 ' + pLabel + ' → stagiaires', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
+            marquer:function(sid,ci,conv){return async function(){
+              conv[ci].stag='Envoyé';
+              await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv)}});
+              await reloadTaches();
+            };}(s.id,i,convocs)
+          });
+        } else {
+          taches.push({ done:true, urgence:'fait', echeance:echeanceJ5, icon:'✅',
+            titre:'Rappel J-5 ' + pLabel + ' envoyé', meta:code,
+            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
+        }
+        // Convoc formateur J-5 pour P2+
+        var echeanceFormJ5 = new Date(dateP.getTime() - 5 * 86400000);
         if (c.form !== 'Envoyé') {
-          taches.push({ done:false, urgence:getUrgence(today, echeanceForm, dateP), echeance:echeanceForm, icon:'👨‍🏫',
+          taches.push({ done:false, urgence:getUrgence(today, echeanceFormJ5, dateP), echeance:echeanceFormJ5, icon:'👨‍🏫',
             titre:'Convocation ' + pLabel + ' → formateur (J-5)', meta:code,
             action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
             marquer:function(sid,ci,conv){return async function(){
@@ -1254,8 +1295,8 @@ function renderTaches() {
             };}(s.id,i,convocs)
           });
         } else {
-          taches.push({ done:true, urgence:'fait', echeance:echeanceForm, icon:'✅',
-            titre:'Convocation ' + pLabel + ' → formateur', meta:code,
+          taches.push({ done:true, urgence:'fait', echeance:echeanceFormJ5, icon:'✅',
+            titre:'Convocation ' + pLabel + ' → formateur envoyée', meta:code,
             action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
         }
       }
