@@ -1084,9 +1084,12 @@ function genererMailPresentiel(type, i) {
   var convocs = [];
   try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
   var pres = convocs[i] || null;
-  var cle = 'mail_' + type.replace('-','_');
-  var template = configData[cle] || '';
-  if (!template) { toast('Modèle vide — configure dans ⚙ Config'); return; }
+  var cle = 'mail_' + type.replace(/-/g,'_');
+  // Lire depuis la textarea si remplie, sinon depuis configData
+  var textareaId = 'cfg-mail-' + type;
+  var el = document.getElementById(textareaId);
+  var template = (el && el.value.trim()) ? el.value : (configData[cle] || '');
+  if (!template) { toast('Modèle vide — colle le texte dans ⚙ Config'); return; }
   var texte = remplacerVariables(template, s, pres);
   document.getElementById('j5-presentiel-sel').style.display = 'none';
   afficherMailGenere(type + ' — Présentiel '+(i+1), texte);
