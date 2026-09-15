@@ -266,7 +266,6 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   <div class="card" style="background:var(--sand);border:1px dashed var(--line);">
     <p style="font-size:12.5px;color:var(--ink-s);margin:0;">ℹ️ Les liens des questionnaires de satisfaction sont <strong>uniques par session</strong> — à renseigner dans ✏️ Modifier la session.</p>
   </div>
-</div>
 
 <!-- DETAIL SESSION -->
 <div class="view" id="view-session">
@@ -2006,11 +2005,9 @@ async function saveSession() {
 
 // === DETAIL SESSION ===
 async function openSession(id) {
-  // Forcer l'affichage de la vue session uniquement
+  // Masquer toutes les vues et afficher uniquement view-session
   document.querySelectorAll('.view').forEach(function(v) { v.style.display = 'none'; });
-  var sv = document.getElementById('view-session');
-  if (sv) sv.style.display = 'block';
-  // Mettre à jour les onglets
+  document.getElementById('view-session').style.display = 'block';
   document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.view === 'session'); });
   document.getElementById('tab-session').style.display = '';
   window.location.hash = id;
