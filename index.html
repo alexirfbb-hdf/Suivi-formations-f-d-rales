@@ -587,12 +587,24 @@ var configData = {}; // Cache config du sheet
 var secteursList = []; // Liste des secteurs paramétrables
 
 // === UTILS ===
+var POST_ACTIONS = ['updateSession','createSession','setConfigBulk',
+  'envoyerMailFormateur','envoyerMailKalisport','envoyerConvocations',
+  'envoyerMailClubs','envoyerQuestionnaireSatisfaction'];
+
 async function api(action, payload) {
   payload = payload || {};
   try {
-    var res = await fetch(API_URL + '?action=' + action + '&payload=' + encodeURIComponent(JSON.stringify(payload)));
-    var data = await res.json();
-    return data;
+    var res;
+    if (POST_ACTIONS.indexOf(action) > -1) {
+      res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: action, payload: payload })
+      });
+    } else {
+      res = await fetch(API_URL + '?action=' + action + '&payload=' + encodeURIComponent(JSON.stringify(payload)));
+    }
+    return await res.json();
   } catch(e) {
     return { error: e.message };
   }
