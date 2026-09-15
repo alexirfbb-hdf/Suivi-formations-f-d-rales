@@ -2418,6 +2418,12 @@ async function init() {
   }
 }
 init();
+
+// Garder Apps Script chaud — ping toutes les 90 secondes
+// Évite le "cold start" de 3s pour les utilisateurs actifs
+setInterval(function() {
+  fetch(API_URL + '?action=ping').catch(function(){});
+}, 90 * 1000);
 </script>
 </body>
 </html>
