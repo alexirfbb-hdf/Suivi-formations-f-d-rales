@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏀</text></svg>">
 <title>Suivi Formations Fédérales — IRFBB HDF</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -943,19 +944,24 @@ async function saveConfigMails() {
     var el = document.getElementById('cfg-mail-'+k.replace(/_/g,'-'));
     if (el) {
       data['mail_'+k] = el.value;
-      localStorage.setItem('irfbb_mail_'+k, el.value);
+      try { localStorage.setItem('irfbb_mail_'+k, el.value); } catch(e) {}
     }
   });
-  document.getElementById('r-cfg-mails').textContent = '✓ Modèles enregistrés';
-  toast('✓ Modèles sauvegardés');
-  // Tenter aussi le Sheet (non bloquant)
+  var r = document.getElementById('r-cfg-mails');
+  r.textContent = 'Enregistrement…';
   try {
     var res = await api('setConfigBulk', { data: data });
     if (res && !res.error) {
       if (configData) Object.assign(configData, data);
-      document.getElementById('r-cfg-mails').textContent = '✓ Modèles enregistrés (local + Sheet)';
+      r.innerHTML = '✅ Enregistrés dans le Sheet (' + (res.count||0) + ' modèles)';
+      toast('✓ Modèles sauvegardés dans le Sheet');
+    } else {
+      r.innerHTML = '⚠️ Sheet KO — sauvegardés en local uniquement<br><small>' + (res&&res.error||'Erreur inconnue') + '</small>';
+      toast('⚠️ Local uniquement — redéploie le Apps Script');
     }
-  } catch(e) {}
+  } catch(e) {
+    r.innerHTML = '⚠️ Erreur API — sauvegardés en local uniquement';
+  }
 }
 
 
@@ -2737,8 +2743,8 @@ async function importResultats() {
 // === INIT ===
 async function init() {
   var hash = window.location.hash.replace('#','');
-  if (hash && hash.charAt(0) === 'S') { await openSession(hash); }
-  else { loadSessions(); }
+  // Charger config et sessions en parallèle au démarrage
+  await Promise.all([loadConfig(), hash && hash.charAt(0) === 'S' ? openSession(hash) : loadSessions()]);
 }
 init();
 </script>
