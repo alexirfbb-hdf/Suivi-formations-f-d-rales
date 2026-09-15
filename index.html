@@ -976,10 +976,12 @@ function remplacerVariables(template, s, presentiel) {
     '[LIEN_KALISPORT]': s.kalisport_lien || '[LIEN_KALISPORT]',
   };
 
-  var result = template;
-  Object.keys(vars).forEach(function(k) {
-    result = result.split(k).join(vars[k]);
-  });
+  var result = template || '';
+  if (vars && typeof vars === 'object') {
+    Object.keys(vars).forEach(function(k) {
+      result = result.split(k).join(vars[k] || '');
+    });
+  }
   return result;
 }
 
@@ -1745,10 +1747,11 @@ function openNewSession() {
 }
 
 async function modifierSession() {
-  if (!currentSession) return;
+  if (!currentSession) { toast('Aucune session sélectionnée'); return; }
   sessionEnCoursDeModif = currentSession.id;
-  await loadAnnuaire(); // attendre la fin avant de remplir le form
+  try { await loadAnnuaire(); } catch(e) { formateurs = formateurs || []; }
   var s = currentSession;
+  if (!s) { toast('Session introuvable'); return; }
   var set = function(id, val) { var el = document.getElementById(id); if (el && val !== undefined && val !== null) el.value = val; };
   set('f-code', s.code_kalisport);
   set('f-nom', s.nom);
