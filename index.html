@@ -2713,7 +2713,12 @@ async function testM(type) {
     p.lien_form = s.lien_qs_form || '';
     res = await api('envoyerQuestionnaireSatisfaction', p);
   }
-  toast(res && res.success ? ('Test envoyé à ' + ME) : ('Erreur : ' + (res && res.error || 'inconnue')));
+  if (!res) {
+    toast('⚠️ Aucune réponse de l\'API — vérifie le redéploiement Apps Script');
+    return;
+  }
+  toast(res.success ? ('✓ Test envoyé à ' + ME) : ('⚠️ Erreur : ' + (res.error || 'inconnue')));
+  if (!res.success) alert('Détail erreur : ' + JSON.stringify(res));
 }
 
 // === IMPORT CSV ===
