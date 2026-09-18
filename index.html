@@ -2247,21 +2247,31 @@ async function sendKalisport() {
 
 
 async function sendRelance() {
-  var cochés = [];
-  document.querySelectorAll('.rel-chk:checked').forEach(function(c) {
-    var id = c.dataset.id;
-    var lienEl = document.querySelector('.rel-lien[data-id="'+id+'"]');
-    cochés.push({ id: id, lien: lienEl ? lienEl.value : '' });
-  });
-  if (!cochés.length) { toast('Aucun stagiaire sélectionné'); return; }
-  if (!confirm('Envoyer la relance à ' + cochés.length + ' stagiaire(s) ?')) return;
+  // Les emails stagiaires ne sont plus en base — on génère le modèle HTML pour copier/coller
   var dateDebut = fmtDate(currentSession.date_debut);
   var res = await api('envoyerRelancePaiement', {
     session_id: currentSession.id,
-    stagiaires_avec_lien: cochés,
     date_debut: dateDebut,
   });
-  if (res.success) toast('Relances envoyées');
+  if (res && res.modele_html) {
+    // Afficher le modèle dans la zone de génération de mail
+    document.getElementById('mail-genere-titre').textContent = 'Modèle — Relance paiement';
+    var apercu = document.getElementById('mail-genere-apercu');
+    if (apercu) {
+      apercu.innerHTML = res.modele_html;
+      apercu.style.display = 'block';
+    }
+    var mailGenBody = document.getElementById('mail-gen-body');
+    if (mailGenBody) {
+      mailGenBody.style.display = 'block';
+      var arr = document.getElementById('mail-gen-arr');
+      if (arr) arr.textContent = '▴';
+    }
+    mailGenBody && mailGenBody.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toast('Modèle relance généré — copie et envoie depuis ta messagerie');
+  } else if (res && res.error) {
+    toast('Erreur: ' + res.error);
+  }
 }
 
 // === CONVOCATION ===
@@ -2380,7 +2390,7 @@ async function sendQS(type) {
   document.getElementById('r-qs').textContent = 'Envoi…';
   var res = await api('envoyerQuestionnaireSatisfaction', p);
   if (res.success) {
-    document.getElementById('r-qs').textContent = res.sent_stag + ' stagiaire(s) + formateur contactés';
+    document.getElementById('r-qs').textContent = '📨 Envoyé sur ta boîte — transfère aux stagiaires' + (lienForm ? ' + formateur' : '');
     // Sauvegarder les liens dans la session (uniques par session)
     var fields = { lien_qs_stag: lienStag, lien_qs_form: lienForm };
     if (dateDernier) fields.date_dernier_presentiel = dateDernier;
