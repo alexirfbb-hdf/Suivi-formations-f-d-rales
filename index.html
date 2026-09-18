@@ -44,7 +44,7 @@ tr:hover td{background:#f9f7f2;}
 .stat{background:var(--white);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:80px;}
 .stat .n{font-family:'Playfair Display',serif;font-size:22px;color:var(--sage-d);}
 .stat .l{font-size:10px;color:var(--ink-s);text-transform:uppercase;letter-spacing:.03em;}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(51,49,44,.4);align-items:center;justify-content:center;z-index:50;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(51,49,44,.4);align-items:center;justify-content:center;z-index:10000;}
 .modal-bg.open{display:flex;}
 .modal{background:var(--white);border-radius:12px;padding:20px;width:600px;max-width:95vw;max-height:90vh;overflow:auto;}
 .modal h3{margin-bottom:12px;}
@@ -2174,17 +2174,24 @@ function renderClubsListe() {
     return;
   }
   var rows = meme.map(function(s) {
-    var isCurrent = s.id === currentSession.id;
-    return '<tr><td style="text-align:center;"><input type="checkbox" class="chk clubs-chk" data-id="'+s.id+'" '+(isCurrent?'checked':'')+' '+(isCurrent?'':'')+' checked></td>' +
+    return '<tr id="clubs-row-'+s.id+'">'+
+      '<td style="text-align:center;"><input type="checkbox" class="chk clubs-chk" data-id="'+s.id+'" checked></td>' +
       '<td><strong>'+(s.code_kalisport||'—')+'</strong></td>' +
       '<td>'+(s.type||'')+'</td>' +
       '<td>'+fmtDate(s.date_debut)+'</td>' +
       '<td>'+(s.lieu||'')+'</td>' +
-      '<td style="font-size:11px;color:var(--ink-s);">'+(s.date_fin_inscription?'Clôture: '+fmtDate(s.date_fin_inscription):'')+'</td></tr>';
+      '<td style="font-size:11px;color:var(--ink-s);">'+(s.date_fin_inscription?'Clôture: '+fmtDate(s.date_fin_inscription):'')+'</td>'+
+      '<td style="text-align:center;"><button title="Masquer cette session" onclick="masquerLigneClub(\''+s.id+'\')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink-s);padding:2px 4px;line-height:1;" onmouseover="this.style.color=\'#c0392b\'" onmouseout="this.style.color=\'var(--ink-s)\'">🗑</button></td>'+
+      '</tr>';
   }).join('');
   document.getElementById('clubs-sessions-liste').innerHTML =
     '<p style="font-size:12px;color:var(--ink-s);margin-bottom:6px;">Sessions du secteur <strong>'+(secteur||'non défini')+'</strong> — toutes cochées par défaut :</p>' +
-    '<div class="scroll"><table><thead><tr><th style="width:28px;">✓</th><th>Code</th><th>Type</th><th>Début</th><th>Lieu</th><th>Clôture</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    '<div class="scroll"><table><thead><tr><th style="width:28px;">✓</th><th>Code</th><th>Type</th><th>Début</th><th>Lieu</th><th>Clôture</th><th style="width:28px;"></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function masquerLigneClub(id) {
+  var row = document.getElementById('clubs-row-' + id);
+  if (row) row.style.display = 'none';
 }
 
 async function envoyerClubsBoite(dest) {
