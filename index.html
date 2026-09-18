@@ -1555,13 +1555,15 @@ async function loadAnnuaire() {
   if (el) el.innerHTML = html;
 }
 function openAddFormateur() { loadAnnuaire(); document.getElementById('modal-annuaire').classList.add('open'); }
-function openAnnuaire() {
+async function openAnnuaire() {
+  document.getElementById('ann-select-content').innerHTML = '<p style="font-size:12.5px;color:var(--ink-s);">⏳ Chargement…</p>';
+  document.getElementById('modal-annuaire').classList.add('open');
+  await loadAnnuaire();
   var html = formateurs.length ?
     '<div class="scroll"><table><thead><tr><th>Nom</th><th>Email</th><th></th></tr></thead><tbody>' +
     formateurs.map(function(f) { return '<tr><td>'+(f.civilite||'')+' <strong>'+(f.nom||'')+'</strong> '+(f.prenom||'')+'</td><td>'+(f.email||'')+'</td><td><button class="btn-g" style="font-size:11px;padding:3px 7px;" onclick="pickFormateur(\''+f.id+'\')">Choisir</button></td></tr>'; }).join('') +
-    '</tbody></table></div>' : '<p style="font-size:12.5px;color:var(--ink-s);">Annuaire vide. Ajoute des formateurs ci-dessous.</p>';
+    '</tbody></table></div>' : '<p style="font-size:12.5px;color:var(--ink-s);">Annuaire vide. Ajoute des formateurs via l\'onglet Formateurs.</p>';
   document.getElementById('ann-select-content').innerHTML = html;
-  document.getElementById('modal-annuaire').classList.add('open');
 }
 function pickFormateur(id) {
   var f = formateurs.find(function(x) { return x.id === id; });
