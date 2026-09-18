@@ -2188,9 +2188,26 @@ function renderClubsListe() {
     '<div class="scroll"><table><thead><tr><th style="width:28px;">✓</th><th>Code</th><th>Type</th><th>Début</th><th>Lieu</th><th>Clôture</th><th style="width:28px;"></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
-function masquerLigneClub(id) {
-  var row = document.getElementById('clubs-row-' + id);
-  if (row) row.style.display = 'none';
+async function masquerLigneClub(id) {
+  var s = sessions.find(function(s){ return s.id === id; });
+  var nom = s ? (s.code_kalisport || s.nom || id) : id;
+  if (!confirm('Supprimer définitivement la session « ' + nom + » du Google Sheet ?\n\nCette action est irréversible.')) return;
+  var res = await api('deleteSession', { id: id });
+  if (res && res.success) {
+    // Retirer du tableau local
+    sessions = sessions.filter(function(s){ return s.id !== id; });
+    try {
+      var cache = JSON.parse(localStorage.getItem('irfbb_cache') || '{}');
+      if (cache.sessions) cache.sessions = cache.sessions.filter(function(s){ return s.id !== id; });
+      localStorage.setItem('irfbb_cache', JSON.stringify(cache));
+    } catch(e) {}
+    // Supprimer la ligne du DOM
+    var row = document.getElementById('clubs-row-' + id);
+    if (row) row.remove();
+    toast('Session supprimée définitivement');
+  } else {
+    toast('Erreur : ' + ((res && res.error) || 'inconnue'));
+  }
 }
 
 async function envoyerClubsBoite(dest) {
