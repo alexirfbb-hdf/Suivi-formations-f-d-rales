@@ -2191,7 +2191,7 @@ function renderClubsListe() {
 async function masquerLigneClub(id) {
   var s = sessions.find(function(s){ return s.id === id; });
   var nom = s ? (s.code_kalisport || s.nom || id) : id;
-  if (!confirm('Supprimer définitivement la session « ' + nom + » du Google Sheet ?\n\nCette action est irréversible.')) return;
+  if (!confirm('Supprimer définitivement la session « ' + nom + ' » du Google Sheet ?\n\nCette action est irréversible.')) return;
   var res = await api('deleteSession', { id: id });
   if (res && res.success) {
     // Retirer du tableau local
