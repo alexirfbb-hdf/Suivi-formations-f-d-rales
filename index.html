@@ -703,7 +703,7 @@ async function loadSessions() {
     var data = await api('getInit');
     sessions = Array.isArray(data.sessions) ? data.sessions : [];
     configData = data.config || {};
-    try { sessionStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData, ts: Date.now() })); } catch(e) {}
+    try { localStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData, ts: Date.now() })); } catch(e) {}
   } catch(e) {}
   renderTDB();
 }
@@ -1964,9 +1964,13 @@ async function saveSession() {
       var res = await api('updateSession', { id: sessionEnCoursDeModif, fields: fields });
       if (res && res.error) throw new Error(res.error);
       Object.assign(currentSession, fields);
+      // Mise à jour locale immédiate — pas de rechargement complet
+      var idx = sessions.findIndex(function(s) { return s.id === sessionEnCoursDeModif; });
+      if (idx > -1) Object.assign(sessions[idx], fields);
+      try { localStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData, ts: Date.now() })); } catch(e) {}
       closeAll();
       toast('Session mise à jour !');
-      loadSessions();
+      renderTDB(); renderTaches();
     } else {
       // Création
       btn.textContent = 'Création…';
@@ -1992,31 +1996,50 @@ async function saveSession() {
 }
 
 // === DETAIL SESSION ===
+// Affiche immédiatement depuis le cache local, charge les stagiaires en arrière-plan
 async function openSession(id) {
   document.getElementById('session-overlay').style.display = 'block';
   document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.view === 'session'); });
   document.getElementById('tab-session').style.display = '';
   window.location.hash = id;
-  document.getElementById('det-title').textContent = 'Chargement…';
-  document.getElementById('det-sub').textContent = '';
-  document.getElementById('det-liens-rapides').innerHTML = '';
+
+  // 1. Affichage instantané depuis le tableau de bord (déjà en mémoire)
+  var local = sessions.find(function(s) { return s.id === id; });
+  if (local) {
+    currentSession = Object.assign({}, local);
+    currentStag = [];
+    _renderSessionHeader(currentSession);
+    switchSub('mails');
+  } else {
+    document.getElementById('det-title').textContent = 'Chargement…';
+  }
+
+  // 2. Chargement des stagiaires en arrière-plan (silencieux)
   try {
     var data = await api('getSession', { id: id });
     if (data.error) throw new Error(data.error);
     currentSession = data.session;
     currentStag = data.stagiaires || [];
-    var s = currentSession;
-    document.getElementById('det-title').textContent = s.nom || '';
-    document.getElementById('det-sub').textContent = [s.code_kalisport, s.type, (s.formateur_civilite||'')+' '+(s.formateur_nom||''), s.secteur].filter(Boolean).join(' · ');
-    document.getElementById('tab-session-label').textContent = s.code_kalisport || s.nom || 'Session';
-    var lStyle = 'display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:16px;background:var(--sand-d);border:1px solid var(--line);font-size:12px;color:var(--ink);text-decoration:none;cursor:pointer;';
-    var liens = [];
-    if (s.mail_session_kalisport || s.kalisport_lien) liens.push('<a href="'+(s.mail_session_kalisport||s.kalisport_lien)+'" target="_blank" style="'+lStyle+'">🔗 Kalisport</a>');
-    if (s.lien_suivi_formateur) liens.push('<a href="'+s.lien_suivi_formateur+'" target="_blank" style="'+lStyle+'">📋 Suivi</a>');
-    if (s.teachup_lien_stag||s.teachup_lien) liens.push('<a href="'+(s.teachup_lien_stag||s.teachup_lien)+'" target="_blank" style="'+lStyle+'">📚 Teach Up</a>');
-    document.getElementById('det-liens-rapides').innerHTML = liens.join('');
-    switchSub('mails');
-  } catch(e) { document.getElementById('det-title').textContent = 'Erreur: '+e.message; }
+    // Mettre à jour le cache sessions en mémoire
+    var idx = sessions.findIndex(function(s) { return s.id === id; });
+    if (idx > -1) sessions[idx] = Object.assign(sessions[idx], data.session);
+    _renderSessionHeader(currentSession);
+    if (document.getElementById('sub-mails').classList.contains('active')) prefillMails();
+  } catch(e) {
+    if (!local) document.getElementById('det-title').textContent = 'Erreur : ' + e.message;
+  }
+}
+
+function _renderSessionHeader(s) {
+  var lStyle = 'display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:16px;background:var(--sand-d);border:1px solid var(--line);font-size:12px;color:var(--ink);text-decoration:none;cursor:pointer;';
+  document.getElementById('det-title').textContent = s.nom || '';
+  document.getElementById('det-sub').textContent = [s.code_kalisport, s.type, (s.formateur_civilite||'')+' '+(s.formateur_nom||''), s.secteur].filter(Boolean).join(' · ');
+  document.getElementById('tab-session-label').textContent = s.code_kalisport || s.nom || 'Session';
+  var liens = [];
+  if (s.mail_session_kalisport || s.kalisport_lien) liens.push('<a href="'+(s.mail_session_kalisport||s.kalisport_lien)+'" target="_blank" style="'+lStyle+'">🔗 Kalisport</a>');
+  if (s.lien_suivi_formateur) liens.push('<a href="'+s.lien_suivi_formateur+'" target="_blank" style="'+lStyle+'">📋 Suivi</a>');
+  if (s.teachup_lien_stag||s.teachup_lien) liens.push('<a href="'+(s.teachup_lien_stag||s.teachup_lien)+'" target="_blank" style="'+lStyle+'">📚 Teach Up</a>');
+  document.getElementById('det-liens-rapides').innerHTML = liens.join('');
 }
 function actifs() { return currentStag.filter(function(s) { return s.statut !== 'Annulé' && s.statut !== 'Reporté'; }); }
 
@@ -2433,7 +2456,7 @@ async function init() {
 
   // 1. Afficher le cache immédiatement si disponible (affichage instantané)
   try {
-    var raw = sessionStorage.getItem('irfbb_cache');
+    var raw = localStorage.getItem('irfbb_cache');
     if (raw) {
       var cached = JSON.parse(raw);
       sessions = Array.isArray(cached.sessions) ? cached.sessions : [];
@@ -2450,7 +2473,7 @@ async function init() {
     var data = await api('getInit');
     sessions = Array.isArray(data.sessions) ? data.sessions : [];
     configData = data.config || {};
-    try { sessionStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData })); } catch(e) {}
+    try { localStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData, ts: Date.now() })); } catch(e) {}
     loadConfigMails();
     renderTDB();
     renderTaches();
@@ -2465,7 +2488,7 @@ init();
 // Évite le "cold start" de 3s pour les utilisateurs actifs
 setInterval(function() {
   fetch(API_URL + '?action=ping').catch(function(){});
-}, 90 * 1000);
+}, 55 * 1000);
 </script>
 </body>
 </html>
