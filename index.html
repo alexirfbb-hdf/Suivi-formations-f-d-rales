@@ -430,8 +430,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
             <input id="f-secteur" list="secteurs-dl" placeholder="OISE, AISNE, NORD…">
             <datalist id="secteurs-dl"></datalist>
           </div>
-          <div class="field"><label>Tarif (€)</label><input id="f-tarif" type="number" placeholder="170"></div>
-          <div class="field"><label>Repas (global)</label>
+<div class="field"><label>Repas (global)</label>
             <select id="f-repas-global">
               <option value="">—</option>
               <option value="Repas prévu par l'organisateur">Repas prévu par l'organisateur</option>
@@ -1780,7 +1779,7 @@ function openNewSession() {
   });
   formPresentiels = [];
   renderPresentielsForms();
-  document.getElementById('f-tarif').value = '170';
+
   document.getElementById('f-fb').value = 'https://www.facebook.com/groups/632709503927580/';
   document.getElementById('f-statut').value = 'À venir';
   document.getElementById('f-visio-type').value = '';
@@ -1806,7 +1805,7 @@ async function modifierSession() {
   set('f-nom', s.nom);
   set('f-secteur', s.secteur);
   set('f-lieu', s.lieu);
-  set('f-tarif', s.tarif);
+
   set('f-debut', s.date_debut ? (s.date_debut+'').substring(0,10) : '');
   set('f-fin', s.date_fin ? (s.date_fin+'').substring(0,10) : '');
   set('f-finins', s.date_fin_inscription ? (s.date_fin_inscription+'').substring(0,10) : '');
@@ -1901,7 +1900,7 @@ async function saveSession() {
     nom: g('f-nom'),
     secteur: g('f-secteur'),
     statut_stage: g('f-statut') || 'À venir',
-    tarif: g('f-tarif') || '170',
+
     repas_global: g('f-repas-global'),
     date_debut: autoDebut,
     date_fin: autoFin,
