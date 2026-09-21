@@ -2205,7 +2205,9 @@ function masquerLigneClub(id) {
 }
 
 async function envoyerClubsBoite(dest) {
-  var ids = Array.from(document.querySelectorAll('.clubs-chk:checked')).map(function(c){return c.dataset.id;});
+  var ids = Array.from(document.querySelectorAll('.clubs-chk:checked'))
+    .filter(function(c) { var tr = c.closest('tr'); return tr && tr.style.display !== 'none'; })
+    .map(function(c) { return c.dataset.id; });
   if (!ids.length) { toast('Aucune session cochée'); return; }
   var secteur = (sessions.find(function(s){ return ids.indexOf(s.id) > -1; }) || {}).secteur || '';
   var destLabel = dest === 'christelle' ? 'Christelle' : 'Martin';
