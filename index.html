@@ -420,6 +420,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
             <select id="f-type">
               <optgroup label="DETB"><option>DETB-CS1</option><option>DETB-CS2</option><option>DETB-CS3</option><option>DETB-CS4</option><option>DETB-CS5</option><option>DETB-CS6</option><option>DETB-CS7</option><option>DETB-CS8</option><option>DETB-CS9</option><option>DETB-CS10</option></optgroup>
               <optgroup label="Brevet Fédéral"><option>Brevet Fédéral Enfants</option><option>Brevet Fédéral Jeunes</option><option>Brevet Fédéral Adultes</option></optgroup>
+              <optgroup label="Autres formations"><option>Basket Bien-être</option><option>Micro Basket</option></optgroup>
             </select>
           </div>
         </div>
@@ -2162,26 +2163,25 @@ function renderRelListe() {
 }
 
 function renderClubsListe() {
-  // Afficher toutes les sessions actives — c'est Alex qui coche ce qu'elle veut envoyer
+  // Afficher toutes les sessions du même secteur que la session courante
   if (!currentSession) return;
+  var secteur = currentSession.secteur || '';
+  var meme = sessions.filter(function(s) {
+    return s.secteur === secteur && s.statut_stage !== 'Terminé';
+  });
+  if (!meme.length) {
+    document.getElementById('clubs-sessions-liste').innerHTML = '<p style="font-size:12px;color:var(--ink-s);">Aucune autre session dans le secteur ' + (secteur||'(non défini)') + '.</p>';
+    return;
+  }
   var masques = [];
   try { masques = JSON.parse(localStorage.getItem('irfbb_clubs_masques') || '[]'); } catch(e) {}
 
-  var actives = sessions.filter(function(s) {
-    return s.statut_stage !== 'Terminé' && masques.indexOf(s.id) === -1;
-  });
-  if (!actives.length) {
-    document.getElementById('clubs-sessions-liste').innerHTML = '<p style="font-size:12px;color:var(--ink-s);">Aucune session active.</p>';
-    return;
-  }
-
-  var rows = actives.map(function(s) {
-    var isCurrent = s.id === currentSession.id;
-    return '<tr id="clubs-row-'+s.id+'">'+
-      '<td style="text-align:center;"><input type="checkbox" class="chk clubs-chk" data-id="'+s.id+'" '+(isCurrent?'checked':'')+'></td>' +
+  var rows = meme.map(function(s) {
+    var masque = masques.indexOf(s.id) > -1;
+    return '<tr id="clubs-row-'+s.id+'"'+(masque?' style="display:none;"':'')+'>'+
+      '<td style="text-align:center;"><input type="checkbox" class="chk clubs-chk" data-id="'+s.id+'" checked></td>' +
       '<td><strong>'+(s.code_kalisport||'—')+'</strong></td>' +
       '<td>'+(s.type||'')+'</td>' +
-      '<td>'+(s.secteur||'')+'</td>' +
       '<td>'+fmtDate(s.date_debut)+'</td>' +
       '<td>'+(s.lieu||'')+'</td>' +
       '<td style="font-size:11px;color:var(--ink-s);">'+(s.date_fin_inscription?'Clôture: '+fmtDate(s.date_fin_inscription):'')+'</td>'+
@@ -2189,8 +2189,8 @@ function renderClubsListe() {
       '</tr>';
   }).join('');
   document.getElementById('clubs-sessions-liste').innerHTML =
-    '<p style="font-size:12px;color:var(--ink-s);margin-bottom:6px;">Toutes les sessions actives — coche celles à envoyer (seule la session en cours est cochée par défaut) :</p>' +
-    '<div class="scroll"><table><thead><tr><th style="width:28px;">✓</th><th>Code</th><th>Type</th><th>Secteur</th><th>Début</th><th>Lieu</th><th>Clôture</th><th style="width:28px;"></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    '<p style="font-size:12px;color:var(--ink-s);margin-bottom:6px;">Sessions du secteur <strong>'+(secteur||'non défini')+'</strong> — toutes cochées par défaut :</p>' +
+    '<div class="scroll"><table><thead><tr><th style="width:28px;">✓</th><th>Code</th><th>Type</th><th>Début</th><th>Lieu</th><th>Clôture</th><th style="width:28px;"></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
 function masquerLigneClub(id) {
