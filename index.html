@@ -1679,6 +1679,23 @@ function supprimerPresentielForm(i) {
   renderPresentielsForms();
 }
 
+function dupliquerPresentielForm(i) {
+  getPresentielsPourSave(); // sync DOM → formPresentiels
+  var src = formPresentiels[i];
+  if (!src) return;
+  // Date : +1 jour si renseignée, sinon vide
+  var nouvelleDate = '';
+  if (src.date) {
+    var d = new Date(src.date);
+    d.setDate(d.getDate() + 1);
+    nouvelleDate = d.toISOString().substring(0, 10);
+  }
+  var copie = { date: nouvelleDate, horaires: src.horaires, lieu: src.lieu, repas: src.repas || '', stag: src.stag || '', form: src.form || '' };
+  formPresentiels.splice(i + 1, 0, copie);
+  renderPresentielsForms();
+  updatePresentielForm(i + 1);
+}
+
 function renderPresentielsForms() {
   var html = formPresentiels.map(function(p, i) {
     return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:8px;background:var(--sand);border-radius:7px;flex-wrap:wrap;">'
@@ -1690,6 +1707,7 @@ function renderPresentielsForms() {
       + '<option value="">-- Repas --</option>'
       + ['Repas prévu par l\'organisateur','Repas prévu par l\'organisateur uniquement pour les journées complètes','Prévoir votre repas par vos propres moyens','Si vous n\'avez pas réservé et payé vos repas en option lors de votre inscription, il faudra prévoir vos repas par vos propres moyens durant la formation'].map(function(r,ri){ var short=['Repas organisateur','Repas journées complètes','Repas par vos soins','Sur option'];return '<option value="'+r+'"'+(p.repas===r?' selected':'')+'>'+short[ri]+'</option>'; }).join('')
       + '</select>'
+      + '<button type="button" style="padding:3px 8px;font-size:11px;border-radius:4px;border:1px solid var(--line);background:transparent;cursor:pointer;color:var(--sage-d);" onclick="dupliquerPresentielForm('+i+')" title="Dupliquer cet encart">⧉</button>'
       + '<button type="button" style="padding:3px 8px;font-size:11px;border-radius:4px;border:1px solid var(--line);background:transparent;cursor:pointer;color:var(--terra);" onclick="supprimerPresentielForm('+i+')">✕</button>'
       + '</div>';
   }).join('');
