@@ -1591,15 +1591,29 @@ async function loadAnnuaire() {
   if (el) el.innerHTML = html;
 }
 function openAddFormateur() { loadAnnuaire(); document.getElementById('modal-annuaire').classList.add('open'); }
-async function openAnnuaire() {
-  document.getElementById('ann-select-content').innerHTML = '<p style="font-size:12.5px;color:var(--ink-s);">⏳ Chargement…</p>';
-  document.getElementById('modal-annuaire').classList.add('open');
-  await loadAnnuaire();
+function renderAnnuaireSelect() {
   var html = formateurs.length ?
     '<div class="scroll"><table><thead><tr><th>Nom</th><th>Email</th><th></th></tr></thead><tbody>' +
     formateurs.map(function(f) { return '<tr><td>'+(f.civilite||'')+' <strong>'+(f.nom||'')+'</strong> '+(f.prenom||'')+'</td><td>'+(f.email||'')+'</td><td><button class="btn-g" style="font-size:11px;padding:3px 7px;" onclick="pickFormateur(\''+f.id+'\')">Choisir</button></td></tr>'; }).join('') +
-    '</tbody></table></div>' : '<p style="font-size:12.5px;color:var(--ink-s);">Annuaire vide. Ajoute des formateurs via l\'onglet Formateurs.</p>';
-  document.getElementById('ann-select-content').innerHTML = html;
+    '</tbody></table></div>' : '<p style="font-size:12.5px;color:var(--ink-s);">Aucun formateur — ajoute-en un ci-dessous, puis clique "Choisir".</p>';
+  var el = document.getElementById('ann-select-content');
+  if (el) el.innerHTML = html;
+}
+async function openAnnuaire() {
+  document.getElementById('modal-annuaire').classList.add('open');
+  // Afficher le cache immédiatement si dispo
+  if (formateurs.length > 0) {
+    renderAnnuaireSelect();
+  } else {
+    document.getElementById('ann-select-content').innerHTML = '<p style="font-size:12.5px;color:var(--ink-s);">⏳ Chargement…</p>';
+  }
+  // Rafraîchir en arrière-plan dans tous les cas
+  try {
+    await loadAnnuaire();
+    renderAnnuaireSelect();
+  } catch(e) {
+    if (!formateurs.length) document.getElementById('ann-select-content').innerHTML = '<p style="font-size:12px;color:var(--terra);">Erreur de chargement — réessaie.</p>';
+  }
 }
 function pickFormateur(id) {
   var f = formateurs.find(function(x) { return x.id === id; });
@@ -1619,8 +1633,9 @@ async function addFormateur() {
   if (!fields.nom) { toast('Nom requis'); return; }
   var res = await api('ajouterFormateur', fields);
   if (res.error) { toast('Erreur: ' + res.error); return; }
-  toast('Formateur ajouté');
+  toast('✓ Formateur ajouté — clique "Choisir" pour le sélectionner');
   await loadAnnuaire();
+  renderAnnuaireSelect();
   document.getElementById('ann-nom').value = '';
   document.getElementById('ann-pre').value = '';
   document.getElementById('ann-email').value = '';
@@ -1782,9 +1797,9 @@ function toggleSection(id) {
 
 var sessionEnCoursDeModif = null;
 
-function openNewSession() {
+async function openNewSession() {
   sessionEnCoursDeModif = null;
-  loadAnnuaire();
+  if (!formateurs.length) await loadAnnuaire();
   // Réinitialiser le formulaire
   ['f-code','f-nom','f-secteur','f-debut','f-fin','f-finins','f-lieu','f-obs',
    'f-dates-globales','f-acces','f-materiel',
