@@ -1266,7 +1266,25 @@ function renderTaches() {
             titre:'Rappel J-5 ' + pLabel + ' envoyé', meta:code,
             action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
         }
-        // Convoc formateur J-5 pour P2+
+        // Émargements J+1 après chaque présentiel
+      var echeanceEmar = new Date(dateP.getTime() + 86400000);
+      if (c.emargement !== 'Fait') {
+        taches.push({ done:false, urgence: today >= echeanceEmar ? (today - echeanceEmar > 2*86400000 ? 'rouge' : 'orange') : 'gris', echeance:echeanceEmar, icon:'📋',
+          titre:'Checker émargements — ' + pLabel, meta:code,
+          action:function(sid){return function(){openSession(sid);};}(s.id),
+          marquer:function(sid,ci,conv){return async function(){
+            conv[ci].emargement='Fait';
+            await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv)}});
+            await reloadTaches();
+          };}(s.id,i,convocs)
+        });
+      } else {
+        taches.push({ done:true, urgence:'fait', echeance:echeanceEmar, icon:'✅',
+          titre:'Émargements vérifiés — ' + pLabel, meta:code,
+          action:function(sid){return function(){openSession(sid);};}(s.id) });
+      }
+
+      // Convoc formateur J-5 pour P2+
         var echeanceFormJ5 = new Date(dateP.getTime() - 5 * 86400000);
         if (c.form !== 'Envoyé') {
           taches.push({ done:false, urgence:getUrgence(today, echeanceFormJ5, dateP), echeance:echeanceFormJ5, icon:'👨‍🏫',
