@@ -620,12 +620,19 @@ async function api(action, payload) {
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: action, payload: payload })
       });
-      data = await res.json();
+      var text = await res.text();
+      if (text.trim().startsWith('<')) {
+        // GAS a renvoyé une page HTML (erreur ou redirection) — le déploiement est probablement obsolète
+        throw new Error('Le script GAS a renvoyé une page d\'erreur. Redéploie le script (Déployer → Gérer les déploiements → Nouvelle version) puis réessaie.');
+      }
+      data = JSON.parse(text);
       // Apps Script redirige parfois les POST en GET (302), perdant le body.
       // Si on reçoit "Action inconnue", on retente en GET.
       if (data && typeof data.error === 'string' && data.error.indexOf('Action inconnue') === 0) {
         res = await fetch(API_URL + '?action=' + action + '&payload=' + encodeURIComponent(JSON.stringify(payload)));
-        data = await res.json();
+        var text2 = await res.text();
+        if (text2.trim().startsWith('<')) throw new Error('Le script GAS a renvoyé une page d\'erreur. Redéploie le script.');
+        data = JSON.parse(text2);
       }
       return data;
     } else {
@@ -1777,15 +1784,16 @@ function getPresentielsPourSave() {
   var repasEls = document.querySelectorAll('.pres-repas');
   var result = [];
   for (var i = 0; i < dates.length; i++) {
-    var stag = (formPresentiels[i] && formPresentiels[i].stag) || '';
-    var form = (formPresentiels[i] && formPresentiels[i].form) || '';
+    var prev = formPresentiels[i] || {};
     result.push({
       date: dates[i].value || '',
       horaires: horairesFromInputs(i),
       lieu: lieus[i] ? lieus[i].value : '',
       repas: repasEls[i] ? repasEls[i].value : '',
-      stag: stag,
-      form: form
+      stag: prev.stag || '',
+      form: prev.form || '',
+      rappel_j5: prev.rappel_j5 || '',
+      emargement: prev.emargement || ''
     });
   }
   formPresentiels = result;
@@ -1871,7 +1879,7 @@ async function modifierSession() {
     if (s.convocs_json) {
       var conv = JSON.parse(s.convocs_json);
       formPresentiels = conv.map(function(c) {
-        return { date: c.date || '', horaires: c.horaires || '', lieu: c.lieu || '', stag: c.stag || '', form: c.form || '' };
+        return { date: c.date || '', horaires: c.horaires || '', lieu: c.lieu || '', repas: c.repas || '', stag: c.stag || '', form: c.form || '', rappel_j5: c.rappel_j5 || '', emargement: c.emargement || '' };
       });
     }
   } catch(e) {}
