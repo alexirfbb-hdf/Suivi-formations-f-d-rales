@@ -897,6 +897,18 @@ async function updSessionTDB(el, id, field) {
   }
 }
 
+async function archiverSession(id, statutActuel) {
+  var nouveau = statutActuel === 'Archivé' ? 'À venir' : 'Archivé';
+  var label = nouveau === 'Archivé' ? 'archiver' : 'désarchiver';
+  if (!confirm('Confirmes-tu de ' + label + ' cette session ?')) return;
+  var s = sessions.find(function(x){return x.id===id;});
+  if (s) s.statut_stage = nouveau;
+  var res = await api('updateSession', { id: id, fields: { statut_stage: nouveau } });
+  if (res && res.error) { toast('Erreur : ' + res.error); return; }
+  toast('✓ Session ' + (nouveau === 'Archivé' ? 'archivée' : 'désarchivée'));
+  renderTDB();
+}
+
 async function marquerPayeComplet(id) {
   var s = sessions.find(function(x){return x.id===id;});
   if (s) s.paiement_manuel = 'Complet';
