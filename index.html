@@ -2109,7 +2109,7 @@ function _renderSessionHeader(s) {
   var liens = [];
   if (s.mail_session_kalisport || s.kalisport_lien) liens.push('<a href="'+(s.mail_session_kalisport||s.kalisport_lien)+'" target="_blank" style="'+lStyle+'">🔗 Kalisport</a>');
   if (s.lien_suivi_formateur) liens.push('<a href="'+s.lien_suivi_formateur+'" target="_blank" style="'+lStyle+'">📋 Suivi</a>');
-  if (s.teachup_lien_stag||s.teachup_lien) liens.push('<a href="'+(s.teachup_lien_stag||s.teachup_lien)+'" target="_blank" style="'+lStyle+'">📚 Teach Up</a>');
+  if (s.teachup_lien) liens.push('<a href="'+s.teachup_lien+'" target="_blank" style="'+lStyle+'">📚 Teach Up</a>');
   document.getElementById('det-liens-rapides').innerHTML = liens.join('');
 }
 function actifs() { return currentStag.filter(function(s) { return s.statut !== 'Annulé' && s.statut !== 'Reporté'; }); }
