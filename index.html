@@ -444,6 +444,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
         </div>
         <div class="field-row">
           <div class="field"><label>Date fin inscription</label><input id="f-finins" type="date"></div>
+          <div class="field"><label>Tarif (€)</label><input id="f-tarif" type="number" placeholder="125"></div>
           <div class="field"><label>Observations</label><input id="f-obs"></div>
         </div>
         <input type="hidden" id="f-statut" value="À venir">
@@ -489,6 +490,12 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <div id="s3" class="section-form-body">
         <div class="field"><label>Lien page session Kalisport</label><input id="f-kal-session" placeholder="https://hautsdefrancebasketball.kalisport.com/..."></div>
         <div class="field"><label>Lien formulaire inscription</label><input id="f-kal-form" placeholder="https://..."></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <button type="button" class="btn-g" onclick="importerDepuisKalisport()" style="font-size:12px;">🔗 Importer depuis Kalisport</button>
+          <button type="button" class="btn-g" onclick="importerConvocationPDF()" style="font-size:12px;">📄 Importer convocation PDF</button>
+          <input type="file" id="input-pdf-conv" accept=".pdf" style="display:none;" onchange="onConvocationPDFSelected(this)">
+        </div>
+        <p style="font-size:11px;color:var(--ink-s);margin:6px 0 0;">L'import Kalisport remplit automatiquement : nom, dates, horaires, lieu, tarif, fin inscription. La convocation PDF extrait : formateur, email, tél, lien Teach Up.</p>
       </div>
     </div>
 
@@ -609,7 +616,7 @@ var secteursList = []; // Liste des secteurs paramétrables
 // === UTILS ===
 var POST_ACTIONS = ['updateSession','createSession','setConfigBulk',
   'envoyerMailFormateur','envoyerMailKalisport','envoyerConvocations',
-  'envoyerMailClubs','envoyerQuestionnaireSatisfaction'];
+  'envoyerMailClubs','envoyerQuestionnaireSatisfaction','parseConvocationPDF'];
 
 async function api(action, payload) {
   payload = payload || {};
@@ -908,6 +915,75 @@ async function archiverSession(id, statutActuel) {
   if (res && res.error) { toast('Erreur : ' + res.error); return; }
   toast('✓ Session ' + (nouveau === 'Archivé' ? 'archivée' : 'désarchivée'));
   renderTDB();
+}
+
+// ═══════════════════════════════════════════════════
+// IMPORT / SYNC KALISPORT
+// ═══════════════════════════════════════════════════
+async function importerDepuisKalisport() {
+  var url = (document.getElementById('f-kal-session')||{}).value || '';
+  if (!url.trim()) { toast('Saisis d\'abord le lien page session Kalisport'); return; }
+  toast('⏳ Import en cours…');
+  var res = await api('fetchKalisport', { url: url.trim() });
+  if (!res || res.error) { toast('Erreur : ' + (res && res.error ? res.error : 'injoignable')); return; }
+  var set = function(id, val) { var el = document.getElementById(id); if (el && val !== undefined && val !== null && val !== '') el.value = val; };
+  // Ne remplace nom que s'il est vide
+  if (res.nom && !(document.getElementById('f-nom')||{}).value) set('f-nom', res.nom);
+  if (res.tarif) set('f-tarif', res.tarif);
+  if (res.finInscription) set('f-finins', res.finInscription);
+  if (res.acces) set('f-acces', res.acces);
+  // Présentiels
+  if (res.presentiels && res.presentiels.length) {
+    formPresentiels = res.presentiels.map(function(p) {
+      return { date: p.date || '', horaires: p.horaires || '', lieu: p.lieu || '', repas: '', stag: '', form: '', rappel_j5: '', emargement: '' };
+    });
+    renderPresentielsForms();
+  }
+  toast('✓ ' + (res.presentiels ? res.presentiels.length : 0) + ' présentiel(s) importé(s) depuis Kalisport');
+}
+
+async function syncDepuisKalisport(id) {
+  var s = sessions.find(function(x) { return x.id === id; });
+  if (!s || !s.mail_session_kalisport) { toast('Aucun lien Kalisport pour cette session'); return; }
+  toast('⏳ Synchronisation…');
+  var res = await api('syncSession', { id: id, url: s.mail_session_kalisport });
+  if (!res || res.error) { toast('Erreur : ' + (res && res.error ? res.error : 'injoignable')); return; }
+  // Recharger les sessions
+  var init = await api('getInit', {});
+  if (init && init.sessions) { sessions = init.sessions; renderTDB(); }
+  toast('✓ Session synchronisée depuis Kalisport');
+}
+
+// ═══════════════════════════════════════════════════
+// IMPORT CONVOCATION PDF
+// ═══════════════════════════════════════════════════
+function importerConvocationPDF() {
+  var inp = document.getElementById('input-pdf-conv');
+  if (inp) { inp.value = ''; inp.click(); }
+}
+
+function onConvocationPDFSelected(input) {
+  var file = input.files[0];
+  if (!file) return;
+  toast('⏳ Lecture du PDF…');
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var b64 = e.target.result.split(',')[1];
+    var res = await api('parseConvocationPDF', { b64: b64 });
+    if (!res || res.error) { toast('Erreur : ' + (res && res.error ? res.error : 'lecture impossible')); return; }
+    var set = function(id, val) { var el = document.getElementById(id); if (el && val) el.value = val; };
+    set('f-nom-fo', res.formateur_nom);
+    set('f-pre-fo', res.formateur_prenom);
+    set('f-email-fo', res.formateur_email);
+    set('f-tel-fo', res.formateur_tel);
+    if (res.teachup_lien) set('f-tup-lien', res.teachup_lien);
+    var msg = '✓ Importé : ';
+    var parts = [];
+    if (res.formateur_nom) parts.push(res.formateur_nom + ' ' + (res.formateur_prenom||''));
+    if (res.teachup_lien) parts.push('lien Teach Up');
+    toast(msg + (parts.join(', ') || 'aucune donnée trouvée'));
+  };
+  reader.readAsDataURL(file);
 }
 
 async function marquerPayeComplet(id) {
@@ -1840,7 +1916,7 @@ async function openNewSession() {
   sessionEnCoursDeModif = null;
   if (!formateurs.length) await loadAnnuaire();
   // Réinitialiser le formulaire
-  ['f-code','f-nom','f-secteur','f-debut','f-fin','f-finins','f-lieu','f-obs',
+  ['f-code','f-nom','f-secteur','f-debut','f-fin','f-finins','f-tarif','f-lieu','f-obs',
    'f-dates-globales','f-acces','f-materiel',
    'f-visio-date','f-visio-lien','f-visio-replay',
    'f-kal-session','f-kal-form','f-tup-id','f-tup-lien',
@@ -1882,6 +1958,7 @@ async function modifierSession() {
   set('f-debut', s.date_debut ? (s.date_debut+'').substring(0,10) : '');
   set('f-fin', s.date_fin ? (s.date_fin+'').substring(0,10) : '');
   set('f-finins', s.date_fin_inscription ? (s.date_fin_inscription+'').substring(0,10) : '');
+  set('f-tarif', s.tarif);
   set('f-obs', s.observations);
   if (s.statut_stage) document.getElementById('f-statut').value = s.statut_stage;
   if (s.repas_global) document.getElementById('f-repas-global').value = s.repas_global;
@@ -1978,6 +2055,7 @@ async function saveSession() {
     date_debut: autoDebut,
     date_fin: autoFin,
     date_fin_inscription: g('f-finins'),
+    tarif: g('f-tarif'),
     lieu: pres.length ? (pres[0].lieu || '') : '',
     observations: g('f-obs'),
     programme_presentiel: presentielsToProgramme(pres),
@@ -2109,6 +2187,7 @@ function _renderSessionHeader(s) {
   document.getElementById('tab-session-label').textContent = s.code_kalisport || s.nom || 'Session';
   var liens = [];
   if (s.mail_session_kalisport || s.kalisport_lien) liens.push('<a href="'+(s.mail_session_kalisport||s.kalisport_lien)+'" target="_blank" style="'+lStyle+'">🔗 Kalisport</a>');
+  if (s.mail_session_kalisport) liens.push('<button onclick="syncDepuisKalisport(\''+s.id+'\')" style="'+lStyle+'cursor:pointer;border:1px solid var(--line);background:var(--sand-d);">🔄 Sync</button>');
   if (s.lien_suivi_formateur) liens.push('<a href="'+s.lien_suivi_formateur+'" target="_blank" style="'+lStyle+'">📋 Suivi</a>');
   if (s.teachup_lien) liens.push('<a href="'+s.teachup_lien+'" target="_blank" style="'+lStyle+'">📚 Teach Up</a>');
   document.getElementById('det-liens-rapides').innerHTML = liens.join('');
