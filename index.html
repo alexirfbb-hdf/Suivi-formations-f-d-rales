@@ -961,8 +961,11 @@ async function importerDepuisKalisport() {
       s2.classList.add('open');
       if (s2arr) s2arr.textContent = '▴';
     }
-    // Faire défiler vers la section présentiels
-    if (s2) s2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Faire défiler le modal vers la section présentiels
+    if (s2) {
+      var modal = document.querySelector('.modal');
+      if (modal) modal.scrollTop = s2.parentElement.offsetTop - 20;
+    }
   }
   toast('✓ ' + (res.presentiels ? res.presentiels.length : 0) + ' présentiel(s) importé(s) depuis Kalisport');
 }
