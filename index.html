@@ -936,10 +936,22 @@ async function importerDepuisKalisport() {
   if (res.tarif) set('f-tarif', res.tarif);
   if (res.finInscription) set('f-finins', res.finInscription);
   if (res.acces) set('f-acces', res.acces);
-  // Présentiels
+  // Présentiels : fusion Kalisport + données existantes
   if (res.presentiels && res.presentiels.length) {
+    var existing = formPresentiels || [];
     formPresentiels = res.presentiels.map(function(p) {
-      return { date: p.date || '', horaires: p.horaires || '', lieu: p.lieu || '', repas: '', stag: '', form: '', rappel_j5: '', emargement: '' };
+      // Chercher un présentiel existant avec la même date
+      var ex = existing.find(function(e) { return e.date === p.date; }) || {};
+      return {
+        date:       p.date     || ex.date     || '',
+        horaires:   p.horaires || ex.horaires || '',  // Kalisport en priorité, sinon valeur existante
+        lieu:       p.lieu     || ex.lieu     || '',  // idem
+        repas:      ex.repas      || '',
+        stag:       ex.stag       || '',
+        form:       ex.form       || '',
+        rappel_j5:  ex.rappel_j5  || '',
+        emargement: ex.emargement || ''
+      };
     });
     renderPresentielsForms();
   }
