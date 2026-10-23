@@ -921,8 +921,12 @@ async function archiverSession(id, statutActuel) {
 // IMPORT / SYNC KALISPORT
 // ═══════════════════════════════════════════════════
 async function importerDepuisKalisport() {
-  var url = (document.getElementById('f-kal-session')||{}).value || '';
-  if (!url.trim()) { toast('Saisis d\'abord le lien page session Kalisport'); return; }
+  // Utiliser le lien formulaire (public) en priorité, sinon le lien session
+  var url = (document.getElementById('f-kal-form')||{}).value || '';
+  if (!url.trim()) url = (document.getElementById('f-kal-session')||{}).value || '';
+  if (!url.trim()) { toast('Saisis d\'abord le lien Kalisport (formulaire inscription ou page session)'); return; }
+  // Refuser les URLs privées
+  if (url.indexOf('/private/') > -1) { toast('⚠️ Utilise le lien "Formulaire inscription" (sans /private/) — le lien session Kalisport est réservé à l\'administration'); return; }
   toast('⏳ Import en cours…');
   var res = await api('fetchKalisport', { url: url.trim() });
   if (!res || res.error) { toast('Erreur : ' + (res && res.error ? res.error : 'injoignable')); return; }
