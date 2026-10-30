@@ -360,6 +360,18 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
           <div id="r-qs" class="mail-result"></div>
         </div>
       </div>
+
+      <!-- ATTESTATIONS -->
+      <div class="mail-row">
+        <div class="mail-row-left">
+          <span class="mail-row-label">📜 Envoi attestations (DETB / BF)</span>
+          <div id="prev-att" class="mail-row-info"></div>
+        </div>
+        <div class="mail-row-actions">
+          <button class="btn-p" onclick="sendAttestations()">Envoyer</button>
+          <div id="r-att" class="mail-result"></div>
+        </div>
+      </div>
     </div>
 
     <!-- GÉNÉRER TEXTES (repliable) -->
@@ -377,7 +389,8 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
           <button class="btn-s" onclick="genererMail('detb-j5')">📧 DETB — J-5 Présentiel</button>
           <button class="btn-g" onclick="genererMail('relance-avant')">💶 Relance paiement (avant)</button>
           <button class="btn-g" onclick="genererMail('relance-cours')">💶 Relance paiement (en cours)</button>
-          <button class="btn-g" onclick="genererMail('qs')">⭐ QS Stagiaires</button>
+          <button class="btn-g" onclick="genererMail('qs')">⭐ QS Stagiaires (envoi 1)</button>
+          <button class="btn-g" onclick="genererMail('qs-relance')">⭐ Relance QS Stagiaires</button>
         </div>
         <div id="j5-presentiel-sel" style="display:none;margin-bottom:10px;">
           <label style="font-size:12.5px;font-weight:600;">Choisir le présentiel concerné :</label>
@@ -536,6 +549,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
         <div class="field"><label>Email</label><input id="f-email-fo2"></div>
         <hr>
         <div class="field"><label>Lien Google Sheet de suivi (émargements, résultats)</label><input id="f-suivi-fo" placeholder="https://docs.google.com/spreadsheets/d/..."></div>
+        <div class="field"><label>Lien dossier Google Drive des attestations</label><input id="f-lien-att" placeholder="https://drive.google.com/drive/folders/..."></div>
       </div>
     </div>
 
@@ -1949,7 +1963,7 @@ async function openNewSession() {
    'f-visio-date','f-visio-lien','f-visio-replay',
    'f-kal-session','f-kal-form','f-tup-id','f-tup-lien',
    'f-nom-fo','f-pre-fo','f-email-fo','f-tel-fo',
-   'f-nom-fo2','f-pre-fo2','f-email-fo2','f-tel-fo2','f-suivi-fo',
+   'f-nom-fo2','f-pre-fo2','f-email-fo2','f-tel-fo2','f-suivi-fo','f-lien-att',
    'f-qs-stag','f-qs-form'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
@@ -2030,6 +2044,7 @@ async function modifierSession() {
   set('f-email-fo2', s.formateur2_email);
   set('f-tel-fo2', s.formateur2_telephone);
   set('f-suivi-fo', s.lien_suivi_formateur);
+  set('f-lien-att', s.lien_dossier_attestations);
   // QS
   set('f-qs-stag', s.lien_qs_stag);
   set('f-qs-form', s.lien_qs_form);
@@ -2113,6 +2128,7 @@ async function saveSession() {
     formateur2_email: g('f-email-fo2'),
     formateur2_telephone: g('f-tel-fo2'),
     lien_suivi_formateur: g('f-suivi-fo'),
+    lien_dossier_attestations: g('f-lien-att'),
     lien_qs_stag: g('f-qs-stag'),
     lien_qs_form: g('f-qs-form')
   };
@@ -2254,6 +2270,7 @@ function prefillMails() {
   var pk = el('prev-kal'); pk.textContent = s.mail_session_kalisport ? 'Session Kalisport configurée · TUP: '+(s.teachup_lien?'✓':'—') : 'Aucun lien — configure dans ✏️ Modifier';
   var pf = el('prev-fo'); pf.textContent = s.mail_date_visio ? 'Visio: '+s.mail_date_visio : (s.lien_suivi_formateur?'Suivi configuré':'Configure dans ✏️ Modifier');
   var pq = el('prev-qs'); pq.textContent = s.lien_qs_stag ? 'Liens QS configurés · Dernier présentiel: '+(s.date_dernier_presentiel||'—') : 'Aucun lien QS — configure dans ✏️ Modifier';
+  var pa = el('prev-att'); if(pa) pa.textContent = s.lien_dossier_attestations ? 'Dossier Drive configuré' : 'Configure le dossier Drive dans ✏️ Modifier';
 }
 
 
@@ -2597,6 +2614,20 @@ async function sendQS(type) {
 
 // === ATTESTATIONS ===
 
+async function sendAttestations() {
+  var s = currentSession;
+  if (!s) { toast('Ouvre une session'); return; }
+  var lienAtt = (s.lien_dossier_attestations || '').trim();
+  if (!lienAtt) { toast('Renseigne le lien dossier attestations dans ✏️ Modifier d\'abord'); return; }
+  document.getElementById('r-att').textContent = 'Envoi…';
+  var res = await api('envoyerAttestations', { session_id: s.id });
+  if (res.success) {
+    document.getElementById('r-att').textContent = '📨 Reçu sur ta boîte — transfère à Christelle';
+  } else {
+    document.getElementById('r-att').textContent = 'Erreur: ' + (res.error || '');
+  }
+}
+
 async function testM(type) {
   if (!currentSession) { toast('Ouvre une session'); return; }
   if (!confirm('Envoyer un mail test à ' + ME + ' ?')) return;
@@ -2643,6 +2674,11 @@ async function testM(type) {
     res = await api('envoyerMailClubs', p);
   } else if (type === 'qs') {
     p.type = 'envoi1';
+    p.lien_stag = s.lien_qs_stag || '';
+    p.lien_form = s.lien_qs_form || '';
+    res = await api('envoyerQuestionnaireSatisfaction', p);
+  } else if (type === 'qs-relance') {
+    p.type = 'relance';
     p.lien_stag = s.lien_qs_stag || '';
     p.lien_form = s.lien_qs_form || '';
     res = await api('envoyerQuestionnaireSatisfaction', p);
