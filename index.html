@@ -672,6 +672,31 @@ function toast(msg) {
   setTimeout(function() { t.classList.remove('show'); }, 2500);
 }
 function closeAll() { document.querySelectorAll('.modal-bg').forEach(function(m) { m.classList.remove('open'); }); }
+// Parse programme_presentiel pour extraire TOUTES les séances (y compris passées)
+// Format : "Samedi 19 septembre 2026 — de 09h30 à 12h30 (RDV 09h15) — Lieu..."
+function parseProgrammePresentiel(texte) {
+  if (!texte) return [];
+  var MOIS = {
+    'janvier':1,'février':2,'mars':3,'avril':4,'mai':5,'juin':6,
+    'juillet':7,'août':8,'septembre':9,'octobre':10,'novembre':11,'décembre':12
+  };
+  var pad = function(n){ return n < 10 ? '0'+n : String(n); };
+  var result = [];
+  String(texte).split('\n').forEach(function(line) {
+    var m = line.match(/\w+\s+(\d{1,2})\s+(\w+)\s+(\d{4})\s*[—\-–]\s*de\s+(\d{1,2}h\d{0,2})\s+à\s+(\d{1,2}h\d{0,2})/i);
+    if (m) {
+      var mois = MOIS[m[2].toLowerCase()];
+      if (mois) {
+        result.push({
+          date: m[3] + '-' + pad(mois) + '-' + pad(parseInt(m[1])),
+          horaires: m[4] + ' à ' + m[5]
+        });
+      }
+    }
+  });
+  return result;
+}
+
 function parseDateLocal(str) {
   if (!str) return null;
   var s = String(str).trim();
@@ -1331,8 +1356,18 @@ function renderTaches() {
   sessions.filter(function(s){ return s.statut_stage !== 'Archivé'; }).forEach(function(s) {
     var code = s.code_kalisport || s.nom || '—';
 
-    var convocs = [];
-    try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
+    // Lire les statuts depuis convocs_json (indexés par date)
+    var convocsRaw = [];
+    try { if (s.convocs_json) convocsRaw = JSON.parse(s.convocs_json); } catch(e) {}
+    var statusByDate = {};
+    convocsRaw.forEach(function(c){ if (c.date) statusByDate[c.date] = c; });
+
+    // Obtenir TOUTES les séances depuis programme_presentiel ; fallback sur convocs_json
+    var toutesSeances = parseProgrammePresentiel(s.programme_presentiel);
+    // Fusionner : dates depuis programme_presentiel + statuts depuis convocs_json
+    var convocs = toutesSeances.length > 0
+      ? toutesSeances.map(function(t){ return Object.assign({}, statusByDate[t.date] || {}, {date: t.date, horaires: t.horaires}); })
+      : convocsRaw;
 
     convocs.forEach(function(c, i) {
       var dateP = parseDateLocal(c.date);
