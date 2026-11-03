@@ -819,24 +819,29 @@ function renderTDB() {
     var admisF = s.admis_f_manuel || '';
     var admisMHtml = '<input type="text" value="'+admisM.replace(/"/g,'&quot;')+'" placeholder="9/10" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'admis_m_manuel\')">';
     var admisFHtml = '<input type="text" value="'+admisF.replace(/"/g,'&quot;')+'" placeholder="8/8" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'admis_f_manuel\')">';
-    // Prochain présentiel
+    // Prochain présentiel — lire programme_presentiel (toutes les séances) en priorité
     var prochainPres = '';
     try {
-      var convJSON = s.convocs_json ? JSON.parse(s.convocs_json) : [];
-      var today = new Date(); today.setHours(0,0,0,0);
-      var futures = convJSON.filter(function(c){
+      var todayTDB = new Date(); todayTDB.setHours(0,0,0,0);
+      // Source : programme_presentiel (dates réelles de la formation)
+      var toutesSeancesTDB = parseProgrammePresentiel(s.programme_presentiel);
+      if (!toutesSeancesTDB.length) {
+        // Fallback : convocs_json
+        toutesSeancesTDB = s.convocs_json ? JSON.parse(s.convocs_json) : [];
+      }
+      var futuresTDB = toutesSeancesTDB.filter(function(c){
         if (!c.date) return false;
         var d = parseDateLocal(c.date);
-        return d && d >= today;
+        return d && d >= todayTDB;
       }).sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
-      if (futures.length) {
-        var d = parseDateLocal(futures[0].date);
-        prochainPres = d ? d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : futures[0].date;
-        var diff = Math.ceil((d - today) / 86400000);
-        var color = diff <= 7 ? 'var(--terra)' : diff <= 14 ? '#b45309' : 'var(--sage-d)';
-        prochainPres = '<span style="color:'+color+';font-size:11px;font-weight:600;">'+prochainPres+'</span>'
-          + (diff<=14?'<br><small style="color:'+color+';">J-'+diff+'</small>':'');
-      } else if (convJSON.length) {
+      if (futuresTDB.length) {
+        var dTDB = parseDateLocal(futuresTDB[0].date);
+        prochainPres = dTDB ? dTDB.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : futuresTDB[0].date;
+        var diffTDB = Math.ceil((dTDB - todayTDB) / 86400000);
+        var colorTDB = diffTDB <= 7 ? 'var(--terra)' : diffTDB <= 14 ? '#b45309' : 'var(--sage-d)';
+        prochainPres = '<span style="color:'+colorTDB+';font-size:11px;font-weight:600;">'+prochainPres+'</span>'
+          + (diffTDB<=14?'<br><small style="color:'+colorTDB+';">J-'+diffTDB+'</small>':'');
+      } else if (toutesSeancesTDB.length) {
         prochainPres = '<span style="font-size:10px;color:var(--ink-s);">Terminé</span>';
       }
     } catch(e) {}
