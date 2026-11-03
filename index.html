@@ -102,6 +102,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 .tache.urgent{border-left:4px solid var(--terra);background:#fff8f5;}
 .tache.bientot{border-left:4px solid #f59e0b;background:#fffbeb;}
 .tache.ok{border-left:4px solid var(--sage);background:#f0faf0;opacity:.6;}
+.tache.selected{outline:2px solid var(--sage);background:#f0faf4;}
 .tache-icon{font-size:18px;flex-shrink:0;}
 .tache-body{flex:1;}
 .tache-titre{font-size:13px;font-weight:600;color:var(--ink);}
@@ -113,6 +114,11 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 .tache-date.vert{background:#dcfce7;color:#166534;}
 .tache-date.gris{background:var(--sand-d);color:var(--ink-s);}
 .groupe-date{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-s);margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line);}
+#barre-selection{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 18px;border-radius:30px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:999;transition:.2s;}
+#barre-selection button{background:var(--sage);color:#fff;border:none;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;}
+#barre-selection button:hover{background:var(--sage-d);}
+#barre-selection .ann{background:transparent;color:#94a3b8;font-weight:400;padding:4px 8px;}
+#barre-selection .ann:hover{color:#fff;}
 </style>
 </head>
 <body>
@@ -143,12 +149,21 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <h2 style="font-size:18px;">✅ Tâches à faire</h2>
     <div style="display:flex;gap:8px;align-items:center;">
       <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer;">
+        <input type="checkbox" id="taches-select-all" onchange="toutSelectionner(this.checked)" title="Tout sélectionner"> Tout
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer;">
         <input type="checkbox" id="taches-show-done" onchange="renderTaches()"> Voir les faites
       </label>
       <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="reloadTaches()">↻ Actualiser</button>
     </div>
   </div>
   <div id="taches-content"></div>
+</div>
+<!-- Barre de sélection multiple -->
+<div id="barre-selection" style="display:none;">
+  <span id="barre-nb">0 tâche sélectionnée</span>
+  <button onclick="marquerSelectionFaite()">✓ Marquer faites</button>
+  <button class="ann" onclick="deselectionnerTout()">✕ Annuler</button>
 </div>
 
 <!-- TABLEAU DE BORD -->
@@ -1377,6 +1392,15 @@ function renderTaches() {
       var dateAff = d ? d.toLocaleDateString('fr-FR') : c.date;
       var pLabel = 'Présentiel ' + (i+1) + (dateAff ? ' — ' + dateAff : '');
 
+      // Séance passée sans statut dans convocs_json = déjà traitée, on ignore les tâches pré-séance
+      var isPassee = dateP < today;
+      var hasStatus = !!statusByDate[c.date];
+      if (isPassee && !hasStatus) {
+        // Séance passée dont on n'a plus le statut : on n'affiche pas les tâches pré-séance
+        // (on laisse quand même afficher les émargements post-séance plus bas si récents)
+        return;
+      }
+
       // P1 uniquement : mail bienvenue J-9
       if (isP1) {
         var echeanceJ9 = new Date(dateP.getTime() - 9 * 86400000);
@@ -1633,7 +1657,9 @@ function renderTaches() {
       var idxM = window.tacheMarquer.length;
       window.tacheMarquer.push(t.marquer || null);
       var dateStr = t.echeance ? fmtDate(t.echeance) : '';
-      html += '<div class="tache '+(t.urgence==='rouge'?'urgent':t.urgence==='orange'?'bientot':'')+'" style="margin-bottom:6px;">'
+      var cbId = 'tch-' + idxM;
+      html += '<div class="tache '+(t.urgence==='rouge'?'urgent':t.urgence==='orange'?'bientot':'')+'" id="tache-row-'+idxM+'" style="margin-bottom:6px;">'
+        + (t.marquer ? '<input type="checkbox" id="'+cbId+'" style="width:16px;height:16px;cursor:pointer;flex-shrink:0;" onchange="onTacheCheck('+idxM+',this.checked)">' : '<span style="width:16px;flex-shrink:0;"></span>')
         + '<span class="tache-icon">'+t.icon+'</span>'
         + '<div class="tache-body"><div class="tache-titre">'+t.titre+'</div><div class="tache-meta">'+t.meta+'</div></div>'
         + (dateStr?'<span class="tache-date '+(t.urgence==='rouge'?'rouge':t.urgence==='orange'?'orange':'gris')+'">'+dateStr+'</span>':'')
@@ -1662,6 +1688,56 @@ function renderTaches() {
   }
 
   document.getElementById('taches-content').innerHTML = html;
+}
+
+function onTacheCheck(idx, checked) {
+  var row = document.getElementById('tache-row-' + idx);
+  if (row) row.classList.toggle('selected', checked);
+  majBarreSelection();
+}
+function majBarreSelection() {
+  var coches = document.querySelectorAll('#taches-content input[type="checkbox"]:checked');
+  var barre = document.getElementById('barre-selection');
+  var nb = document.getElementById('barre-nb');
+  if (coches.length > 0) {
+    barre.style.display = 'flex';
+    nb.textContent = coches.length + ' tâche' + (coches.length > 1 ? 's' : '') + ' sélectionnée' + (coches.length > 1 ? 's' : '');
+  } else {
+    barre.style.display = 'none';
+  }
+  // Mettre à jour la case "Tout"
+  var total = document.querySelectorAll('#taches-content input[type="checkbox"]').length;
+  var all = document.getElementById('taches-select-all');
+  if (all) { all.checked = total > 0 && coches.length === total; all.indeterminate = coches.length > 0 && coches.length < total; }
+}
+function toutSelectionner(checked) {
+  document.querySelectorAll('#taches-content input[type="checkbox"]').forEach(function(cb) {
+    cb.checked = checked;
+    var m = cb.id.match(/^tch-(\d+)$/);
+    if (m) { var row = document.getElementById('tache-row-' + m[1]); if (row) row.classList.toggle('selected', checked); }
+  });
+  majBarreSelection();
+}
+function deselectionnerTout() {
+  toutSelectionner(false);
+  var all = document.getElementById('taches-select-all');
+  if (all) all.checked = false;
+}
+async function marquerSelectionFaite() {
+  var coches = Array.from(document.querySelectorAll('#taches-content input[type="checkbox"]:checked'));
+  if (!coches.length) return;
+  var barre = document.getElementById('barre-selection');
+  barre.innerHTML = '<span>⏳ Enregistrement en cours…</span>';
+  var promises = coches.map(function(cb) {
+    var m = cb.id.match(/^tch-(\d+)$/);
+    if (!m) return Promise.resolve();
+    var fn = window.tacheMarquer[parseInt(m[1])];
+    return fn ? fn() : Promise.resolve();
+  });
+  // On les exécute séquentiellement pour éviter les conflits d'écriture
+  for (var i = 0; i < promises.length; i++) { try { await promises[i]; } catch(e) {} }
+  deselectionnerTout();
+  await reloadTaches();
 }
 
 function getUrgence(today, echeance, dateFin) {
