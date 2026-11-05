@@ -74,8 +74,17 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 .warn{background:#fef9c3;color:#b45309;}
 .ko{background:#fee2e2;color:#991b1b;}
 .neu{background:var(--sand-d);color:var(--ink-s);}
-.obs-input{font-size:11px;padding:3px 5px;width:130px;border:1px solid transparent;border-radius:4px;background:transparent;}
-.obs-input:hover,.obs-input:focus{border-color:var(--line);background:var(--white);}
+/* Filtre En cours / Terminées / Toutes */
+.seg{display:flex;background:var(--sand-d);border-radius:8px;padding:2px;}
+.seg button{border:none;background:transparent;font-size:11.5px;padding:4px 10px;border-radius:6px;cursor:pointer;color:var(--ink-s);white-space:nowrap;}
+.seg button.active{background:var(--white);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08);}
+/* Colonne État */
+.etat{display:inline-block;font-size:10.5px;font-weight:600;padding:3px 7px;border-radius:10px;white-space:nowrap;cursor:pointer;border:1px solid transparent;}
+.etat-fini{background:#dcfce7;color:#166534;}
+.etat-cloturer{background:var(--white);color:#166534;border-color:#86efac;}
+.etat-cloturer:hover{background:#dcfce7;}
+.etat-retard{background:#fee2e2;color:#b91c1c;}
+.etat-afaire{background:var(--sand-d);color:var(--ink-s);}
 .tdb-action{font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink-s);}
 .tdb-action:hover{color:var(--terra);border-color:var(--terra);}
 /* Sous-onglets TDB */
@@ -119,6 +128,15 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 #barre-selection button:hover{background:var(--sage-d);}
 #barre-selection .ann{background:transparent;color:#94a3b8;font-weight:400;padding:4px 8px;}
 #barre-selection .ann:hover{color:#fff;}
+/* Colonnes présentiels du tableau de bord */
+.tdb th.th-pres{text-align:center;min-width:52px;}
+.tdb td.pres-cell{text-align:center;font-size:11px;white-space:nowrap;padding:6px 4px;border-left:1px solid var(--line);}
+.tdb td.pres-passe{background:#dcfce7;color:#166534;font-weight:600;}
+.tdb td.pres-urgent{background:#fee2e2;color:#b91c1c;font-weight:700;}
+.tdb td.pres-bientot{background:#fef3c7;color:#b45309;font-weight:700;}
+.tdb td.pres-prochain{background:#e0f2fe;color:#075985;font-weight:700;}
+.tdb td.pres-futur{color:var(--ink-s);}
+.tdb td.pres-vide{background:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(0,0,0,.025) 4px,rgba(0,0,0,.025) 8px);}
 </style>
 </head>
 <body>
@@ -176,7 +194,11 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     </div>
     <div style="display:flex;gap:6px;align-items:center;">
       <input id="tdb-search" style="width:160px;font-size:12px;padding:5px 8px;" placeholder="Rechercher…" oninput="renderTDB()">
-      <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap;"><input type="checkbox" id="tdb-archived" onchange="renderTDB()"> Voir archivés</label>
+      <div class="seg" id="tdb-etat">
+        <button data-e="encours" class="active" onclick="setTdbEtat('encours')">En cours</button>
+        <button data-e="terminees" onclick="setTdbEtat('terminees')">Terminées</button>
+        <button data-e="toutes" onclick="setTdbEtat('toutes')">Toutes</button>
+      </div>
       <button class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="exportTDB()">Export CSV (Excel)</button>
     </div>
   </div>
@@ -186,12 +208,11 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <tr>
         <th>Code Kalisport</th><th>Formateur</th>
         <th>Payés</th><th>Admis ♂</th><th>Admis ♀</th>
-        <th>Prochain<br>présentiel</th>
+        <th class="th-pres">P1</th>
         <th>QS Envoi 1</th><th>QS Relance</th>
         <th>Diplômes</th><th>Doc<br>salarié</th><th>Virement</th>
         
-        <th>Rém.</th><th>Observations</th>
-        <th>Avancement</th><th>Dernier point</th><th></th>
+        <th>Rém.</th><th>Dernier point</th><th title="Clôture de la formation">État</th>
       </tr>
     </thead><tbody id="tdb-body"></tbody></table>
   </div>
@@ -791,7 +812,7 @@ function switchSub(name) {
 async function loadSessions(force) {
   // Affiche le cache mémoire tout de suite ; recharge depuis le Sheet si demandé ou si vide
   if (!force && sessions && sessions.length > 0) { renderTDB(); return; }
-  if (!sessions.length) document.getElementById('tdb-body').innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--ink-s);padding:24px;">Chargement…</td></tr>';
+  if (!sessions.length) document.getElementById('tdb-body').innerHTML = '<tr><td colspan="20" style="text-align:center;color:var(--ink-s);padding:24px;">Chargement…</td></tr>';
   var data = await api('getInit');
   if (data && !data.error) {
     sessions = Array.isArray(data.sessions) ? data.sessions : [];
@@ -821,11 +842,72 @@ function setTdbTab(tab) {
   renderTDB();
 }
 
-function renderTDB() {
+var tdbEtat = 'encours'; // 'encours' | 'terminees' | 'toutes'
+function setTdbEtat(e) {
+  tdbEtat = e;
+  document.querySelectorAll('#tdb-etat button').forEach(function(b) { b.classList.toggle('active', b.dataset.e === e); });
+  renderTDB();
+}
+
+// Une formation est terminée quand elle a été clôturée (ou archivée dans l'ancienne version)
+function estTerminee(s) {
+  return s.statut_stage === 'Terminé' || s.statut_stage === 'Archivé' || s.statut_admin === 'Complet';
+}
+
+// Ce qu'il reste à faire sur une session (tâches non faites + diplômes une fois les présentiels passés)
+function bilanSession(s) {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var pres = getPresentiels(s);
+  var dernier = pres.length ? parseDateLocal(pres[pres.length-1].date) : null;
+  var restes = construireTaches(s, today, getDelais()).filter(function(t) { return !t.done; });
+  var finie = !!dernier && dernier < today;
+  if (finie && s.statut_diplomes !== 'Complet') restes.push({ titre: 'Diplômes / attestations à envoyer', echeance: today });
+  return {
+    sansDates: !pres.length,
+    finie: finie,
+    restes: restes,
+    retard: restes.some(function(t) { return t.echeance < today; })
+  };
+}
+
+function celluleEtat(s) {
+  if (estTerminee(s)) return '<span class="etat etat-fini" onclick="rouvrirSession(\''+s.id+'\')" title="Formation clôturée — cliquer pour la rouvrir">🏁 Terminée</span>';
+  var b = bilanSession(s);
+  if (b.sansDates) return '<span style="color:var(--ink-s);font-size:11px;">—</span>';
+  var liste = b.restes.map(function(t) { return '• ' + t.titre; }).join('\n').replace(/"/g,'&quot;');
+  if (b.finie && !b.restes.length) return '<span class="etat etat-cloturer" onclick="cloturerSession(\''+s.id+'\')" title="Tout est fait — cliquer pour clôturer">✓ Clôturer</span>';
+  var cls = b.retard ? 'etat-retard' : 'etat-afaire';
+  var action = b.finie ? 'cloturerSession(\''+s.id+'\')' : 'openSession(\''+s.id+'\')';
+  return '<span class="etat '+cls+'" onclick="'+action+'" title="Reste à faire :\n'+liste+'">'+b.restes.length+' à faire</span>';
+}
+
+async function cloturerSession(id) {
+  var s = sessions.find(function(x){ return x.id === id; }); if (!s) return;
+  var b = bilanSession(s);
+  var msg = b.restes.length
+    ? 'Il reste encore :\n' + b.restes.map(function(t){ return '• ' + t.titre; }).join('\n') + '\n\nClôturer quand même cette formation ?'
+    : 'Tout est fait. Clôturer « ' + (s.code_kalisport || s.nom) + ' » ?\nElle passera dans le filtre « Terminées ».';
+  if (!confirm(msg)) return;
+  var f = { statut_stage: 'Terminé', statut_admin: 'Complet' };
+  majSessionLocale(id, f); renderTDB(); renderTaches();
+  var res = await api('updateSession', { id: id, fields: f });
+  toast(res && res.error ? 'Erreur : ' + res.error : '🏁 Formation clôturée');
+}
+
+async function rouvrirSession(id) {
+  var s = sessions.find(function(x){ return x.id === id; }); if (!s) return;
+  if (!confirm('Rouvrir « ' + (s.code_kalisport || s.nom) + ' » ? Elle repassera dans « En cours ».')) return;
+  var f = { statut_stage: 'À venir', statut_admin: '' };
+  majSessionLocale(id, f); renderTDB(); renderTaches();
+  var res = await api('updateSession', { id: id, fields: f });
+  toast(res && res.error ? 'Erreur : ' + res.error : '↩ Formation rouverte');
+}
+
+function sessionsFiltrees() {
   var q = (document.getElementById('tdb-search').value || '').toLowerCase();
-  var showArch = document.getElementById('tdb-archived') && document.getElementById('tdb-archived').checked;
-  var liste = sessions.filter(function(s) {
-    if (!showArch && s.statut_stage === 'Archivé') return false;
+  return sessions.filter(function(s) {
+    if (tdbEtat === 'encours' && estTerminee(s)) return false;
+    if (tdbEtat === 'terminees' && !estTerminee(s)) return false;
     // Filtre par onglet
     if (tdbTab === 'bf' && (s.type||'').indexOf('Brevet') === -1) return false;
     if (tdbTab === 'detb' && (s.type||'').indexOf('DETB') === -1) return false;
@@ -835,7 +917,23 @@ function renderTDB() {
     }
     return true;
   });
-  if (!liste.length) { document.getElementById('tdb-body').innerHTML = '<tr><td colspan="18" class="empty">Aucune session.</td></tr>'; return; }
+}
+
+function renderTDB() {
+  var liste = sessionsFiltrees();
+  // Une colonne par présentiel : autant de colonnes que la session qui en a le plus
+  var nbCols = Math.max(1, Math.max.apply(null, liste.map(function(s){ return getPresentiels(s).length; }).concat([0])));
+  var ths = document.querySelectorAll('table.tdb thead .th-pres');
+  var ancre = ths[0];
+  for (var t = 1; t < ths.length; t++) ths[t].remove();
+  ancre.textContent = 'P1';
+  for (var p = nbCols; p >= 2; p--) {
+    var th = document.createElement('th'); th.className = 'th-pres'; th.textContent = 'P' + p;
+    ancre.after(th);
+  }
+  var todayTDB = new Date(); todayTDB.setHours(0,0,0,0);
+
+  if (!liste.length) { document.getElementById('tdb-body').innerHTML = '<tr><td colspan="'+(13+nbCols)+'" class="empty">'+(tdbEtat === 'terminees' ? 'Aucune formation terminée.' : 'Aucune session.')+'</td></tr>'; return; }
 
   document.getElementById('tdb-body').innerHTML = liste.map(function(s) {
     // Payé — saisie manuelle
@@ -849,26 +947,27 @@ function renderTDB() {
     var admisF = String(s.admis_f_manuel || '');
     var admisMHtml = '<input type="text" value="'+admisM.replace(/"/g,'&quot;')+'" placeholder="9/10" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'admis_m_manuel\')">';
     var admisFHtml = '<input type="text" value="'+admisF.replace(/"/g,'&quot;')+'" placeholder="8/8" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'admis_f_manuel\')">';
-    // Prochain présentiel — lire programme_presentiel (toutes les séances) en priorité
-    var prochainPres = '';
-    try {
-      var todayTDB = new Date(); todayTDB.setHours(0,0,0,0);
-      var toutesSeancesTDB = getPresentiels(s);
-      var futuresTDB = toutesSeancesTDB.filter(function(c){
-        var d = parseDateLocal(c.date);
-        return d && d >= todayTDB;
-      });
-      if (futuresTDB.length) {
-        var dTDB = parseDateLocal(futuresTDB[0].date);
-        prochainPres = dTDB ? dTDB.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : futuresTDB[0].date;
-        var diffTDB = Math.ceil((dTDB - todayTDB) / 86400000);
-        var colorTDB = diffTDB <= 7 ? 'var(--terra)' : diffTDB <= 14 ? '#b45309' : 'var(--sage-d)';
-        prochainPres = '<span style="color:'+colorTDB+';font-size:11px;font-weight:600;">'+prochainPres+'</span>'
-          + (diffTDB<=14?'<br><small style="color:'+colorTDB+';">J-'+diffTDB+'</small>':'');
-      } else if (toutesSeancesTDB.length) {
-        prochainPres = '<span style="font-size:10px;color:var(--ink-s);">Terminé</span>';
+    // Présentiels : passé = vert ✓, prochain = mis en avant (J-x), à venir = gris
+    var presTDB = getPresentiels(s);
+    var iProchain = presTDB.findIndex(function(c){ var d = parseDateLocal(c.date); return d && d >= todayTDB; });
+    var presCells = '';
+    for (var k = 0; k < nbCols; k++) {
+      var c = presTDB[k];
+      if (!c) { presCells += '<td class="pres-cell pres-vide"></td>'; continue; }
+      var dP = parseDateLocal(c.date);
+      var lbl = dP ? ('0'+dP.getDate()).slice(-2) + '/' + ('0'+(dP.getMonth()+1)).slice(-2) : c.date;
+      var tip = (dP ? dP.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '') + (c.horaires ? ' — ' + c.horaires : '') + (c.lieu ? ' — ' + c.lieu : '');
+      tip = tip.replace(/"/g,'&quot;');
+      if (dP && dP < todayTDB) {
+        presCells += '<td class="pres-cell pres-passe" title="'+tip+'">✓ '+lbl+'</td>';
+      } else if (k === iProchain) {
+        var diff = Math.round((dP - todayTDB) / 86400000);
+        var cl = diff <= 7 ? 'pres-urgent' : diff <= 14 ? 'pres-bientot' : 'pres-prochain';
+        presCells += '<td class="pres-cell '+cl+'" title="'+tip+'">'+lbl+'<br><small>'+(diff === 0 ? "aujourd'hui" : 'J-'+diff)+'</small></td>';
+      } else {
+        presCells += '<td class="pres-cell pres-futur" title="'+tip+'">'+lbl+'</td>';
       }
-    } catch(e) {}
+    }
 
     // Diplômes — menu déroulant
     var dipVal = s.statut_diplomes || '';
@@ -878,14 +977,6 @@ function renderTDB() {
       + '<option value="" '+(dipVal===''?'selected':'')+'>À faire</option>'
       + '<option value="Envoi partiel" '+(dipVal==='Envoi partiel'?'selected':'')+'>Envoi partiel</option>'
       + '<option value="Complet" '+(dipVal==='Complet'?'selected':'')+'>✓ Complet</option>'
-      + '</select>';
-
-    // Avancement admin (statut_admin) — À faire / Complet
-    var ava = s.statut_admin || '';
-    var avaSelect = '<select class="sm" style="color:'+(ava==='Complet'?'#166534':'var(--ink-s)')+';background:transparent;border:none;" '
-      + 'onchange="event.stopPropagation();updAvancement(this,\''+s.id+'\')" onclick="event.stopPropagation();">'
-      + '<option value="" '+(ava===''?'selected':'')+'>À faire</option>'
-      + '<option value="Complet" '+(ava==='Complet'?'selected':'')+'>✓ Complet</option>'
       + '</select>';
 
     // Virements
@@ -899,13 +990,13 @@ function renderTDB() {
       : '<strong>'+(s.code_kalisport||'—')+'</strong>';
     if (!s.code_kalisport) codeHtml = '<strong style="font-size:11.5px;">'+(s.nom||'—')+'</strong>';
 
-    return '<tr onclick="openSession(\''+s.id+'\')" style="cursor:pointer;">'
+    return '<tr onclick="openSession(\''+s.id+'\')" style="cursor:pointer;'+(estTerminee(s)?'opacity:.6;':'')+'">'
       + '<td style="min-width:100px;">'+codeHtml+'<br><small style="color:var(--ink-s);">'+(s.secteur||'')+(s.date_debut?' · '+fmtDate(s.date_debut):'')+'</small></td>'
       + '<td style="white-space:nowrap;">'+(s.formateur_nom||'—')+'</td>'
       + '<td onclick="event.stopPropagation();">'+payHtml+'</td>'
       + '<td onclick="event.stopPropagation();">'+admisMHtml+'</td>'
       + '<td onclick="event.stopPropagation();">'+admisFHtml+'</td>'
-      + '<td style="text-align:center;">'+prochainPres+'</td>'
+      + presCells
       + '<td>'+badgeStat(s.statut_qs_envoi1)+'</td>'
       + '<td>'+badgeStat(s.statut_qs_relance)+'</td>'
       + '<td onclick="event.stopPropagation();">'+dipSelect+'</td>'
@@ -916,16 +1007,8 @@ function renderTDB() {
 
       + '<td style="text-align:center;" onclick="event.stopPropagation();">'
         + '<input type="checkbox" class="chk" '+(s.rem_formateur?'checked':'')+' onchange="updSessionTDB(this,\''+s.id+'\',\'rem_formateur\')"></td>'
-      + '<td onclick="event.stopPropagation();">'
-        + '<input class="obs-input" type="text" value="'+(s.observations||'').replace(/"/g,'&quot;')+'" placeholder="Observations…"'
-        + ' onblur="updSessionTDB(this,\''+s.id+'\',\'observations\')"'
-        + ' onkeydown="if(event.key===&quot;Enter&quot;)this.blur()">'
-      + '</td>'
-      + '<td onclick="event.stopPropagation();">'+avaSelect+'</td>'
       + '<td onclick="event.stopPropagation();pointerSession(\''+s.id+'\');" style="cursor:pointer;text-align:center;" title="Cliquer pour pointer aujourd\'hui">'+badgePoint(s.date_revue)+'</td>'
-      + '<td onclick="event.stopPropagation();">'
-        + '<button class="tdb-action" onclick="archiverSession(\''+s.id+'\',\''+s.statut_stage+'\')" title="'+(s.statut_stage==='Archivé'?'Désarchiver':'Archiver')+'">'+(s.statut_stage==='Archivé'?'↩':'🗄')+'</button>'
-      + '</td>'
+      + '<td style="text-align:center;" onclick="event.stopPropagation();">'+celluleEtat(s)+'</td>'
       + '</tr>';
   }).join('');
 }
@@ -986,17 +1069,6 @@ async function updSessionTDB(el, id, field) {
   }
 }
 
-async function archiverSession(id, statutActuel) {
-  var nouveau = statutActuel === 'Archivé' ? 'À venir' : 'Archivé';
-  var label = nouveau === 'Archivé' ? 'archiver' : 'désarchiver';
-  if (!confirm('Confirmes-tu de ' + label + ' cette session ?')) return;
-  var s = sessions.find(function(x){return x.id===id;});
-  if (s) s.statut_stage = nouveau;
-  var res = await api('updateSession', { id: id, fields: { statut_stage: nouveau } });
-  if (res && res.error) { toast('Erreur : ' + res.error); return; }
-  toast('✓ Session ' + (nouveau === 'Archivé' ? 'archivée' : 'désarchivée'));
-  renderTDB();
-}
 
 // ═══════════════════════════════════════════════════
 // IMPORT / SYNC KALISPORT (via iCal)
@@ -1103,15 +1175,6 @@ async function marquerPayeComplet(id) {
   toast(res && res.error ? 'Erreur : ' + res.error : '✓ Paiements : Complet');
 }
 
-async function updAvancement(el, id) {
-  var val = el.value;
-  var s = sessions.find(function(x) { return x.id === id; });
-  if (s) s.statut_admin = val;
-  el.style.color = val === 'Complet' ? '#166534' : 'var(--ink-s)';
-  var res = await api('updateSession', { id: id, fields: { statut_admin: val } });
-  if (res && res.error) toast('Erreur: ' + res.error);
-  else toast('✓ Avancement : ' + (val || 'À faire'));
-}
 
 var MAIL_KEYS = ['bf_j10','detb_j10','bf_j5','detb_j5','fo_j7','qs','qs_relance','relance_avant','relance_cours'];
 var configMailsLoaded = false;
@@ -1453,7 +1516,7 @@ function renderTaches() {
   var showDone = document.getElementById('taches-show-done') && document.getElementById('taches-show-done').checked;
   var D = getDelais();
   var taches = [];
-  sessions.filter(function(s){ return s.statut_stage !== 'Archivé'; }).forEach(function(s) {
+  sessions.filter(function(s){ return !estTerminee(s); }).forEach(function(s) {
     construireTaches(s, today, D).forEach(function(t) {
       t.urgence = t.done ? 'fait' : getUrgence(today, t.echeance);
       taches.push(t);
@@ -1602,12 +1665,11 @@ function exportTDB() {
     ['Email formateur','formateur_email'],['Payés','paiement_manuel'],['Admis H','admis_m_manuel'],['Admis F','admis_f_manuel'],
     ['QS envoi 1','statut_qs_envoi1'],['QS relance','statut_qs_relance'],['Diplômes','statut_diplomes'],
     ['Doc salarié','doc_salarie'],['Virements','virement_info'],['Rém. formateur','rem_formateur'],
-    ['Avancement','statut_admin'],['Dernier point','date_revue'],['Observations','observations']
+    ['Dernier point','date_revue'],['État', function(s){ return estTerminee(s) ? 'Terminée' : 'En cours'; }]
   ];
   var esc = function(v) { v = v === undefined || v === null ? '' : String(v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
-  var showArch = document.getElementById('tdb-archived') && document.getElementById('tdb-archived').checked;
   var lignes = [cols.map(function(c){ return c[0]; }).join(';')];
-  sessions.filter(function(s){ return showArch || s.statut_stage !== 'Archivé'; }).forEach(function(s) {
+  sessionsFiltrees().forEach(function(s) {
     lignes.push(cols.map(function(c){ return esc(typeof c[1] === 'function' ? c[1](s) : s[c[1]]); }).join(';'));
   });
   var blob = new Blob(['﻿' + lignes.join('\r\n')], { type: 'text/csv;charset=utf-8' });
