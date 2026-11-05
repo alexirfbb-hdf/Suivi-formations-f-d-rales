@@ -2011,12 +2011,25 @@ async function saveSession() {
   var btn = document.getElementById('btn-save-session');
   var g = function(id) { var el = document.getElementById(id); return el ? el.value : ''; };
   // Lire les présentiels depuis le DOM
-  var pres = getPresentielsPourSave();
-  // Si modification et aucun présentiel saisi dans le form → garder les existants
-  if (sessionEnCoursDeModif && pres.length === 0) {
-    var existing = currentSession && currentSession.convocs_json;
-    if (existing) {
-      try { pres = JSON.parse(existing); } catch(e) {}
+  // Les lignes sans date sont ignorées (jamais de présentiel sans date dans le Sheet)
+  var pres = getPresentielsPourSave().filter(function(p) { return /^\d{4}-\d{2}-\d{2}$/.test(p.date); })
+    .sort(function(a, b) { return a.date < b.date ? -1 : 1; });
+  var confirmerSuppression = false;
+  if (sessionEnCoursDeModif) {
+    var avant = getPresentiels(currentSession);
+    if (pres.length === 0 && avant.length) pres = avant; // formulaire vide → on garde l'existant
+    // Garde-fou : retrait de présentiels ou modification d'un présentiel passé → confirmation explicite
+    var todayIso = new Date(); todayIso = todayIso.getFullYear() + '-' + ('0'+(todayIso.getMonth()+1)).slice(-2) + '-' + ('0'+todayIso.getDate()).slice(-2);
+    var retires = avant.filter(function(a) { return !pres.some(function(n) { return n.date === a.date; }); });
+    var passesModifies = avant.filter(function(a) {
+      return a.date < todayIso && !pres.some(function(n) { return n.date === a.date && (n.horaires||'') === (a.horaires||''); });
+    });
+    if (retires.length || passesModifies.length) {
+      var lignes = [];
+      if (retires.length) lignes.push('Présentiel(s) retiré(s) : ' + retires.map(function(c){ return fmtDate(c.date); }).join(', '));
+      if (passesModifies.length) lignes.push('Présentiel(s) déjà passé(s) modifié(s) : ' + passesModifies.map(function(c){ return fmtDate(c.date); }).join(', '));
+      if (!confirm('⚠️ Attention\n\n' + lignes.join('\n') + '\n\nConfirmes-tu cette modification des dates ?')) return;
+      confirmerSuppression = true;
     }
   }
   var datesSorted = pres.map(function(p){return p.date;}).filter(Boolean).sort();
@@ -2097,7 +2110,7 @@ async function saveSession() {
     if (sessionEnCoursDeModif) {
       // Modification
       btn.textContent = 'Enregistrement…';
-      var res = await api('updateSession', { id: sessionEnCoursDeModif, fields: fields });
+      var res = await api('updateSession', { id: sessionEnCoursDeModif, fields: fields, confirmerSuppression: confirmerSuppression });
       if (res && res.error) throw new Error(res.error);
       majSessionLocale(sessionEnCoursDeModif, fields);
       closeAll();
