@@ -537,6 +537,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <div class="section-form">
       <div class="section-form-titre" onclick="toggleSection('s2')">📅 Dates de formation <span id="s2-arr">▾</span></div>
       <div id="s2" class="section-form-body">
+ <div id="f-alertes-kal"></div>
         <p id="f-pres-aide" style="font-size:12px;color:var(--ink-s);margin:0 0 10px;">Saisis chaque présentiel — ces dates alimentent les tâches, le programme dans les mails et les convocations.</p>
         <div id="f-presentiels-liste"></div>
         <button type="button" id="f-pres-ajout" class="btn-g" style="font-size:12px;margin-bottom:12px;" onclick="ajouterPresentielForm()">+ Ajouter un présentiel</button>
@@ -1036,7 +1037,7 @@ function renderTDB() {
     if (!s.code_kalisport) codeHtml = '<strong style="font-size:11.5px;">'+(s.nom||'—')+'</strong>';
     if (s.source_dates === 'manuel') codeHtml += '<span class="tag-src tag-manuel" title="Non reliée à Kalisport : dates saisies à la main (relie-la dans ✏️ Modifier → Kalisport)">manuel</span>';
     var alertes = (s.alertes_kalisport || []);
-    if (alertes.length) codeHtml += '<span class="tag-src tag-alerte" title="'+alertes.join('\n').replace(/"/g,'&quot;')+'">⚠ Kalisport</span>';
+    if (alertes.length) codeHtml += '<span class="tag-src tag-alerte" title="'+alertes.map(function(a){ return a.texte || a; }).join('\n').replace(/"/g,'&quot;')+'\n\n→ À régler dans ✏️ Modifier">⚠ Kalisport</span>';
 
     return '<tr onclick="openSession(\''+s.id+'\')" style="cursor:pointer;'+(estTerminee(s)?'opacity:.6;':'')+'">'
       + '<td style="min-width:100px;">'+codeHtml+'<br><small style="color:var(--ink-s);">'+(s.secteur||'')+(s.date_debut?' · '+fmtDate(s.date_debut):'')+'</small></td>'
@@ -1870,7 +1871,49 @@ function dupliquerPresentielForm(i) {
   updatePresentielForm(i + 1);
 }
 
-var formModeKal = false;   // true = session reliée à Kalisport : dates en lecture seule
+var formModeKal = false;
+
+/** Encadré « ⚠ Différences avec Kalisport » : un bouton pour régler chaque alerte. */
+function renderAlertesKalForm(s) {
+  var el = document.getElementById('f-alertes-kal');
+  var alertes = (s.alertes_kalisport || []).filter(function(a){ return a && a.type; });
+  if (!alertes.length) { el.innerHTML = ''; return; }
+  var today = new Date(); today.setHours(0,0,0,0);
+  var datesKal = getPresentiels(s).filter(function(c){ var d = parseDateLocal(c.date); return c.kal && d && d >= today; });
+  var bt = 'style="font-size:11.5px;padding:4px 10px;margin:4px 6px 0 0;"';
+  el.innerHTML = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;">'
+    + '<strong style="color:#b91c1c;">⚠ Différences avec Kalisport</strong>'
+    + '<p style="margin:4px 0 8px;color:var(--ink-s);font-size:11.5px;">Si Kalisport n\'est pas à jour, corrige d\'abord le stage dans Kalisport puis clique « 🔄 Actualiser Kalisport ». Sinon, règle l\'écart ici :</p>'
+    + alertes.map(function(a, k) {
+      var h = '<div style="padding:6px 0;border-top:1px solid #fecaca;">' + a.texte + '<br>';
+      if (a.type === 'deplace') {
+        h += '<button class="btn-p" '+bt+' onclick="resoudreAlerte(\'valider\')">✓ C\'est bien le même présentiel — valider</button>'
+          + '<span style="font-size:11px;color:var(--ink-s);">Pense à prévenir les stagiaires si un mail annonçait l\'ancienne date.</span>';
+      } else if (a.type === 'disparu') {
+        h += (datesKal.length
+            ? '<select id="alerte-vers-'+k+'" style="font-size:11.5px;margin:4px 6px 0 0;">' + datesKal.map(function(c){ return '<option value="'+c.date+'">'+fmtDate(c.date)+'</option>'; }).join('') + '</select>'
+              + '<button class="btn-p" '+bt+' onclick="resoudreAlerte(\'reporter\',\''+a.date+'\',document.getElementById(\'alerte-vers-'+k+'\').value)">↪ Reporter le suivi sur cette date</button>'
+            : '')
+          + '<button class="btn-g" '+bt+' onclick="resoudreAlerte(\'oublier\',\''+a.date+'\')">🗑 Présentiel annulé — oublier</button>';
+      } else if (a.type === 'introuvable') {
+        h += '<button class="btn-p" '+bt+' onclick="ouvrirPickerKalisport()">🔗 Choisir le bon stage dans Kalisport</button>';
+      }
+      return h + '</div>';
+    }).join('') + '</div>';
+}
+
+async function resoudreAlerte(action, de, vers) {
+  if (!sessionEnCoursDeModif) return;
+  if (action === 'oublier' && !confirm('Oublier le suivi du présentiel du ' + fmtDate(de) + ' ?\n(Il reste consultable dans l\'onglet Historique du Sheet.)')) return;
+  var res = await api('resoudreAlerteKalisport', { id: sessionEnCoursDeModif, action: action, de: de, vers: vers });
+  if (!res || res.error) { toast('Erreur : ' + (res && res.error ? res.error : 'injoignable')); return; }
+  await loadSessions(true);
+  var s = sessions.find(function(x){ return x.id === sessionEnCoursDeModif; });
+  if (s) { currentSession = Object.assign({}, s); _renderSessionHeader(currentSession); prefillMails(); }
+  renderTaches();
+  toast('✓ Écart réglé');
+  modifierSession();
+}   // true = session reliée à Kalisport : dates en lecture seule
 
 /** Remplit la liste des stages Kalisport reliables (libres + celui de la session). */
 async function remplirSelectStages(kidCourant, idSession) {
@@ -2003,6 +2046,7 @@ async function openNewSession() {
   });
   formPresentiels = [];
   formModeKal = false;
+  document.getElementById('f-alertes-kal').innerHTML = '';
   remplirSelectStages('', '');
   renderPresentielsForms();
 
@@ -2039,6 +2083,7 @@ async function modifierSession() {
   if (s.statut_stage) document.getElementById('f-statut').value = s.statut_stage;
   if (s.repas_global) document.getElementById('f-repas-global').value = s.repas_global;
   formModeKal = s.source_dates === 'kalisport';
+  renderAlertesKalForm(s);
   remplirSelectStages(s.kalisport_id || '', s.id);
   formPresentiels = [];
   try {
