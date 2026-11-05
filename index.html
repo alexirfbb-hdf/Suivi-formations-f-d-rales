@@ -177,7 +177,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <div style="display:flex;gap:6px;align-items:center;">
       <input id="tdb-search" style="width:160px;font-size:12px;padding:5px 8px;" placeholder="Rechercher…" oninput="renderTDB()">
       <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap;"><input type="checkbox" id="tdb-archived" onchange="renderTDB()"> Voir archivés</label>
-      <button class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="exportTDB()">Export Excel</button>
+      <button class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="exportTDB()">Export CSV (Excel)</button>
     </div>
   </div>
   </div>
@@ -248,11 +248,8 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <div class="field"><label>Planning BF (carte Google Maps)</label><input id="cfg-plan-bf" placeholder="https://www.google.com/maps/d/..."></div>
       <div class="field"><label>Planning DETB (carte Google Maps)</label><input id="cfg-plan-detb" placeholder="https://..."></div>
     </div>
-    <hr style="margin:8px 0;">
-    <p style="font-size:12px;font-weight:600;margin-bottom:6px;">Planning interne → Martin uniquement</p>
     <div class="field-row">
-      <div class="field"><label>Planning interne BF</label><input id="cfg-plan-int-bf" placeholder="https://docs.google.com/..."></div>
-      <div class="field"><label>Planning interne DETB</label><input id="cfg-plan-int-detb" placeholder="https://docs.google.com/..."></div>
+      <div class="field"><label>Replay visio de présentation DETB</label><input id="cfg-replay-detb" placeholder="https://www.youtube.com/..."></div>
     </div>
     <div class="btn-row">
       <button class="btn-p" onclick="saveConfigPlanning()">Enregistrer tous les liens</button>
@@ -261,21 +258,44 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <div id="r-cfg-plan" style="font-size:12px;color:var(--ink-s);"></div>
   </div>
 
+  <!-- KALISPORT -->
+  <div class="card">
+    <h3 style="font-size:14px;margin-bottom:6px;">📥 Calendrier Kalisport</h3>
+    <p style="font-size:12px;color:var(--ink-s);margin-bottom:8px;">Adresse du flux iCal utilisée par « Importer Kalisport » et « Syncer Kalisport ». Une adresse en <code>webcal://</code> est acceptée.</p>
+    <div class="field"><label>URL iCal Kalisport</label><input id="cfg-ical" placeholder="webcal://hautsdefrancebasketball.kalisport.com/calendar.php?p=..."></div>
+    <div class="btn-row"><button class="btn-p" onclick="saveConfigIcal()">Enregistrer</button></div>
+    <div id="r-cfg-ical" style="font-size:12px;color:var(--ink-s);"></div>
+  </div>
+  <!-- ÉCHÉANCES -->
+  <div class="card">
+    <h3 style="font-size:14px;margin-bottom:6px;">⏱ Échéances des tâches</h3>
+    <p style="font-size:12px;color:var(--ink-s);margin-bottom:8px;">Nombre de jours avant (J-) ou après (J+) le présentiel. Ces réglages pilotent à la fois la liste de tâches et Google Agenda.</p>
+    <div id="cfg-delais" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;"></div>
+    <div class="btn-row">
+      <button class="btn-p" onclick="saveConfigDelais()">Enregistrer les échéances</button>
+      <button class="btn-g" onclick="lancerSyncAgenda()" style="margin-left:8px;">📅 Synchroniser Google Agenda</button>
+    </div>
+    <div id="r-cfg-delais" style="font-size:12px;color:var(--ink-s);"></div>
+  </div>
   <!-- MODÈLES DE MAILS -->
   <div class="card">
     <h3 style="font-size:14px;margin-bottom:6px;">✉️ Modèles de mails</h3>
     <div class="info" style="font-size:11.5px;">Variables remplacées automatiquement : <code>[NOM_FORMATION]</code> <code>[DATE_PRESENTIEL]</code> <code>[HORAIRES]</code> <code>[LIEU]</code> <code>[REPAS]</code> <code>[LIEN_TEACHUP_STAG]</code> <code>[LIEN_REPLAY_VISIO]</code> <code>[CIVILITE_FORMATEUR]</code> <code>[NOM_FORMATEUR]</code> <code>[PRENOM_FORMATEUR]</code> <code>[EMAIL_FORMATEUR]</code> <code>[TEL_FORMATEUR]</code> <code>[CODE_MODULE]</code> <code>[INTITULE_MODULE]</code> <code>[RESP_NOM]</code> <code>[RESP_EMAIL]</code> <code>[RESP_TEL]</code> <code>[LIEN_QS]</code> <code>[PROGRAMME_COMPLET]</code></div>
     <div class="field-row">
-      <div class="field"><label style="color:var(--sage-d);font-weight:700;">BF — J-10 Bienvenue stagiaires</label><textarea id="cfg-mail-bf-j10" style="min-height:200px;font-size:11px;font-family:monospace;"></textarea></div>
-      <div class="field"><label style="color:var(--sage-d);font-weight:700;">DETB — J-10 Bienvenue stagiaires</label><textarea id="cfg-mail-detb-j10" style="min-height:200px;font-size:11px;font-family:monospace;"></textarea></div>
+      <div class="field"><label style="color:var(--sage-d);font-weight:700;">BF — Bienvenue stagiaires (avant P1)</label><textarea id="cfg-mail-bf-j10" style="min-height:200px;font-size:11px;font-family:monospace;"></textarea></div>
+      <div class="field"><label style="color:var(--sage-d);font-weight:700;">DETB — Bienvenue stagiaires (avant P1)</label><textarea id="cfg-mail-detb-j10" style="min-height:200px;font-size:11px;font-family:monospace;"></textarea></div>
     </div>
     <div class="field-row">
       <div class="field"><label style="color:var(--sage-d);font-weight:700;">BF — J-5 Rappel présentiel</label><textarea id="cfg-mail-bf-j5" style="min-height:200px;font-size:11px;font-family:monospace;"></textarea></div>
       <div class="field"><label style="color:var(--sage-d);font-weight:700;">DETB — J-5 Rappel présentiel</label><textarea id="cfg-mail-detb-j5" style="min-height:200px;font-size:11px;font-family:monospace;"></textarea></div>
     </div>
     <div class="field-row">
-      <div class="field"><label style="color:var(--sage-d);font-weight:700;">Formateur — J-7</label><textarea id="cfg-mail-fo-j7" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
+      <div class="field"><label style="color:var(--sage-d);font-weight:700;">Formateur — Convocation présentiel</label><textarea id="cfg-mail-fo-j7" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
       <div class="field"><label style="color:var(--sage-d);font-weight:700;">QS — Stagiaires</label><textarea id="cfg-mail-qs" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label style="color:var(--sage-d);font-weight:700;">QS — Relance stagiaires</label><textarea id="cfg-mail-qs-relance" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
+      <div class="field"></div>
     </div>
     <div class="field-row">
       <div class="field"><label style="color:var(--terra);font-weight:700;">💶 Relance paiement — Avant formation</label><textarea id="cfg-mail-relance-avant" style="min-height:160px;font-size:11px;font-family:monospace;"></textarea></div>
@@ -397,10 +417,11 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <div id="mail-gen-body" style="display:none;margin-top:12px;">
         <div class="info" style="margin-bottom:10px;">Texte prêt à copier-coller. Rien n'est envoyé depuis l'app.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-          <button class="btn-p" onclick="genererMail('bf-j10')">📧 BF — Bienvenue J-10</button>
-          <button class="btn-p" onclick="genererMail('detb-j10')">📧 DETB — Bienvenue J-10</button>
+          <button class="btn-p" onclick="genererMail('bf-j10')">📧 BF — Bienvenue</button>
+          <button class="btn-p" onclick="genererMail('detb-j10')">📧 DETB — Bienvenue</button>
           <button class="btn-s" onclick="genererMail('bf-j5')">📧 BF — J-5 Présentiel</button>
           <button class="btn-s" onclick="genererMail('detb-j5')">📧 DETB — J-5 Présentiel</button>
+          <button class="btn-s" onclick="genererMail('fo-j7')">👨‍🏫 Convocation formateur</button>
           <button class="btn-g" onclick="genererMail('relance-avant')">💶 Relance paiement (avant)</button>
           <button class="btn-g" onclick="genererMail('relance-cours')">💶 Relance paiement (en cours)</button>
           <button class="btn-g" onclick="genererMail('qs')">⭐ QS Stagiaires (envoi 1)</button>
@@ -471,7 +492,6 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
         </div>
         <div class="field-row">
           <div class="field"><label>Date fin inscription</label><input id="f-finins" type="date"></div>
-          <div class="field"><label>Tarif (€)</label><input id="f-tarif" type="number" placeholder="125"></div>
           <div class="field"><label>Observations</label><input id="f-obs"></div>
         </div>
         <input type="hidden" id="f-statut" value="À venir">
@@ -645,48 +665,66 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 
 <script>
 var API_URL = 'https://script.google.com/macros/s/AKfycbzx_yE_nMLFxLIG28tydeuFq2ZIwndHCgieNyepw9KLFqLesEchi4CBwS8VEblGISpGbA/exec';
+// Toutes les sorties mail arrivent UNIQUEMENT ici (adresse fixée dans le script Apps Script)
 var ME = 'agodart@hdfbasket.org';
 
-var sessions = [], formateurs = [], currentSession = null, currentStag = [];
+var sessions = [], formateurs = [], currentSession = null;
 var virementSession = null;
 var configData = {}; // Cache config du sheet
 var secteursList = []; // Liste des secteurs paramétrables
 
 // === UTILS ===
-var POST_ACTIONS = ['updateSession','createSession','setConfigBulk',
-  'envoyerMailFormateur','envoyerMailKalisport','envoyerConvocations',
-  'envoyerMailClubs','envoyerQuestionnaireSatisfaction','parseConvocationPDF',
-  'importerSessionKalisport','syncDatesKalisport'];
+// Échéances par défaut (jours) — identiques à DELAIS_DEFAUT du script Apps Script.
+// Modifiables dans ⚙ Config → Échéances (clé delais_json).
+var DELAIS_DEFAUT = {
+  bienvenue_p1: 9, rappel_presentiel: 5, infos_formateur: 9, convoc_formateur: 5,
+  emargement: 1, relance_paiement: 9, prerequis: 9, qs_envoi1: 1, qs_relance: 30
+};
+var DELAIS_LIBELLES = {
+  bienvenue_p1: 'Mail bienvenue stagiaires (J- avant P1)',
+  rappel_presentiel: 'Rappel stagiaires (J- avant chaque présentiel)',
+  infos_formateur: 'Infos stage → formateur (J- avant P1)',
+  convoc_formateur: 'Convocation formateur (J- avant P2, P3…)',
+  emargement: 'Vérifier émargements (J+ après présentiel)',
+  relance_paiement: 'Relance paiements (J- avant P1)',
+  prerequis: 'Contrôle prérequis (J- avant P1)',
+  qs_envoi1: 'Questionnaire satisfaction (J+ après dernier présentiel)',
+  qs_relance: 'Relance questionnaire (J+ après dernier présentiel)'
+};
+function getDelais() {
+  var d = Object.assign({}, DELAIS_DEFAUT);
+  try {
+    var c = configData && configData.delais_json ? JSON.parse(configData.delais_json) : {};
+    Object.keys(c).forEach(function(k) { var n = parseInt(c[k], 10); if (!isNaN(n)) d[k] = n; });
+  } catch(e) {}
+  return d;
+}
+
+// Ajoute n jours au calendrier (insensible aux changements d'heure)
+function addJours(d, n) { var r = new Date(d); r.setDate(r.getDate() + n); return r; }
+
+// Présentiels d'une session — source UNIQUE : convocs_json, triés par date
+function getPresentiels(s) {
+  var arr = [];
+  try { if (s && s.convocs_json) arr = JSON.parse(s.convocs_json); } catch(e) {}
+  if (!Array.isArray(arr)) arr = [];
+  return arr.filter(function(c) { return c && c.date; })
+    .sort(function(a, b) { return String(a.date) < String(b.date) ? -1 : 1; });
+}
 
 async function api(action, payload) {
-  payload = payload || {};
+  // Tout passe en POST (text/plain = pas de pré-vol CORS). Le script accepte aussi GET.
   try {
-    var res, data;
-    if (POST_ACTIONS.indexOf(action) > -1) {
-      res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: action, payload: payload })
-      });
-      var text = await res.text();
-      if (text.trim().startsWith('<')) {
-        // GAS a renvoyé une page HTML (erreur ou redirection) — le déploiement est probablement obsolète
-        throw new Error('Le script GAS a renvoyé une page d\'erreur. Redéploie le script (Déployer → Gérer les déploiements → Nouvelle version) puis réessaie.');
-      }
-      data = JSON.parse(text);
-      // Apps Script redirige parfois les POST en GET (302), perdant le body.
-      // Si on reçoit "Action inconnue", on retente en GET.
-      if (data && typeof data.error === 'string' && data.error.indexOf('Action inconnue') === 0) {
-        res = await fetch(API_URL + '?action=' + action + '&payload=' + encodeURIComponent(JSON.stringify(payload)));
-        var text2 = await res.text();
-        if (text2.trim().startsWith('<')) throw new Error('Le script GAS a renvoyé une page d\'erreur. Redéploie le script.');
-        data = JSON.parse(text2);
-      }
-      return data;
-    } else {
-      res = await fetch(API_URL + '?action=' + action + '&payload=' + encodeURIComponent(JSON.stringify(payload)));
-      return await res.json();
+    var res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: action, payload: payload || {} })
+    });
+    var text = await res.text();
+    if (text.trim().charAt(0) === '<') {
+      throw new Error('Le script Apps Script a renvoyé une page d\'erreur. Redéploie-le (Déployer → Gérer les déploiements → Modifier → Nouvelle version).');
     }
+    return JSON.parse(text);
   } catch(e) {
     return { error: e.message };
   }
@@ -700,28 +738,6 @@ function toast(msg) {
 function closeAll() { document.querySelectorAll('.modal-bg').forEach(function(m) { m.classList.remove('open'); }); }
 // Parse programme_presentiel pour extraire TOUTES les séances (y compris passées)
 // Format : "Samedi 19 septembre 2026 — de 09h30 à 12h30 (RDV 09h15) — Lieu..."
-function parseProgrammePresentiel(texte) {
-  if (!texte) return [];
-  var MOIS = {
-    'janvier':1,'février':2,'mars':3,'avril':4,'mai':5,'juin':6,
-    'juillet':7,'août':8,'septembre':9,'octobre':10,'novembre':11,'décembre':12
-  };
-  var pad = function(n){ return n < 10 ? '0'+n : String(n); };
-  var result = [];
-  String(texte).split('\n').forEach(function(line) {
-    var m = line.match(/\w+\s+(\d{1,2})\s+(\w+)\s+(\d{4})\s*[—\-–]\s*de\s+(\d{1,2}h\d{0,2})\s+à\s+(\d{1,2}h\d{0,2})/i);
-    if (m) {
-      var mois = MOIS[m[2].toLowerCase()];
-      if (mois) {
-        result.push({
-          date: m[3] + '-' + pad(mois) + '-' + pad(parseInt(m[1])),
-          horaires: m[4] + ' à ' + m[5]
-        });
-      }
-    }
-  });
-  return result;
-}
 
 function parseDateLocal(str) {
   if (!str) return null;
@@ -765,27 +781,35 @@ function switchView(name) {
   if (name === 'taches') { window.location.hash = ''; renderTaches(); }
   if (name === 'tdb')    { window.location.hash = ''; loadSessions(); }
   if (name === 'annuaire') { window.location.hash = ''; loadAnnuaire(); }
-  if (name === 'config') { window.location.hash = ''; if (!configData) loadConfig(); else loadConfigMails(); }
+  if (name === 'config') { window.location.hash = ''; loadConfig(); }
 }
 function switchSub(name) {
-  document.querySelectorAll('.stab').forEach(function(t) { t.classList.toggle('active', t.dataset.s === name); });
-  document.querySelectorAll('.subview').forEach(function(v) { v.classList.remove('active'); });
-  document.getElementById('sub-' + name).classList.add('active');
-  if (name === 'mails') { prefillMails(); renderRelListe(); renderClubsListe(); }
+  if (name === 'mails') { prefillMails(); renderClubsListe(); }
 }
 
 // === TABLEAU DE BORD ===
-async function loadSessions() {
-  // Si données récentes en mémoire, afficher directement sans recharger
-  if (sessions && sessions.length > 0) { renderTDB(); return; }
-  document.getElementById('tdb-body').innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--ink-s);padding:24px;">Chargement…</td></tr>';
-  try {
-    var data = await api('getInit');
+async function loadSessions(force) {
+  // Affiche le cache mémoire tout de suite ; recharge depuis le Sheet si demandé ou si vide
+  if (!force && sessions && sessions.length > 0) { renderTDB(); return; }
+  if (!sessions.length) document.getElementById('tdb-body').innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--ink-s);padding:24px;">Chargement…</td></tr>';
+  var data = await api('getInit');
+  if (data && !data.error) {
     sessions = Array.isArray(data.sessions) ? data.sessions : [];
     configData = data.config || {};
-    try { localStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData, ts: Date.now() })); } catch(e) {}
-  } catch(e) {}
+    saveCache();
+  } else if (data && data.error) {
+    toast('⚠️ ' + data.error);
+  }
   renderTDB();
+}
+function saveCache() {
+  try { localStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData, ts: Date.now() })); } catch(e) {}
+}
+function majSessionLocale(id, fields) {
+  var s = sessions.find(function(x) { return x.id === id; });
+  if (s) Object.assign(s, fields);
+  if (currentSession && currentSession.id === id) Object.assign(currentSession, fields);
+  saveCache();
 }
 
 var tdbTab = 'tous'; // 'tous' | 'bf' | 'detb'
@@ -814,40 +838,26 @@ function renderTDB() {
   if (!liste.length) { document.getElementById('tdb-body').innerHTML = '<tr><td colspan="18" class="empty">Aucune session.</td></tr>'; return; }
 
   document.getElementById('tdb-body').innerHTML = liste.map(function(s) {
-    var nb = Number(s.nb_stagiaires) || 0;
-    var payes = Number(s.nb_payes) || 0;
-    var admis = Number(s.nb_admis) || 0;
-    var nbM = Number(s.nb_m) || 0;
-    var nbF = Number(s.nb_f) || 0;
-    var admisM = Number(s.nb_admis_m) || 0;
-    var admisF = Number(s.nb_admis_f) || 0;
-
     // Payé — saisie manuelle
-    var payVal = s.paiement_manuel || '';
+    var payVal = String(s.paiement_manuel || '');
     var payComplet = payVal.toLowerCase() === 'complet' || payVal === '✓';
     var payHtml = '<input type="text" value="'+(payVal).replace(/"/g,'&quot;')+'" placeholder="ex: 10/12" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'paiement_manuel\')">'
       + (payComplet ? '' : '<button class="tdb-action" style="font-size:9px;margin-left:2px;" onclick="event.stopPropagation();marquerPayeComplet(\''+s.id+'\')">✓</button>');
 
     // Admis ♂ et ♀ séparés
-    var admisM = s.admis_m_manuel || '';
-    var admisF = s.admis_f_manuel || '';
+    var admisM = String(s.admis_m_manuel || '');
+    var admisF = String(s.admis_f_manuel || '');
     var admisMHtml = '<input type="text" value="'+admisM.replace(/"/g,'&quot;')+'" placeholder="9/10" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'admis_m_manuel\')">';
     var admisFHtml = '<input type="text" value="'+admisF.replace(/"/g,'&quot;')+'" placeholder="8/8" style="width:55px;font-size:11px;text-align:center;" onclick="event.stopPropagation();" onblur="updSessionTDB(this,\''+s.id+'\',\'admis_f_manuel\')">';
     // Prochain présentiel — lire programme_presentiel (toutes les séances) en priorité
     var prochainPres = '';
     try {
       var todayTDB = new Date(); todayTDB.setHours(0,0,0,0);
-      // Source : programme_presentiel (dates réelles de la formation)
-      var toutesSeancesTDB = parseProgrammePresentiel(s.programme_presentiel);
-      if (!toutesSeancesTDB.length) {
-        // Fallback : convocs_json
-        toutesSeancesTDB = s.convocs_json ? JSON.parse(s.convocs_json) : [];
-      }
+      var toutesSeancesTDB = getPresentiels(s);
       var futuresTDB = toutesSeancesTDB.filter(function(c){
-        if (!c.date) return false;
         var d = parseDateLocal(c.date);
         return d && d >= todayTDB;
-      }).sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
+      });
       if (futuresTDB.length) {
         var dTDB = parseDateLocal(futuresTDB[0].date);
         prochainPres = dTDB ? dTDB.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : futuresTDB[0].date;
@@ -887,6 +897,7 @@ function renderTDB() {
     var codeHtml = s.kalisport_lien
       ? '<a href="'+s.kalisport_lien+'" target="_blank" onclick="event.stopPropagation();" style="color:var(--sage-d);font-weight:600;text-decoration:none;">'+(s.code_kalisport||'—')+'</a>'
       : '<strong>'+(s.code_kalisport||'—')+'</strong>';
+    if (!s.code_kalisport) codeHtml = '<strong style="font-size:11.5px;">'+(s.nom||'—')+'</strong>';
 
     return '<tr onclick="openSession(\''+s.id+'\')" style="cursor:pointer;">'
       + '<td style="min-width:100px;">'+codeHtml+'<br><small style="color:var(--ink-s);">'+(s.secteur||'')+(s.date_debut?' · '+fmtDate(s.date_debut):'')+'</small></td>'
@@ -907,7 +918,7 @@ function renderTDB() {
         + '<input type="checkbox" class="chk" '+(s.rem_formateur?'checked':'')+' onchange="updSessionTDB(this,\''+s.id+'\',\'rem_formateur\')"></td>'
       + '<td onclick="event.stopPropagation();">'
         + '<input class="obs-input" type="text" value="'+(s.observations||'').replace(/"/g,'&quot;')+'" placeholder="Observations…"'
-        + ' onblur="updSessionObs(this,\''+s.id+'\')"'
+        + ' onblur="updSessionTDB(this,\''+s.id+'\',\'observations\')"'
         + ' onkeydown="if(event.key===&quot;Enter&quot;)this.blur()">'
       + '</td>'
       + '<td onclick="event.stopPropagation();">'+avaSelect+'</td>'
@@ -938,7 +949,7 @@ async function pointerSession(id) {
   if (s) s.date_revue = iso;
   var res = await api('updateSession', { id: id, fields: { date_revue: iso } });
   if (res && res.error) {
-    toast('⚠️ Erreur: ' + res.error + ' — vérifie que la colonne date_revue existe dans le Sheet');
+    toast('⚠️ Erreur: ' + res.error);
   } else {
     renderTDB();
     toast('✓ Point fait le ' + today.toLocaleDateString('fr-FR'));
@@ -947,7 +958,7 @@ async function pointerSession(id) {
 
 function badgeStat(v) {
   if (v === 'Envoyé') return '<span class="badge ok">✓</span>';
-  return '<span class="badge warn">'+v+'</span>';
+  return '<span class="badge warn">'+(v||'À faire')+'</span>';
 }
 
 async function updDiplomes(el, id) {
@@ -963,13 +974,13 @@ async function updDiplomes(el, id) {
 async function updSessionTDB(el, id, field) {
   var val = el.type === 'checkbox' ? (el.checked ? 'Oui' : '') : el.value;
   var s = sessions.find(function(x){return x.id===id;});
-  if (s) s[field] = val;
+  if (s && String(s[field] || '') === String(val)) return; // rien n'a changé
   var fields = {}; fields[field] = val;
+  majSessionLocale(id, fields);
   var res = await api('updateSession', { id: id, fields: fields });
   if (res && res.error) {
     toast('⚠️ Erreur: ' + res.error);
   } else {
-    // Petit feedback visuel
     el.style.background = '#d4edda';
     setTimeout(function(){ el.style.background = ''; }, 800);
   }
@@ -1033,9 +1044,8 @@ async function importerKalisportSession(kalisport_id, nom) {
   toast('⏳ Import en cours…');
   var res = await api('importerSessionKalisport', { kalisport_id: kalisport_id, nom: nom });
   if (!res || res.error) { toast('Erreur : ' + (res && res.error ? res.error : 'injoignable')); return; }
-  var init = await api('getInit', {});
-  if (init && init.sessions) { sessions = init.sessions; renderTDB(); }
-  toast('✓ Session "' + (res.nom || nom) + '" importée — ' + (res.nb_seances || 0) + ' séances. Complétez les informations manquantes (lieu, formateur…).');
+  await loadSessions(true);
+  toast('✓ "' + (res.nom || nom) + '" importée — ' + (res.nb_seances || 0) + ' présentiel(s). Complète formateur, liens… via ✏️ Modifier.');
   if (res.session_id) openSession(res.session_id);
 }
 
@@ -1043,13 +1053,15 @@ async function syncDatesKalisport() {
   toast('⏳ Synchronisation des dates Kalisport en cours…');
   var res = await api('syncDatesKalisport', {});
   if (!res || res.error) { toast('Erreur : ' + (res && res.error ? res.error : 'injoignable')); return; }
-  var msg = '✓ Sync Kalisport terminée';
-  if (res.updated) msg += ' — ' + res.updated + ' session(s) mise(s) à jour';
-  if (res.skipped) msg += ', ' + res.skipped + ' ignorée(s)';
-  if (!res.updated && !res.skipped) msg += ' — aucune modification';
+  var msg = '✓ Sync Kalisport : ' + (res.updated || 0) + ' session(s) mise(s) à jour';
+  if (res.skipped) msg += ', ' + res.skipped + ' sans correspondance';
   toast(msg);
-  var init = await api('getInit', {});
-  if (init && init.sessions) { sessions = init.sessions; renderTDB(); }
+  await loadSessions(true);
+  renderTaches();
+  if (currentSession) {
+    var s = sessions.find(function(x){ return x.id === currentSession.id; });
+    if (s) { currentSession = Object.assign({}, s); _renderSessionHeader(currentSession); prefillMails(); }
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -1085,11 +1097,10 @@ function onConvocationPDFSelected(input) {
 }
 
 async function marquerPayeComplet(id) {
-  var s = sessions.find(function(x){return x.id===id;});
-  if (s) s.paiement_manuel = 'Complet';
-  await api('updateSession', { id: id, fields: { paiement_manuel: 'Complet' } });
+  majSessionLocale(id, { paiement_manuel: 'Complet' });
   renderTDB();
-  toast('✓ Paiements : Complet');
+  var res = await api('updateSession', { id: id, fields: { paiement_manuel: 'Complet' } });
+  toast(res && res.error ? 'Erreur : ' + res.error : '✓ Paiements : Complet');
 }
 
 async function updAvancement(el, id) {
@@ -1102,7 +1113,7 @@ async function updAvancement(el, id) {
   else toast('✓ Avancement : ' + (val || 'À faire'));
 }
 
-var MAIL_KEYS = ['bf_j10','detb_j10','bf_j5','detb_j5','fo_j7','qs','relance_avant','relance_cours'];
+var MAIL_KEYS = ['bf_j10','detb_j10','bf_j5','detb_j5','fo_j7','qs','qs_relance','relance_avant','relance_cours'];
 var configMailsLoaded = false;
 
 function loadConfigMails() {
@@ -1164,9 +1175,8 @@ function remplacerVariables(template, s, presentiel) {
     : getResponsableDetb(s.type);
 
   // Programme complet
-  var convocs = [];
-  try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
-  var prog = convocs.filter(function(c){return c.date;}).map(function(c,i) {
+  var convocs = getPresentiels(s);
+  var prog = convocs.map(function(c,i) {
     var d = parseDateLocal(c.date);
     var dateStr = d ? d.toLocaleDateString('fr-FR', {weekday:'long',day:'numeric',month:'long',year:'numeric'}) : c.date;
     dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
@@ -1196,8 +1206,9 @@ function remplacerVariables(template, s, presentiel) {
     '[RESP_TEL]': resp.tel,
     '[LIEN_QS]': s.lien_qs_stag || '[LIEN_QS]',
     '[LIEN_PRESENTATION_DETB]': configData.info_detb || '[LIEN_PRESENTATION_DETB]',
-    '[LIEN_REPLAY_DETB]': configData.plan_detb || '[LIEN_REPLAY_DETB]',
-    '[LIEN_PLANNING_DETB]': configData.plan_bf || '[LIEN_PLANNING_DETB]',
+    '[LIEN_REPLAY_DETB]': configData.replay_detb || 'https://www.youtube.com/watch?v=V3Z5zaYoomY',
+    '[LIEN_PLANNING_DETB]': configData.plan_detb || '[LIEN_PLANNING_DETB]',
+    '[LIEN_PLANNING_BF]': configData.plan_bf || '[LIEN_PLANNING_BF]',
     '[PROGRAMME_COMPLET]': prog || '[PROGRAMME_COMPLET]',
     '[NOM_SESSION_TEACHUP]': s.teachup_id || s.nom || '[NOM_SESSION_TEACHUP]',
     '[ACCES_VOITURE]': s.mail_acces ? s.mail_acces.split('\n')[0] : '[ACCES_VOITURE]',
@@ -1206,7 +1217,8 @@ function remplacerVariables(template, s, presentiel) {
     '[LIEN_SUIVI_FORMATEUR]': s.lien_suivi_formateur || '[LIEN_SUIVI_FORMATEUR]',
     '[LIEN_TDB_TEACHUP]': s.teachup_lien || '[LIEN_TDB_TEACHUP]',
     '[LIEN_FACEBOOK]': s.mail_fb || configData.lien_fb || 'https://www.facebook.com/groups/632709503927580/',
-    '[LIEN_KALISPORT]': s.kalisport_lien || '[LIEN_KALISPORT]',
+    '[LIEN_KALISPORT]': s.mail_session_kalisport || s.kalisport_lien || '[LIEN_KALISPORT]',
+    '[LIEN_INSCRIPTION]': s.mail_formulaire || '[LIEN_INSCRIPTION]',
   };
 
   var result = template || '';
@@ -1221,102 +1233,78 @@ function remplacerVariables(template, s, presentiel) {
 function genererMail(type) {
   if (!currentSession) { toast('Ouvre une session'); return; }
   var s = currentSession;
-  var isBF = (s.type||'').indexOf('Brevet') > -1;
-  var isJ5 = type.indexOf('j5') > -1;
+  var convocs = getPresentiels(s);
 
-  // Pour J-5 : sélectionner le présentiel
-  if (isJ5) {
-    var convocs = [];
-    try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
+  // Mails liés à UN présentiel : on demande lequel
+  if (type.indexOf('j5') > -1 || type === 'fo-j7') {
+    var liste = convocs.map(function(c, i) { return { c: c, i: i }; });
     document.getElementById('j5-presentiel-sel').style.display = convocs.length ? 'block' : 'none';
-    document.getElementById('j5-pres-liste').innerHTML = convocs.map(function(c, i) {
-      var d = parseDateLocal(c.date);
-      var lbl = d ? d.toLocaleDateString('fr-FR') : c.date;
-      return '<button class="btn-s" style="font-size:11px;padding:4px 10px;" onclick="genererMailPresentiel(\''+type+'\','+i+')">P'+(i+1)+' — '+lbl+'</button>';
+    document.getElementById('j5-pres-liste').innerHTML = liste.map(function(x) {
+      var d = parseDateLocal(x.c.date);
+      var lbl = d ? d.toLocaleDateString('fr-FR') : x.c.date;
+      return '<button class="btn-s" style="font-size:11px;padding:4px 10px;" onclick="genererMailPresentiel(\''+type+'\','+x.i+')">P'+(x.i+1)+' — '+lbl+'</button>';
     }).join('');
-    if (convocs.length) {
-      document.getElementById('mail-genere-zone').style.display = 'none';
-      return;
-    }
+    if (convocs.length) { document.getElementById('mail-genere-zone').style.display = 'none'; return; }
   }
 
-  // Pour J-10 : utiliser automatiquement le 1er présentiel
-  var presAuto = null;
-  if (type === 'bf-j10' || type === 'detb-j10') {
-    var convAuto = [];
-    try { if (s.convocs_json) convAuto = JSON.parse(s.convocs_json); } catch(e) {}
-    if (convAuto.length) presAuto = convAuto[0];
-  }
+  var template = lireModele(type);
+  if (!template) { toast('Modèle "' + type + '" vide — colle le texte dans ⚙ Config → Modèles de mails'); return; }
 
-  var cle = 'mail_' + type.replace(/-/g,'_');
-  // Lire depuis la textarea si visible, sinon depuis configData
-  var textareaId = 'cfg-mail-' + type;
-  var el = document.getElementById(textareaId);
-  var template = (el && el.value.trim()) ? el.value : (configData[cle] || '');
-  if (!template) {
-    toast('Modèle "' + type + '" vide — colle le texte dans ⚙ Config → Modèles de mails');
-    return;
-  }
-
-  // Pour les relances : déterminer automatiquement le bon présentiel
-  var presRelance = null;
-  if (type === 'relance-avant') {
-    // Premier présentiel
-    var convR = [];
-    try { if (s.convocs_json) convR = JSON.parse(s.convocs_json); } catch(e) {}
-    if (convR.length) presRelance = convR[0];
+  var pres = null;
+  var today = new Date(); today.setHours(0,0,0,0);
+  if (type === 'bf-j10' || type === 'detb-j10' || type === 'relance-avant') {
+    pres = convocs[0] || null;                       // 1er présentiel
   } else if (type === 'relance-cours') {
-    // Prochain présentiel à venir
-    var convR2 = [];
-    try { if (s.convocs_json) convR2 = JSON.parse(s.convocs_json); } catch(e) {}
-    var today2 = new Date(); today2.setHours(0,0,0,0);
-    var futures = convR2.filter(function(c){
-      var d = parseDateLocal(c.date); return d && d >= today2;
-    }).sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
-    if (futures.length) presRelance = futures[0];
-    else if (convR2.length) presRelance = convR2[convR2.length-1];
+    pres = convocs.filter(function(c){ var d = parseDateLocal(c.date); return d && d >= today; })[0]
+        || convocs[convocs.length-1] || null;        // prochain présentiel
   }
+  afficherMailGenere(type, remplacerVariables(template, s, pres));
+}
 
-  var texte = remplacerVariables(template, s, presRelance || presAuto);
-  afficherMailGenere(type, texte);
+function lireModele(type) {
+  var cle = 'mail_' + type.replace(/-/g,'_');
+  var el = document.getElementById('cfg-mail-' + type);
+  return (el && el.value.trim()) ? el.value : ((configData && configData[cle]) || '');
 }
 
 function genererMailPresentiel(type, i) {
-  try {
-    var s = currentSession;
-    if (!s) { toast('Ouvre une session'); return; }
-    var convocs = [];
-    try { if (s.convocs_json) convocs = JSON.parse(s.convocs_json); } catch(e) {}
-    var pres = convocs[i] || null;
-    var cle = 'mail_' + type.replace(/-/g,'_');
-    var textareaId = 'cfg-mail-' + type;
-    var el = document.getElementById(textareaId);
-    var template = (el && el.value.trim()) ? el.value : (configData && configData[cle] ? configData[cle] : '');
-    if (!template) { toast('Modèle "' + type + '" vide — va dans ⚙ Config pour le remplir'); return; }
-    var texte = remplacerVariables(template, s, pres);
-    var selEl = document.getElementById('j5-presentiel-sel');
-    if (selEl) selEl.style.display = 'none';
-    afficherMailGenere(type + ' — Présentiel '+(i+1), texte);
-  } catch(err) {
-    alert('Erreur: ' + err.message);
-  }
+  var s = currentSession;
+  if (!s) { toast('Ouvre une session'); return; }
+  var pres = getPresentiels(s)[i] || null;
+  var template = lireModele(type);
+  if (!template) { toast('Modèle "' + type + '" vide — va dans ⚙ Config pour le remplir'); return; }
+  document.getElementById('j5-presentiel-sel').style.display = 'none';
+  afficherMailGenere(type, remplacerVariables(template, s, pres), 'Présentiel ' + (i+1));
 }
 
-function afficherMailGenere(type, texte) {
+function afficherMailGenere(type, texte, suffixe) {
   var titres = {
-    'bf-j10':'BF — Mail de bienvenue J-10', 'detb-j10':'DETB — Mail de bienvenue J-10',
-    'fo-j7':'Formateur — J-7', 'qs':'QS Stagiaires',
+    'bf-j10':'BF — Mail de bienvenue', 'detb-j10':'DETB — Mail de bienvenue',
+    'bf-j5':'BF — Rappel présentiel', 'detb-j5':'DETB — Rappel présentiel',
+    'fo-j7':'Formateur — Convocation présentiel', 'qs':'QS Stagiaires', 'qs-relance':'Relance QS Stagiaires',
     'relance-avant':'Relance paiement — Avant formation', 'relance-cours':'Relance paiement — En cours'
   };
-  document.getElementById('mail-genere-titre').textContent = titres[type] || type;
-  // Zone visible
-  var apercu = document.getElementById('mail-genere-apercu');
-  if (apercu) apercu.textContent = texte;
-  // Textarea cachée pour copier
+  document.getElementById('mail-genere-titre').textContent = (titres[type] || type) + (suffixe ? ' — ' + suffixe : '');
+  document.getElementById('mail-genere-apercu').innerHTML = texteVersHtml(texte);
   document.getElementById('mail-genere-texte').value = texte;
   document.getElementById('mail-genere-zone').style.display = 'block';
   document.getElementById('r-mail-copie').textContent = '';
   document.getElementById('mail-genere-zone').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function echapHtml(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+// **gras**  __souligné__  *italique*  + liens cliquables
+function texteVersHtml(texte) {
+  return echapHtml(texte)
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/__([^_]+)__/g, '<u>$1</u>')
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>');
+}
+function texteBrut(texte) {
+  return String(texte).replace(/\*\*([^*]+)\*\*/g,'$1').replace(/__([^_]+)__/g,'$1').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1$2');
 }
 
 function toggleMailGen() {
@@ -1327,13 +1315,31 @@ function toggleMailGen() {
   arr.textContent = open ? '▾' : '▴';
 }
 
-function copierMailGenere() {
-  var ta = document.getElementById('mail-genere-texte');
-  ta.select();
-  ta.setSelectionRange(0, 99999);
-  document.execCommand('copy');
-  document.getElementById('r-mail-copie').textContent = '✓ Copié ! Colle directement dans Kalisport.';
-  toast('✓ Mail copié dans le presse-papier');
+async function copierMailGenere() {
+  var txt = texteBrut(document.getElementById('mail-genere-texte').value);
+  try { await navigator.clipboard.writeText(txt); }
+  catch(e) { var ta = document.getElementById('mail-genere-texte'); ta.value = txt; ta.select(); document.execCommand('copy'); }
+  document.getElementById('r-mail-copie').textContent = '✓ Copié (texte brut).';
+  toast('✓ Mail copié');
+}
+async function copierMailGenereHTML() {
+  var texte = document.getElementById('mail-genere-texte').value;
+  var html = '<div style="font-family:Arial,sans-serif;font-size:14px;white-space:pre-wrap;">' + texteVersHtml(texte) + '</div>';
+  try {
+    await navigator.clipboard.write([new ClipboardItem({
+      'text/html': new Blob([html], { type: 'text/html' }),
+      'text/plain': new Blob([texteBrut(texte)], { type: 'text/plain' })
+    })]);
+    document.getElementById('r-mail-copie').textContent = '✓ Copié avec la mise en forme — colle dans Gmail ou Kalisport.';
+    toast('✓ Mail copié (mis en forme)');
+  } catch(e) {
+    // Repli : sélection de l'aperçu rendu
+    var ap = document.getElementById('mail-genere-apercu');
+    var r = document.createRange(); r.selectNodeContents(ap);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    document.execCommand('copy'); sel.removeAllRanges();
+    document.getElementById('r-mail-copie').textContent = '✓ Copié (mise en forme).';
+  }
 }
 
 
@@ -1375,335 +1381,137 @@ async function saveVirement() {
   toast('✓ Virement(s) enregistré(s)');
 }
 async function reloadTaches() {
-  await loadSessions();
+  await loadSessions(true);
   renderTaches();
+}
+
+// ═══════════════════════════════════════════════════
+// TÂCHES — mêmes règles que syncAgenda() côté Apps Script
+// ═══════════════════════════════════════════════════
+function construireTaches(s, today, D) {
+  var J = 86400000, out = [];
+  var code = s.code_kalisport || s.nom || '—';
+  var pres = getPresentiels(s);
+  var limiteEmar = addJours(today, -30);
+  function add(t) { t.sessionId = s.id; t.meta = code; out.push(t); }
+
+  pres.forEach(function(c, i) {
+    var dateP = parseDateLocal(c.date); if (!dateP) return;
+    var lbl = 'Présentiel ' + (i+1) + ' — ' + dateP.toLocaleDateString('fr-FR');
+    var avant = dateP >= today; // les tâches « avant présentiel » n'ont plus de sens une fois passé
+    if (i === 0 && avant) add({ icon:'📧', titre:'Mail bienvenue ' + lbl + ' → stagiaires',
+      echeance:addJours(dateP, -D.bienvenue_p1), done:c.stag === 'Envoyé',
+      marquer:{ index:i, champ:'stag', valeur:'Envoyé' } });
+    if (avant) add({ icon:'📋', titre:'Rappel ' + lbl + ' → stagiaires',
+      echeance:addJours(dateP, -D.rappel_presentiel),
+      done:c.rappel_j5 === 'Envoyé' || (i > 0 && c.stag === 'Envoyé'), // ancien format P2+
+      marquer:{ index:i, champ:'rappel_j5', valeur:'Envoyé' } });
+    if (i > 0 && avant) add({ icon:'👨‍🏫', titre:'Convocation ' + lbl + ' → formateur',
+      echeance:addJours(dateP, -D.convoc_formateur), done:c.form === 'Envoyé',
+      marquer:{ index:i, champ:'form', valeur:'Envoyé' } });
+    if (dateP >= limiteEmar) add({ icon:'🖊', titre:'Vérifier émargements — ' + lbl,
+      echeance:addJours(dateP, D.emargement), done:c.emargement === 'Fait', ouvrir:'session',
+      marquer:{ index:i, champ:'emargement', valeur:'Fait' } });
+  });
+
+  var p1 = pres.length ? parseDateLocal(pres[0].date) : null;
+  if (p1 && p1 >= today) {
+    add({ icon:'👨‍🏫', titre:'Infos stage → formateur', echeance:addJours(p1, -D.infos_formateur),
+      done:s.statut_mail_formateur === 'Envoyé', marquer:{ champ:'statut_mail_formateur', valeur:'Envoyé' } });
+    add({ icon:'💶', titre:'Relance paiements manquants', echeance:addJours(p1, -D.relance_paiement),
+      done:s.relance_paiement_fait === 'Oui', marquer:{ champ:'relance_paiement_fait', valeur:'Oui' } });
+    add({ icon:'✔️', titre:'Contrôler les prérequis stagiaires', echeance:addJours(p1, -D.prerequis), ouvrir:'session',
+      done:s.prereq_controle_fait === 'Oui', marquer:{ champ:'prereq_controle_fait', valeur:'Oui' } });
+  }
+
+  var dernier = pres.length ? parseDateLocal(pres[pres.length-1].date) : null;
+  if (dernier) {
+    add({ icon:'⭐', titre:'Questionnaire satisfaction — envoi 1', echeance:addJours(dernier, D.qs_envoi1),
+      done:s.statut_qs_envoi1 === 'Envoyé', marquer:{ champ:'statut_qs_envoi1', valeur:'Envoyé' } });
+    if (s.statut_qs_envoi1 === 'Envoyé') add({ icon:'🔄', titre:'Questionnaire satisfaction — relance',
+      echeance:addJours(dernier, D.qs_relance),
+      done:s.statut_qs_relance === 'Envoyé', marquer:{ champ:'statut_qs_relance', valeur:'Envoyé' } });
+  }
+  return out;
+}
+
+async function executerMarquage(t) {
+  var m = t.marquer, res, fields = {};
+  if (m.index !== undefined) {
+    res = await api('majConvoc', { id: t.sessionId, index: m.index, champ: m.champ, valeur: m.valeur });
+    if (res && res.convocs_json) fields.convocs_json = res.convocs_json;
+  } else {
+    fields[m.champ] = m.valeur;
+    res = await api('updateSession', { id: t.sessionId, fields: fields });
+  }
+  if (res && res.error) throw new Error(res.error);
+  majSessionLocale(t.sessionId, fields);
 }
 
 function renderTaches() {
   var today = new Date(); today.setHours(0,0,0,0);
   var showDone = document.getElementById('taches-show-done') && document.getElementById('taches-show-done').checked;
+  var D = getDelais();
   var taches = [];
-
   sessions.filter(function(s){ return s.statut_stage !== 'Archivé'; }).forEach(function(s) {
-    var code = s.code_kalisport || s.nom || '—';
-
-    // Lire les statuts depuis convocs_json (indexés par date)
-    var convocsRaw = [];
-    try { if (s.convocs_json) convocsRaw = JSON.parse(s.convocs_json); } catch(e) {}
-    var statusByDate = {};
-    convocsRaw.forEach(function(c){ if (c.date) statusByDate[c.date] = c; });
-
-    // Obtenir TOUTES les séances depuis programme_presentiel ; fallback sur convocs_json
-    var toutesSeances = parseProgrammePresentiel(s.programme_presentiel);
-    // Fusionner : dates depuis programme_presentiel + statuts depuis convocs_json
-    var convocs = toutesSeances.length > 0
-      ? toutesSeances.map(function(t){ return Object.assign({}, statusByDate[t.date] || {}, {date: t.date, horaires: t.horaires}); })
-      : convocsRaw;
-
-    convocs.forEach(function(c, i) {
-      var dateP = parseDateLocal(c.date);
-      if (!dateP) return;
-      var isP1 = (i === 0);
-      var d = parseDateLocal(c.date);
-      var dateAff = d ? d.toLocaleDateString('fr-FR') : c.date;
-      var pLabel = 'Présentiel ' + (i+1) + (dateAff ? ' — ' + dateAff : '');
-
-      // Séance passée sans statut dans convocs_json = déjà traitée, on ignore les tâches pré-séance
-      var isPassee = dateP < today;
-      var hasStatus = !!statusByDate[c.date];
-      if (isPassee && !hasStatus) {
-        // Séance passée dont on n'a plus le statut : on n'affiche pas les tâches pré-séance
-        // (on laisse quand même afficher les émargements post-séance plus bas si récents)
-        return;
-      }
-
-      // P1 uniquement : mail bienvenue J-9
-      if (isP1) {
-        var echeanceJ9 = new Date(dateP.getTime() - 9 * 86400000);
-        if (c.stag !== 'Envoyé') {
-          taches.push({ done:false, urgence:getUrgence(today, echeanceJ9, dateP), echeance:echeanceJ9, icon:'📧',
-            titre:'Mail bienvenue ' + pLabel + ' → stagiaires (J-9)', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-            marquer:function(sid,ci,conv){return async function(){
-              conv[ci].stag='Envoyé';
-              await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv),statut_convocation:'Envoyé'}});
-              await reloadTaches();
-            };}(s.id,i,convocs)
-          });
-        } else {
-          taches.push({ done:true, urgence:'fait', echeance:echeanceJ9, icon:'✅',
-            titre:'Mail bienvenue P1 envoyé', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
-        }
-      }
-
-      // TOUS les présentiels : mail rappel J-5
-      var echeanceJ5 = new Date(dateP.getTime() - 5 * 86400000);
-      var rappelFait = isP1 ? (c.rappel_j5 === 'Envoyé') : (c.stag === 'Envoyé' && !isP1);
-      // Pour P2+ on utilise stag comme indicateur du rappel J-5
-      // Pour P1 on utilise un champ dédié rappel_j5
-      var rappelIcone = isP1 ? '📋' : '📋';
-      var rappelTitre = 'Mail rappel J-5 ' + pLabel + ' → stagiaires';
-      if (isP1) {
-        // P1 J-5 = rappel séparé du bienvenue J-9
-        var rappelP1Fait = c.rappel_j5 === 'Envoyé';
-        if (!rappelP1Fait) {
-          taches.push({ done:false, urgence:getUrgence(today, echeanceJ5, dateP), echeance:echeanceJ5, icon:'📋',
-            titre:rappelTitre + ' (J-5)', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-            marquer:function(sid,ci,conv){return async function(){
-              conv[ci].rappel_j5='Envoyé';
-              await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv)}});
-              await reloadTaches();
-            };}(s.id,i,convocs)
-          });
-        } else {
-          taches.push({ done:true, urgence:'fait', echeance:echeanceJ5, icon:'✅',
-            titre:'Rappel J-5 P1 envoyé', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
-        }
-      } else {
-        // P2+ : stag = rappel J-5
-        if (c.stag !== 'Envoyé') {
-          taches.push({ done:false, urgence:getUrgence(today, echeanceJ5, dateP), echeance:echeanceJ5, icon:'📋',
-            titre:'Mail rappel J-5 ' + pLabel + ' → stagiaires', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-            marquer:function(sid,ci,conv){return async function(){
-              conv[ci].stag='Envoyé';
-              await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv)}});
-              await reloadTaches();
-            };}(s.id,i,convocs)
-          });
-        } else {
-          taches.push({ done:true, urgence:'fait', echeance:echeanceJ5, icon:'✅',
-            titre:'Rappel J-5 ' + pLabel + ' envoyé', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
-        }
-        // Émargements J+1 après chaque présentiel
-      var echeanceEmar = new Date(dateP.getTime() + 86400000);
-      if (c.emargement !== 'Fait') {
-        taches.push({ done:false, urgence: today >= echeanceEmar ? (today - echeanceEmar > 2*86400000 ? 'rouge' : 'orange') : 'gris', echeance:echeanceEmar, icon:'📋',
-          titre:'Checker émargements — ' + pLabel, meta:code,
-          action:function(sid){return function(){openSession(sid);};}(s.id),
-          marquer:function(sid,ci,conv){return async function(){
-            conv[ci].emargement='Fait';
-            await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv)}});
-            await reloadTaches();
-          };}(s.id,i,convocs)
-        });
-      } else {
-        taches.push({ done:true, urgence:'fait', echeance:echeanceEmar, icon:'✅',
-          titre:'Émargements vérifiés — ' + pLabel, meta:code,
-          action:function(sid){return function(){openSession(sid);};}(s.id) });
-      }
-
-      // Convoc formateur J-5 pour P2+
-        var echeanceFormJ5 = new Date(dateP.getTime() - 5 * 86400000);
-        if (c.form !== 'Envoyé') {
-          taches.push({ done:false, urgence:getUrgence(today, echeanceFormJ5, dateP), echeance:echeanceFormJ5, icon:'👨‍🏫',
-            titre:'Convocation ' + pLabel + ' → formateur (J-5)', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-            marquer:function(sid,ci,conv){return async function(){
-              conv[ci].form='Envoyé';
-              await api('updateSession',{id:sid,fields:{convocs_json:JSON.stringify(conv)}});
-              await reloadTaches();
-            };}(s.id,i,convocs)
-          });
-        } else {
-          taches.push({ done:true, urgence:'fait', echeance:echeanceFormJ5, icon:'✅',
-            titre:'Convocation ' + pLabel + ' → formateur envoyée', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
-        }
-      }
+    construireTaches(s, today, D).forEach(function(t) {
+      t.urgence = t.done ? 'fait' : getUrgence(today, t.echeance);
+      taches.push(t);
     });
-
-    // Infos formateur J-9 avant P1
-    if (s.statut_mail_formateur !== 'Envoyé' && convocs.length > 0) {
-      var dateP1 = parseDateLocal(convocs[0].date);
-      if (dateP1) {
-        var j9F = new Date(dateP1.getTime() - 9 * 86400000);
-        taches.push({ done:false, urgence:getUrgence(today, j9F, dateP1), echeance:j9F, icon:'👨‍🏫',
-          titre:'Infos stage → formateur (J-9)', meta:code,
-          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-          marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_mail_formateur:'Envoyé'}}); await reloadTaches(); };}(s.id)
-        });
-      }
-    } else if (s.statut_mail_formateur === 'Envoyé' && convocs.length > 0) {
-      var dateP1b = parseDateLocal(convocs[0].date);
-      if (dateP1b) {
-        var j9Fb = new Date(dateP1b.getTime() - 9 * 86400000);
-        taches.push({ done:true, urgence:'fait', echeance:j9Fb, icon:'✅',
-          titre:'Infos formateur envoyées', meta:code,
-          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
-      }
-    }
-
-    // Relance paiements manquants J-9 avant P1
-    if (convocs.length > 0) {
-      var dateP1r = parseDateLocal(convocs[0].date);
-      if (dateP1r) {
-        var j9R = new Date(dateP1r.getTime() - 9 * 86400000);
-        var relanceFaite = s.relance_paiement_fait === 'Oui';
-        if (!relanceFaite) {
-          taches.push({ done:false, urgence:getUrgence(today, j9R, dateP1r), echeance:j9R, icon:'💶',
-            titre:'Relance paiements manquants (J-9)', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-            marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{relance_paiement_fait:'Oui'}}); await reloadTaches(); };}(s.id)
-          });
-        } else {
-          taches.push({ done:true, urgence:'fait', echeance:j9R, icon:'✅',
-            titre:'Relance paiements effectuée', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
-        }
-      }
-    }
-
-    // Contrôle prérequis J-9 avant P1
-    if (convocs.length > 0) {
-      var dateP1c = parseDateLocal(convocs[0].date);
-      if (dateP1c) {
-        var j9C = new Date(dateP1c.getTime() - 9 * 86400000);
-        var prereqFait = s.prereq_controle_fait === 'Oui';
-        if (!prereqFait) {
-          taches.push({ done:false, urgence:getUrgence(today, j9C, dateP1c), echeance:j9C, icon:'✔️',
-            titre:'Contrôler les prérequis stagiaires (J-9)', meta:code,
-            action:function(sid){return function(){openSession(sid);};}(s.id),
-            marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{prereq_controle_fait:'Oui'}}); await reloadTaches(); };}(s.id)
-          });
-        } else {
-          taches.push({ done:true, urgence:'fait', echeance:j9C, icon:'✅',
-            titre:'Prérequis contrôlés', meta:code,
-            action:function(sid){return function(){openSession(sid);};}(s.id) });
-        }
-      }
-    }
-
-    // QS Envoi 1 : J+1 après dernier présentiel
-    var dateDernier = s.date_dernier_presentiel ? parseDateLocal(String(s.date_dernier_presentiel)) : null;
-    if (!dateDernier && convocs.length > 0) {
-      var dates = convocs.map(function(c){return parseDateLocal(c.date);}).filter(Boolean).sort(function(a,b){return b-a;});
-      if (dates.length) dateDernier = dates[0];
-    }
-    if (dateDernier) {
-      var j1 = new Date(dateDernier.getTime() + 86400000);
-      if (s.statut_qs_envoi1 !== 'Envoyé') {
-        taches.push({ done:false, urgence:today >= j1 ? 'orange' : 'gris', echeance:j1, icon:'⭐',
-          titre:'QS — Envoi 1 (J+1)', meta:code,
-          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-          marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_qs_envoi1:'Envoyé'}}); await reloadTaches(); };}(s.id)
-        });
-      } else {
-        taches.push({ done:true, urgence:'fait', echeance:j1, icon:'✅',
-          titre:'QS Envoi 1 envoyé', meta:code,
-          action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
-        // QS Relance J+30
-        var j30 = new Date(dateDernier.getTime() + 30 * 86400000);
-        if (s.statut_qs_relance !== 'Envoyé') {
-          taches.push({ done:false, urgence:today >= j30 ? 'orange' : 'gris', echeance:j30, icon:'🔄',
-            titre:'QS — Relance (J+30)', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id),
-            marquer:function(sid){return async function(){ await api('updateSession',{id:sid,fields:{statut_qs_relance:'Envoyé'}}); await reloadTaches(); };}(s.id)
-          });
-        } else {
-          taches.push({ done:true, urgence:'fait', echeance:j30, icon:'✅',
-            titre:'QS Relance envoyée', meta:code,
-            action:function(sid){return function(){ouvrirTache(sid,'mails');};}(s.id) });
-        }
-      }
-    }
   });
-
-  // Trier par urgence puis date
-  var ordre = { rouge:0, orange:1, gris:2, fait:3 };
-  taches.sort(function(a,b) {
-    var ou = (ordre[a.urgence]||2) - (ordre[b.urgence]||2);
-    if (ou !== 0) return ou;
-    if (a.echeance && b.echeance) return a.echeance - b.echeance;
-    if (a.echeance) return -1; if (b.echeance) return 1;
-    return 0;
-  });
+  taches.sort(function(a,b) { return a.echeance - b.echeance; });
 
   var aFaire = taches.filter(function(t){return !t.done;});
   var faites = taches.filter(function(t){return t.done;});
-
+  var jours = function(t) { return Math.ceil((t.echeance - today)/86400000); };
   var groupes = [
-    { label:'🔴 En retard ou cette semaine', test:function(t){
-      if (!t.echeance) return false;
-      var diff = Math.ceil((t.echeance - today)/86400000);
-      return diff <= 7;
-    }, couleur:'#fee2e2', border:'#fca5a5' },
-    { label:'🟡 Semaine prochaine', test:function(t){
-      if (!t.echeance) return false;
-      var diff = Math.ceil((t.echeance - today)/86400000);
-      return diff > 7 && diff <= 14;
-    }, couleur:'#fef9c3', border:'#fde047' },
-    { label:'📅 Ce mois', test:function(t){
-      if (!t.echeance) return false;
-      var diff = Math.ceil((t.echeance - today)/86400000);
-      return diff > 14 && diff <= 31;
-    }, couleur:'#f0f9ff', border:'#bae6fd' },
-    { label:'📋 Plus tard', test:function(t){
-      if (!t.echeance) return true;
-      return Math.ceil((t.echeance - today)/86400000) > 31;
-    }, couleur:'var(--sand)', border:'var(--line)' }
+    { label:'🔴 En retard ou cette semaine', test:function(t){ return jours(t) <= 7; }, couleur:'#fee2e2', border:'#fca5a5' },
+    { label:'🟡 Semaine prochaine', test:function(t){ var d = jours(t); return d > 7 && d <= 14; }, couleur:'#fef9c3', border:'#fde047' },
+    { label:'📅 Ce mois', test:function(t){ var d = jours(t); return d > 14 && d <= 31; }, couleur:'#f0f9ff', border:'#bae6fd' },
+    { label:'📋 Plus tard', test:function(t){ return jours(t) > 31; }, couleur:'var(--sand)', border:'var(--line)' }
   ];
 
-  var nbUrgent = taches.filter(function(t){return !t.done && t.urgence==='rouge';}).length;
-  var header = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">'
-    + '<div class="stat"><div class="n" style="color:'+(nbUrgent?'var(--terra)':'var(--sage-d)')+'">'+aFaire.length+'</div><div class="l">À faire</div></div>'
-    + (nbUrgent?'<div class="stat"><div class="n" style="color:var(--terra);">'+nbUrgent+'</div><div class="l">Urgentes</div></div>':'')
+  var nbRetard = aFaire.filter(function(t){ return t.echeance < today; }).length;
+  var html = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">'
+    + '<div class="stat"><div class="n" style="color:var(--sage-d);">'+aFaire.length+'</div><div class="l">À faire</div></div>'
+    + (nbRetard?'<div class="stat"><div class="n" style="color:var(--terra);">'+nbRetard+'</div><div class="l">En retard</div></div>':'')
     + '<div class="stat"><div class="n" style="color:var(--sage-d);">'+faites.length+'</div><div class="l">Faites</div></div>'
     + '</div>';
 
-  window.tacheActions = [];
-  window.tacheMarquer = [];
-  var html = header;
-  var affichees = 0;
-
+  window.tachesAffichees = [];
   groupes.forEach(function(g) {
     var items = aFaire.filter(g.test);
     if (!items.length) return;
-    affichees += items.length;
     html += '<div style="margin-bottom:20px;">'
-      + '<div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:6px 10px;border-radius:6px;background:'+g.couleur+';border-bottom:2px solid '+g.border+';">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:6px 10px;border-radius:6px;background:'+g.couleur+';border-left:3px solid '+g.border+';">'
       + g.label + ' <span style="font-weight:400;">(' + items.length + ')</span></div>';
     items.forEach(function(t) {
-      var idx = window.tacheActions.length;
-      window.tacheActions.push(t.action);
-      var idxM = window.tacheMarquer.length;
-      window.tacheMarquer.push(t.marquer || null);
-      var dateStr = t.echeance ? fmtDate(t.echeance) : '';
-      var cbId = 'tch-' + idxM;
-      html += '<div class="tache '+(t.urgence==='rouge'?'urgent':t.urgence==='orange'?'bientot':'')+'" id="tache-row-'+idxM+'" style="margin-bottom:6px;">'
-        + (t.marquer ? '<input type="checkbox" id="'+cbId+'" style="width:16px;height:16px;cursor:pointer;flex-shrink:0;" onchange="onTacheCheck('+idxM+',this.checked)">' : '<span style="width:16px;flex-shrink:0;"></span>')
+      var k = window.tachesAffichees.length; window.tachesAffichees.push(t);
+      var cls = t.urgence==='rouge' ? 'rouge' : t.urgence==='orange' ? 'orange' : 'gris';
+      html += '<div class="tache '+(t.urgence==='rouge'?'urgent':t.urgence==='orange'?'bientot':'')+'" id="tache-row-'+k+'" style="margin-bottom:6px;">'
+        + '<input type="checkbox" id="tch-'+k+'" style="width:16px;height:16px;cursor:pointer;flex-shrink:0;" onchange="onTacheCheck('+k+',this.checked)">'
         + '<span class="tache-icon">'+t.icon+'</span>'
         + '<div class="tache-body"><div class="tache-titre">'+t.titre+'</div><div class="tache-meta">'+t.meta+'</div></div>'
-        + (dateStr?'<span class="tache-date '+(t.urgence==='rouge'?'rouge':t.urgence==='orange'?'orange':'gris')+'">'+dateStr+'</span>':'')
-        + (t.marquer?'<button class="btn-g" style="font-size:11px;padding:4px 10px;flex-shrink:0;border-color:var(--sage);color:var(--sage-d);" onclick="marquerTacheFaite('+idxM+')">✓ Fait</button>':'')
-        + '<button class="btn-p" style="font-size:11px;padding:4px 10px;flex-shrink:0;" onclick="tacheActions['+idx+']()">Ouvrir →</button>'
+        + '<span class="tache-date '+cls+'">'+fmtDate(t.echeance)+'</span>'
+        + '<button class="btn-g" style="font-size:11px;padding:4px 10px;flex-shrink:0;border-color:var(--sage);color:var(--sage-d);" onclick="marquerTacheFaite('+k+')">✓ Fait</button>'
+        + '<button class="btn-p" style="font-size:11px;padding:4px 10px;flex-shrink:0;" onclick="openSession(window.tachesAffichees['+k+'].sessionId)">Ouvrir →</button>'
         + '</div>';
     });
     html += '</div>';
   });
-
-  if (!affichees) {
-    html += '<div class="card" style="text-align:center;padding:40px;color:var(--ink-s);">🎉 Aucune tâche en attente !</div>';
-  }
+  if (!aFaire.length) html += '<div class="card" style="text-align:center;padding:40px;color:var(--ink-s);">🎉 Aucune tâche en attente !</div>';
 
   if (showDone && faites.length) {
-    html += '<div style="margin-top:20px;opacity:.6;">'
-      + '<div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">✅ Faites ('+faites.length+')</div>';
+    html += '<div style="margin-top:20px;opacity:.6;"><div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">✅ Faites ('+faites.length+')</div>';
     faites.forEach(function(t) {
-      html += '<div class="tache ok" style="margin-bottom:6px;">'
-        + '<span class="tache-icon">'+t.icon+'</span>'
+      html += '<div class="tache ok" style="margin-bottom:6px;"><span class="tache-icon">✅</span>'
         + '<div class="tache-body" style="text-decoration:line-through;"><div class="tache-titre">'+t.titre+'</div><div class="tache-meta">'+t.meta+'</div></div>'
-        + '<span class="badge ok">Fait</span>'
-        + '</div>';
+        + '<span class="badge ok">Fait</span></div>';
     });
     html += '</div>';
   }
-
   document.getElementById('taches-content').innerHTML = html;
+  majBarreSelection();
 }
 
 function onTacheCheck(idx, checked) {
@@ -1742,104 +1550,29 @@ function deselectionnerTout() {
 async function marquerSelectionFaite() {
   var coches = Array.from(document.querySelectorAll('#taches-content input[type="checkbox"]:checked'));
   if (!coches.length) return;
-  var barre = document.getElementById('barre-selection');
-  barre.innerHTML = '<span>⏳ Enregistrement en cours…</span>';
-  var promises = coches.map(function(cb) {
-    var m = cb.id.match(/^tch-(\d+)$/);
-    if (!m) return Promise.resolve();
-    var fn = window.tacheMarquer[parseInt(m[1])];
-    return fn ? fn() : Promise.resolve();
-  });
-  // On les exécute séquentiellement pour éviter les conflits d'écriture
-  for (var i = 0; i < promises.length; i++) { try { await promises[i]; } catch(e) {} }
-  deselectionnerTout();
-  await reloadTaches();
+  document.getElementById('barre-nb').textContent = '⏳ Enregistrement…';
+  var erreurs = 0;
+  // Strictement l'une après l'autre : deux tâches d'une même session modifient la même ligne du Sheet
+  for (var i = 0; i < coches.length; i++) {
+    var m = coches[i].id.match(/^tch-(\d+)$/);
+    var t = m && window.tachesAffichees[parseInt(m[1])];
+    if (!t) continue;
+    try { await executerMarquage(t); } catch(e) { erreurs++; }
+  }
+  renderTaches(); renderTDB();
+  toast(erreurs ? '⚠️ ' + erreurs + ' erreur(s) — réessaie' : '✓ ' + coches.length + ' tâche(s) marquée(s) faite(s)');
 }
 
-function getUrgence(today, echeance, dateFin) {
-  if (!echeance && !dateFin) return 'gris';
-  var ref = echeance || dateFin;
-  var diff = Math.ceil((ref - today) / 86400000);
-  if (diff <= 0) return 'rouge'; // dépassé ou aujourd'hui
-  if (diff <= 7) return 'rouge'; // dans les 7 jours
-  if (diff <= 14) return 'orange'; // dans les 14 jours
+function getUrgence(today, echeance) {
+  if (!echeance) return 'gris';
+  var diff = Math.ceil((echeance - today) / 86400000);
+  if (diff <= 7) return 'rouge';   // en retard, aujourd'hui ou dans la semaine
+  if (diff <= 14) return 'orange';
   return 'gris';
 }
 
-function parseDate(str) {
-  if (!str) return null;
-  // Format ISO YYYY-MM-DD (stocké par input type="date")
-  var iso = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (iso) {
-    var d = new Date(parseInt(iso[1]), parseInt(iso[2])-1, parseInt(iso[3]));
-    d.setHours(0,0,0,0);
-    return d;
-  }
-  // Format DD/MM/YYYY ou DD/MM/YY
-  var m = str.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-  if (m) {
-    var y = m[3] ? (parseInt(m[3]) < 100 ? 2000+parseInt(m[3]) : parseInt(m[3])) : new Date().getFullYear();
-    var d2 = new Date(y, parseInt(m[2])-1, parseInt(m[1]));
-    d2.setHours(0,0,0,0);
-    return d2;
-  }
-  return null;
-}
 
-function ouvrirTache(sessionId, subtab) {
-  openSession(sessionId).then(function() {
-    if (subtab === 'mails') switchSub('mails');
-  });
-}
 
-async function syncPresentielsDepuisProgramme() {
-  var prog = currentSession.programme_presentiel || '';
-  if (!prog) { toast('Aucun programme à synchroniser'); return; }
-
-  var lignes = prog.split('\n').map(function(l){return l.trim();}).filter(Boolean);
-  var newConvocs = lignes.map(function(ligne) {
-    // Extraire la date : chercher un pattern de date dans la ligne
-    // Ex: "Samedi 19 septembre 2026 — de 9h00 à 17h30 (RDV 8h45) — Salle..."
-    // Ex: "Samedi 19 septembre 2026"
-    var moisFr = {janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};
-    var dateStr = '';
-    var horaires = '';
-    var lieu = '';
-
-    // Chercher jour mois année dans le texte
-    var m = ligne.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/i);
-    if (m) {
-      var mois = moisFr[m[2].toLowerCase()];
-      if (mois) {
-        var d = new Date(parseInt(m[3]), mois-1, parseInt(m[1]));
-        dateStr = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
-      }
-    }
-
-    // Extraire horaires
-    var hm = ligne.match(/de\s+(\d{1,2}h\d{2})\s+à\s+(\d{1,2}h\d{2})(?:\s*\(RDV\s+(\d{1,2}h\d{2})\))?/i);
-    if (hm) {
-      horaires = hm[1] + ' à ' + hm[2] + (hm[3] ? ' (RDV ' + hm[3] + ')' : '');
-    }
-
-    // Lieu : après le dernier —
-    var parties = ligne.split('—');
-    if (parties.length >= 3) lieu = parties[parties.length-1].trim();
-    else if (parties.length === 2) lieu = parties[1].trim();
-
-    return { date: dateStr, horaires: horaires, lieu: lieu, stag: '', form: '' };
-  }).filter(function(c){ return c.date; });
-
-  if (!newConvocs.length) { toast('Aucune date trouvée dans le programme'); return; }
-
-  if (!confirm(newConvocs.length + ' présentiel(s) trouvé(s). Synchroniser ?')) return;
-
-  var json = JSON.stringify(newConvocs);
-  var res = await api('updateSession', { id: currentSession.id, fields: { convocs_json: json } });
-  if (res && res.error) { toast('Erreur: ' + res.error); return; }
-  currentSession.convocs_json = json;
-  toast('✓ ' + newConvocs.length + ' présentiel(s) synchronisé(s)');
-}
 
 
 function fermerSession() {
@@ -1851,15 +1584,39 @@ function fermerSession() {
   document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.view === 'tdb'); });
 }
 
-async function marquerTacheFaite(idx) {
-  if (!window.tacheMarquer || !window.tacheMarquer[idx]) return;
-  if (!confirm('Marquer cette tâche comme faite ?')) return;
-  await window.tacheMarquer[idx]();
+async function marquerTacheFaite(k) {
+  var t = window.tachesAffichees && window.tachesAffichees[k];
+  if (!t) return;
+  try { await executerMarquage(t); } catch(e) { toast('⚠️ ' + e.message); return; }
+  renderTaches(); renderTDB();
   toast('✓ Tâche marquée comme faite');
 }
 
 
-function exportTDB() { toast('Export Excel — fonctionnalité à brancher sur Code.gs'); }
+function exportTDB() {
+  // Export CSV lisible par Excel (séparateur ; + BOM UTF-8)
+  var cols = [
+    ['Code Kalisport','code_kalisport'],['Nom','nom'],['Type','type'],['Secteur','secteur'],['Statut','statut_stage'],
+    ['Début','date_debut'],['Fin','date_fin'],['Fin inscription','date_fin_inscription'],
+    ['Formateur', function(s){ return [s.formateur_civilite,s.formateur_nom,s.formateur_prenom].filter(Boolean).join(' '); }],
+    ['Email formateur','formateur_email'],['Payés','paiement_manuel'],['Admis H','admis_m_manuel'],['Admis F','admis_f_manuel'],
+    ['QS envoi 1','statut_qs_envoi1'],['QS relance','statut_qs_relance'],['Diplômes','statut_diplomes'],
+    ['Doc salarié','doc_salarie'],['Virements','virement_info'],['Rém. formateur','rem_formateur'],
+    ['Avancement','statut_admin'],['Dernier point','date_revue'],['Observations','observations']
+  ];
+  var esc = function(v) { v = v === undefined || v === null ? '' : String(v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
+  var showArch = document.getElementById('tdb-archived') && document.getElementById('tdb-archived').checked;
+  var lignes = [cols.map(function(c){ return c[0]; }).join(';')];
+  sessions.filter(function(s){ return showArch || s.statut_stage !== 'Archivé'; }).forEach(function(s) {
+    lignes.push(cols.map(function(c){ return esc(typeof c[1] === 'function' ? c[1](s) : s[c[1]]); }).join(';'));
+  });
+  var blob = new Blob(['﻿' + lignes.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'formations_irfbb_' + new Date().toISOString().substring(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('✓ Export téléchargé');
+}
 
 
 // === ANNUAIRE ===
@@ -2085,10 +1842,10 @@ async function openNewSession() {
   sessionEnCoursDeModif = null;
   if (!formateurs.length) await loadAnnuaire();
   // Réinitialiser le formulaire
-  ['f-code','f-nom','f-secteur','f-debut','f-fin','f-finins','f-tarif','f-lieu','f-obs',
-   'f-dates-globales','f-acces','f-materiel',
+  ['f-code','f-nom','f-secteur','f-debut','f-fin','f-finins','f-lieu','f-obs','f-repas-global',
+   'f-acces','f-materiel',
    'f-visio-date','f-visio-lien','f-visio-replay',
-   'f-kal-session','f-kal-form','f-tup-id','f-tup-lien',
+   'f-kal-session','f-kal-form','f-tup-id','f-tup-lien','f-tup-stag',
    'f-nom-fo','f-pre-fo','f-email-fo','f-tel-fo',
    'f-nom-fo2','f-pre-fo2','f-email-fo2','f-tel-fo2','f-suivi-fo','f-lien-att',
    'f-qs-stag','f-qs-form'].forEach(function(id) {
@@ -2127,7 +1884,6 @@ async function modifierSession() {
   set('f-debut', s.date_debut ? (s.date_debut+'').substring(0,10) : '');
   set('f-fin', s.date_fin ? (s.date_fin+'').substring(0,10) : '');
   set('f-finins', s.date_fin_inscription ? (s.date_fin_inscription+'').substring(0,10) : '');
-  set('f-tarif', s.tarif);
   set('f-obs', s.observations);
   if (s.statut_stage) document.getElementById('f-statut').value = s.statut_stage;
   if (s.repas_global) document.getElementById('f-repas-global').value = s.repas_global;
@@ -2143,7 +1899,6 @@ async function modifierSession() {
     }
   } catch(e) {}
   renderPresentielsForms();
-  set('f-dates-globales', s.dates_globales);
   set('f-date-dernier', s.date_dernier_presentiel ? (s.date_dernier_presentiel+'').substring(0,10) : '');
   if (s.mail_visio_type) document.getElementById('f-visio-type').value = s.mail_visio_type;
   set('f-visio-date', s.mail_date_visio);
@@ -2208,8 +1963,7 @@ async function saveSession() {
   var autoDatesGlobales = '';
   if (autoDebut && autoFin) {
     var fmt = function(d) {
-      var dt = new Date(d);
-      return dt.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
+      return parseDateLocal(d).toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
     };
     autoDatesGlobales = autoDebut === autoFin ? 'Le ' + fmt(autoDebut) : 'du ' + fmt(autoDebut) + ' au ' + fmt(autoFin);
   }
@@ -2225,7 +1979,6 @@ async function saveSession() {
     date_debut: autoDebut,
     date_fin: autoFin,
     date_fin_inscription: g('f-finins'),
-    tarif: g('f-tarif'),
     lieu: pres.length ? (pres[0].lieu || '') : '',
     observations: g('f-obs'),
     programme_presentiel: presentielsToProgramme(pres),
@@ -2284,14 +2037,11 @@ async function saveSession() {
       btn.textContent = 'Enregistrement…';
       var res = await api('updateSession', { id: sessionEnCoursDeModif, fields: fields });
       if (res && res.error) throw new Error(res.error);
-      Object.assign(currentSession, fields);
-      // Mise à jour locale immédiate — pas de rechargement complet
-      var idx = sessions.findIndex(function(s) { return s.id === sessionEnCoursDeModif; });
-      if (idx > -1) Object.assign(sessions[idx], fields);
-      try { localStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData, ts: Date.now() })); } catch(e) {}
+      majSessionLocale(sessionEnCoursDeModif, fields);
       closeAll();
       toast('Session mise à jour !');
       renderTDB(); renderTaches();
+      if (currentSession) { _renderSessionHeader(currentSession); prefillMails(); }
     } else {
       // Création
       btn.textContent = 'Création…';
@@ -2306,7 +2056,8 @@ async function saveSession() {
       }
       closeAll();
       toast('Session créée !');
-      loadSessions();
+      await loadSessions(true);
+      renderTaches();
     }
   } catch(e) {
     document.getElementById('r-session').textContent = 'Erreur : ' + e.message;
@@ -2323,31 +2074,25 @@ async function openSession(id) {
   document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.view === 'session'); });
   document.getElementById('tab-session').style.display = '';
   window.location.hash = id;
-
-  // 1. Affichage instantané depuis le tableau de bord (déjà en mémoire)
+  // Affichage instantané depuis la mémoire, puis rafraîchissement depuis le Sheet
   var local = sessions.find(function(s) { return s.id === id; });
   if (local) {
     currentSession = Object.assign({}, local);
-    currentStag = [];
     _renderSessionHeader(currentSession);
     switchSub('mails');
   } else {
     document.getElementById('det-title').textContent = 'Chargement…';
   }
-
-  // 2. Chargement des stagiaires en arrière-plan (silencieux)
-  try {
-    var data = await api('getSession', { id: id });
-    if (data.error) throw new Error(data.error);
-    currentSession = data.session;
-    currentStag = data.stagiaires || [];
-    // Mettre à jour le cache sessions en mémoire
+  var data = await api('getSession', { id: id });
+  if (data && data.session) {
+    if (!currentSession || currentSession.id !== id) currentSession = {};
+    Object.assign(currentSession, data.session);
     var idx = sessions.findIndex(function(s) { return s.id === id; });
-    if (idx > -1) sessions[idx] = Object.assign(sessions[idx], data.session);
+    if (idx > -1) Object.assign(sessions[idx], data.session);
     _renderSessionHeader(currentSession);
-    if (document.getElementById('sub-mails').classList.contains('active')) prefillMails();
-  } catch(e) {
-    if (!local) document.getElementById('det-title').textContent = 'Erreur : ' + e.message;
+    switchSub('mails');
+  } else if (!local) {
+    document.getElementById('det-title').textContent = 'Session introuvable';
   }
 }
 
@@ -2358,28 +2103,13 @@ function _renderSessionHeader(s) {
   document.getElementById('tab-session-label').textContent = s.code_kalisport || s.nom || 'Session';
   var liens = [];
   if (s.mail_session_kalisport || s.kalisport_lien) liens.push('<a href="'+(s.mail_session_kalisport||s.kalisport_lien)+'" target="_blank" style="'+lStyle+'">🔗 Kalisport</a>');
-  if (s.kalisport_id) liens.push('<button onclick="syncDatesKalisport()" style="'+lStyle+'cursor:pointer;border:1px solid var(--line);background:var(--sand-d);">🔄 Syncer Kalisport</button>');
+  if (s.kalisport_id) liens.push('<button onclick="syncDatesKalisport()" style="'+lStyle+'cursor:pointer;">🔄 Syncer Kalisport</button>');
   if (s.lien_suivi_formateur) liens.push('<a href="'+s.lien_suivi_formateur+'" target="_blank" style="'+lStyle+'">📋 Suivi</a>');
   if (s.teachup_lien) liens.push('<a href="'+s.teachup_lien+'" target="_blank" style="'+lStyle+'">📚 Teach Up</a>');
   document.getElementById('det-liens-rapides').innerHTML = liens.join('');
 }
-function actifs() { return currentStag.filter(function(s) { return s.statut !== 'Annulé' && s.statut !== 'Reporté'; }); }
 
 
-// === UPDATES STAGIAIRES ===
-async function updPaiement(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.paiement_statut=val?'OK':''; await api('updateStagiaire',{id:id,fields:{paiement_statut:val?'OK':''}}); toast(val?'Paiement confirmé':'Retiré'); }
-async function updDecision(id, val, el) {
-  var s = currentStag.find(function(x) { return x.id === id; });
-  if (s) s.decision_attestation = val;
-  if (el) {
-    el.className = 'sm dec-' + (val==='ATTESTATION VALIDEE'?'admis':val==='NON ADMIS'?'non-admis':'attente');
-  }
-  await api('updateStagiaire', { id: id, fields: { decision_attestation: val } });
-  toast(val === 'ATTESTATION VALIDEE' ? '✓ Admis' : val === 'NON ADMIS' ? '✕ Non admis' : 'En attente');
-}
-async function updStatut(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.statut=val; await api('updateStagiaire',{id:id,fields:{statut:val}}); renderStag(); toast(val); }
-async function updNote(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.note=val; await api('updateStagiaire',{id:id,fields:{note:val}}); toast('Note enregistrée'); }
-async function updRepas(id, val) { var s=currentStag.find(function(x){return x.id===id;}); if(s)s.repas=val?'Oui':'Non'; await api('updateStagiaire',{id:id,fields:{repas:val?'Oui':'Non'}}); toast(val?'Repas ajouté':'Retiré'); }
 
 // === MAILS - PREFILL ===
 function prefillMails() {
@@ -2403,22 +2133,57 @@ function prefillMails() {
 
 // === CONFIG ===
 async function loadConfig() {
-  var data = await api('getConfig');
-  configData = data || {};
-  var sec = configData.secteurs || '';
-  document.getElementById('cfg-secteurs').value = sec;
-  secteursList = sec.split('\n').map(function(s){return s.trim();}).filter(Boolean);
-  if (configData.tup_enfants) document.getElementById('cfg-tup-enf').value = configData.tup_enfants;
-  if (configData.tup_jeunes) document.getElementById('cfg-tup-jeu').value = configData.tup_jeunes;
-  if (configData.tup_adultes) document.getElementById('cfg-tup-adu').value = configData.tup_adultes;
-  if (configData.plan_bf) document.getElementById('cfg-plan-bf').value = configData.plan_bf;
-  if (configData.plan_detb) document.getElementById('cfg-plan-detb').value = configData.plan_detb;
-  if (configData.info_bf) document.getElementById('cfg-info-bf').value = configData.info_bf;
-  if (configData.info_detb) document.getElementById('cfg-info-detb').value = configData.info_detb;
-  if (configData.plan_int_bf) document.getElementById('cfg-plan-int-bf').value = configData.plan_int_bf;
-  if (configData.plan_int_detb) document.getElementById('cfg-plan-int-detb').value = configData.plan_int_detb;
+  remplirConfig();                       // affichage immédiat depuis le cache
+  var data = await api('getConfig');     // puis valeurs fraîches du Sheet
+  if (data && !data.error) { configData = data; saveCache(); remplirConfig(); }
+}
+function remplirConfig() {
+  var c = configData || {};
+  var set = function(id, v) { var el = document.getElementById(id); if (el) el.value = v || ''; };
+  set('cfg-secteurs', c.secteurs);
+  secteursList = String(c.secteurs || '').split('\n').map(function(s){return s.trim();}).filter(Boolean);
+  set('cfg-tup-enf', c.tup_enfants); set('cfg-tup-jeu', c.tup_jeunes); set('cfg-tup-adu', c.tup_adultes);
+  set('cfg-plan-bf', c.plan_bf); set('cfg-plan-detb', c.plan_detb);
+  set('cfg-info-bf', c.info_bf); set('cfg-info-detb', c.info_detb); set('cfg-replay-detb', c.replay_detb);
+  set('cfg-ical', c.kalisport_ical_url);
+  renderDelaisForm();
   loadConfigMails();
   updateSecteursDatalist();
+}
+function renderDelaisForm() {
+  var D = getDelais();
+  var el = document.getElementById('cfg-delais'); if (!el) return;
+  el.innerHTML = Object.keys(DELAIS_DEFAUT).map(function(k) {
+    return '<label style="display:flex;align-items:center;gap:8px;font-size:12px;">'
+      + '<input type="number" min="0" max="90" class="cfg-delai" data-k="'+k+'" value="'+D[k]+'" style="width:60px;">'
+      + '<span>'+DELAIS_LIBELLES[k]+'</span></label>';
+  }).join('');
+}
+async function saveConfigDelais() {
+  var d = {};
+  document.querySelectorAll('.cfg-delai').forEach(function(i) { var n = parseInt(i.value, 10); if (!isNaN(n)) d[i.dataset.k] = n; });
+  var res = await saveConfigVals({ delais_json: JSON.stringify(d) });
+  document.getElementById('r-cfg-delais').textContent = res.error ? '⚠️ ' + res.error : '✓ Échéances enregistrées';
+  renderTaches();
+}
+async function lancerSyncAgenda() {
+  var r = document.getElementById('r-cfg-delais');
+  r.textContent = '⏳ Synchronisation de Google Agenda…';
+  var res = await api('syncAgenda');
+  r.textContent = res && !res.error
+    ? '✓ Agenda : ' + (res.creees||0) + ' créé(s), ' + (res.maj||0) + ' mis à jour, ' + (res.supprimees||0) + ' supprimé(s)'
+    : '⚠️ ' + ((res && res.error) || 'Erreur');
+}
+async function saveConfigIcal() {
+  var v = document.getElementById('cfg-ical').value.trim();
+  var res = await saveConfigVals({ kalisport_ical_url: v });
+  document.getElementById('r-cfg-ical').textContent = res.error ? '⚠️ ' + res.error : '✓ Adresse iCal enregistrée';
+}
+// Enregistre plusieurs clés Config en un seul appel
+async function saveConfigVals(data) {
+  var res = await api('setConfigBulk', { data: data });
+  if (res && !res.error) { Object.assign(configData, data); saveCache(); toast('✓ Enregistré'); }
+  return res || { error: 'Pas de réponse' };
 }
 
 function updateSecteursDatalist() {
@@ -2429,16 +2194,11 @@ function updateSecteursDatalist() {
 
 async function saveSecteurs() {
   var val = document.getElementById('cfg-secteurs').value.trim();
-  var res = await api('setConfig', { cle: 'secteurs', valeur: val });
-  if (res.success) {
-    configData.secteurs = val;
-    secteursList = val.split('\n').map(function(s){return s.trim();}).filter(Boolean);
-    updateSecteursDatalist();
-    document.getElementById('r-cfg-secteurs').textContent = '✓ Secteurs enregistrés (' + secteursList.length + ')';
-    toast('Secteurs sauvegardés');
-  } else {
-    document.getElementById('r-cfg-secteurs').textContent = 'Erreur: ' + (res.error||'');
-  }
+  var res = await saveConfigVals({ secteurs: val });
+  if (res.error) { document.getElementById('r-cfg-secteurs').textContent = 'Erreur: ' + res.error; return; }
+  secteursList = val.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+  updateSecteursDatalist();
+  document.getElementById('r-cfg-secteurs').textContent = '✓ Secteurs enregistrés (' + secteursList.length + ')';
 }
 
 async function majPlanningTout() {
@@ -2450,47 +2210,27 @@ async function majPlanningTout() {
 }
 
 async function saveConfigPlanning() {
-  var bf = document.getElementById('cfg-plan-bf').value;
-  var detb = document.getElementById('cfg-plan-detb').value;
-  var infoBf = document.getElementById('cfg-info-bf').value;
-  var infoDetb = document.getElementById('cfg-info-detb').value;
-  var intBf = document.getElementById('cfg-plan-int-bf').value;
-  var intDetb = document.getElementById('cfg-plan-int-detb').value;
-  await api('setConfig', { cle: 'plan_bf', valeur: bf });
-  await api('setConfig', { cle: 'plan_detb', valeur: detb });
-  await api('setConfig', { cle: 'info_bf', valeur: infoBf });
-  await api('setConfig', { cle: 'info_detb', valeur: infoDetb });
-  await api('setConfig', { cle: 'plan_int_bf', valeur: intBf });
-  await api('setConfig', { cle: 'plan_int_detb', valeur: intDetb });
-  configData.plan_bf = bf; configData.plan_detb = detb;
-  configData.info_bf = infoBf; configData.info_detb = infoDetb;
-  configData.plan_int_bf = intBf; configData.plan_int_detb = intDetb;
-  document.getElementById('r-cfg-plan').textContent = '✓ Liens enregistrés';
-  toast('Enregistré');
+  var g = function(id) { return document.getElementById(id).value.trim(); };
+  var res = await saveConfigVals({
+    plan_bf: g('cfg-plan-bf'), plan_detb: g('cfg-plan-detb'),
+    info_bf: g('cfg-info-bf'), info_detb: g('cfg-info-detb'), replay_detb: g('cfg-replay-detb')
+  });
+  document.getElementById('r-cfg-plan').textContent = res.error ? '⚠️ ' + res.error : '✓ Liens enregistrés';
 }
 async function saveConfigTup() {
-  var enf = document.getElementById('cfg-tup-enf').value;
-  var jeu = document.getElementById('cfg-tup-jeu').value;
-  var adu = document.getElementById('cfg-tup-adu').value;
-  await api('setConfig', { cle: 'tup_enfants', valeur: enf });
-  await api('setConfig', { cle: 'tup_jeunes', valeur: jeu });
-  await api('setConfig', { cle: 'tup_adultes', valeur: adu });
-  configData.tup_enfants = enf; configData.tup_jeunes = jeu; configData.tup_adultes = adu;
-  document.getElementById('r-cfg-tup').textContent = '✓ Liens Teach Up enregistrés';
-  toast('Enregistré');
+  var g = function(id) { return document.getElementById(id).value.trim(); };
+  var res = await saveConfigVals({ tup_enfants: g('cfg-tup-enf'), tup_jeunes: g('cfg-tup-jeu'), tup_adultes: g('cfg-tup-adu') });
+  document.getElementById('r-cfg-tup').textContent = res.error ? '⚠️ ' + res.error : '✓ Liens Teach Up enregistrés';
 }
 
 // === MAIL CLUBS — groupé par secteur ===
-function renderRelListe() {
-  // Relance paiement - gérée via les modèles (génération texte)
-}
 
 function renderClubsListe() {
   // Afficher toutes les sessions du même secteur que la session courante
   if (!currentSession) return;
   var secteur = currentSession.secteur || '';
   var meme = sessions.filter(function(s) {
-    return s.secteur === secteur && s.statut_stage !== 'Terminé';
+    return s.secteur === secteur && s.statut_stage !== 'Terminé' && s.statut_stage !== 'Archivé';
   });
   if (!meme.length) {
     document.getElementById('clubs-sessions-liste').innerHTML = '<p style="font-size:12px;color:var(--ink-s);">Aucune autre session dans le secteur ' + (secteur||'(non défini)') + '.</p>';
@@ -2534,7 +2274,7 @@ async function envoyerClubsBoite(dest) {
   if (!ids.length) { toast('Aucune session cochée'); return; }
   var secteur = (sessions.find(function(s){ return ids.indexOf(s.id) > -1; }) || {}).secteur || '';
   var destLabel = dest === 'christelle' ? 'Christelle' : 'Martin';
-  if (!confirm('Envoyer le mail ' + destLabel + ' (secteur ' + secteur + ') à ta boîte agodart@hdfbasket.org ?')) return;
+  if (!confirm('Recevoir le mail pour ' + destLabel + ' (secteur ' + secteur + ') sur ' + ME + ' ?')) return;
   document.getElementById('r-clubs').textContent = '⏳ Envoi en cours…';
   var p = {
     sessions_ids: ids,
@@ -2546,8 +2286,12 @@ async function envoyerClubsBoite(dest) {
   };
   var res = await api('envoyerMailClubs', p);
   if (res && res.success) {
-    document.getElementById('r-clubs').textContent = '✅ Mail envoyé à ta boîte — transfère-le à ' + destLabel + ' !';
-    toast('✅ Mail ' + destLabel + ' envoyé à agodart@hdfbasket.org');
+    document.getElementById('r-clubs').textContent = '📨 Reçu sur ' + ME + ' — à transférer à ' + destLabel;
+    toast('📨 Mail pour ' + destLabel + ' reçu sur ' + ME);
+    if (dest === 'christelle') {
+      ids.forEach(function(id) { majSessionLocale(id, { statut_mail_clubs: 'Envoyé' }); api('updateSession', { id: id, fields: { statut_mail_clubs: 'Envoyé' } }); });
+      prefillMails();
+    }
   } else {
     document.getElementById('r-clubs').textContent = '❌ Erreur : ' + ((res && res.error) || 'inconnu');
     toast('❌ Erreur envoi');
@@ -2557,185 +2301,56 @@ async function envoyerClubsBoite(dest) {
 // === MAIL KALISPORT ===
 async function sendKalisport() {
   var s = currentSession;
-  var p = {
-    session_id: s.id,
-    session_kalisport: s.mail_session_kalisport || '',
-    formulaire: s.mail_formulaire || '',
-    tdb_lien: s.teachup_lien || ''
-  };
-  if (!p.session_kalisport && !p.formulaire) {
-    toast('Configure les liens dans ⚙ Config session d\'abord');
-    return;
-  }
+  if (!s.mail_session_kalisport && !s.mail_formulaire) { toast('Renseigne les liens Kalisport dans ✏️ Modifier d\'abord'); return; }
   document.getElementById('r-kal').textContent = 'Envoi…';
-  var res = await api('envoyerMailKalisport', p);
-  document.getElementById('r-kal').textContent = res.success ? ('Envoyé à ' + s.formateur_email) : ('Erreur: ' + (res.error||''));
-  if (res.success) {
-    toast('Mail envoyé');
+  var res = await api('envoyerMailKalisport', { session_id: s.id });
+  if (res && res.success) {
+    document.getElementById('r-kal').textContent = '📨 Reçu sur ' + ME + ' — à transférer à ' + (s.formateur_email || 'au formateur');
     await api('updateSession', { id: s.id, fields: { statut_mail_kalisport: 'Envoyé' } });
-    currentSession.statut_mail_kalisport = 'Envoyé';
-    prefillMails();
+    majSessionLocale(s.id, { statut_mail_kalisport: 'Envoyé' });
+    prefillMails(); toast('📨 Mail reçu sur ' + ME);
+  } else {
+    document.getElementById('r-kal').textContent = 'Erreur: ' + ((res && res.error) || '');
   }
 }
 
-// === RELANCE PAIEMENT (lien individuel par stagiaire) ===
 
 
-async function sendRelance() {
-  // Les emails stagiaires ne sont plus en base — on génère le modèle HTML pour copier/coller
-  var dateDebut = fmtDate(currentSession.date_debut);
-  var res = await api('envoyerRelancePaiement', {
-    session_id: currentSession.id,
-    date_debut: dateDebut,
-  });
-  if (res && res.modele_html) {
-    // Afficher le modèle dans la zone de génération de mail
-    document.getElementById('mail-genere-titre').textContent = 'Modèle — Relance paiement';
-    var apercu = document.getElementById('mail-genere-apercu');
-    if (apercu) {
-      apercu.innerHTML = res.modele_html;
-      apercu.style.display = 'block';
-    }
-    var mailGenBody = document.getElementById('mail-gen-body');
-    if (mailGenBody) {
-      mailGenBody.style.display = 'block';
-      var arr = document.getElementById('mail-gen-arr');
-      if (arr) arr.textContent = '▴';
-    }
-    mailGenBody && mailGenBody.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    toast('Modèle relance généré — copie et envoie depuis ta messagerie');
-  } else if (res && res.error) {
-    toast('Erreur: ' + res.error);
-  }
-}
-
-// === CONVOCATION ===
-// === CONVOCATIONS PAR PRÉSENTIEL ===
-var convocs = []; // [{ date, label, stag, form }]
-var convocIndex = -1; // index du présentiel en cours d'envoi
-
-function chargerConvocs() {
-  var raw = currentSession.convocs_json || '';
-  // Ne pas traiter [] comme vide
-  convocs = [];
-  if (raw && raw !== '[]') {
-    try {
-      var parsed = JSON.parse(raw);
-      convocs = Array.isArray(parsed) ? parsed : [];
-    } catch(e) {
-      console.log('Erreur JSON parse convocs:', e.message, 'raw:', raw.substring(0,100));
-    }
-  }
-
-  if (!el) return;
-
-  if (!convocs.length && currentSession.programme_presentiel) {
-    el.innerHTML = '<div class="info">Les présentiels ont été saisis dans la session mais pas encore synchronisés ici.<br>'
-      + '<button class="btn-p" style="margin-top:8px;font-size:12px;" onclick="syncPresentielsDepuisProgramme()">↻ Synchroniser automatiquement</button></div>';
-    return;
-  }
-  if (!convocs.length) {
-    el.innerHTML = '<p style="font-size:12.5px;color:var(--ink-s);margin:0 0 8px;">Aucun présentiel. Clique sur + pour en ajouter.</p>';
-    return;
-  }
-  // Afficher directement sans passer par renderConvocListe pour isoler le bug
-  var html = '<div style="font-size:11.5px;color:var(--sage-d);margin-bottom:8px;">'+convocs.length+' présentiel(s) chargé(s)</div>';
-  html += '<table style="width:100%;font-size:12.5px;margin-bottom:8px;"><thead><tr>'
-    + '<th style="padding:5px 6px;">Présentiel</th><th style="padding:5px 6px;">Date</th>'
-    + '<th style="padding:5px 6px;">Stag.</th><th style="padding:5px 6px;">Form.</th><th></th>'
-    + '</tr></thead><tbody>';
-  convocs.forEach(function(c, i) {
-    var stagBadge = c.stag === 'Envoyé'
-      ? '<span class="badge ok">✓ Envoyé</span>'
-      : '<button class="btn-s" style="font-size:11px;padding:3px 8px;" onclick="ouvrirConvocForm('+i+',\'stag\')">Envoyer stag.</button>';
-    var formBadge = c.form === 'Envoyé'
-      ? '<span class="badge ok">✓ Envoyé</span>'
-      : '<button class="btn-p" style="font-size:11px;padding:3px 8px;background:var(--terra);" onclick="ouvrirConvocForm('+i+',\'form\')">Envoyer form.</button>';
-    var dateAff = c.date ? fmtDate(c.date) : '—';
-    html += '<tr>'
-      + '<td style="padding:5px 6px;"><strong>P'+(i+1)+'</strong></td>'
-      + '<td style="padding:5px 6px;">'
-        + '<input type="text" value="'+(c.date||'')+'" placeholder="2026-09-19" style="width:110px;font-size:12px;" onblur="updatePresentielDate('+i+',this.value)"> '
-        + '<span style="font-size:11px;color:var(--ink-s);">'+dateAff+'</span>'
-      + '</td>'
-      + '<td style="padding:5px 6px;">'+stagBadge+'</td>'
-      + '<td style="padding:5px 6px;">'+formBadge+'</td>'
-      + '<td style="padding:5px 6px;"><button class="tdb-action" onclick="supprimerPresentiel('+i+')" title="Supprimer">✕</button></td>'
-      + '</tr>';
-  });
-  html += '</tbody></table>';
-  el.innerHTML = html;
-}
 
 
-async function sauvegarderConvocs() {
-  var json = JSON.stringify(convocs);
-  if (currentSession) currentSession.convocs_json = json;
-  await api('updateSession', { id: currentSession.id, fields: { convocs_json: json } });
-}
 
 
-function aperçuConvocFormateur() {
-  var s = currentSession;
-  var i = convocIndex;
-  var c = i >= 0 ? convocs[i] : null;
-  var dateAff = c && c.date ? (parseDateLocal(c.date)||{toLocaleDateString:function(){return c.date;}}).toLocaleDateString('fr-FR') : '';
-  document.getElementById('apercu-title').textContent = 'Aperçu convocation formateur';
-  document.getElementById('apercu-body').innerHTML =
-    '<p>Bonjour <strong>'+(s.formateur_civilite||'')+' '+(s.formateur_nom||'')+'</strong>,</p>' +
-    '<p>Vous êtes convoqué(e) en tant que formateur pour le stage <strong>'+s.nom+'</strong>.</p>' +
-    (dateAff ? '<p><strong>Présentiel :</strong> '+dateAff+(c.horaires?' — '+c.horaires:'')+(c.lieu?' — '+c.lieu:'')+'</p>' : '') +
-    '<p><strong>Programme complet :</strong></p>' +
-    ((s.programme_presentiel||'').split('\n').filter(Boolean).map(function(l){return '<p style="margin:2px 0;padding-left:10px;">• '+l+'</p>';}).join('') || '<p style="color:#888;">—</p>') +
-    (s.mail_acces ? '<p><strong>Accès :</strong> '+s.mail_acces+'</p>' : '') +
-    (s.mail_materiel ? '<p><strong>Matériel :</strong> '+s.mail_materiel+'</p>' : '') +
-    '<p><strong>Alexandra GODART</strong> — 03 20 16 93 75 — agodart@hdfbasket.org</p>';
-  document.getElementById('modal-apercu').classList.add('open');
-}
+
+
 async function sendFormateur() {
   var s = currentSession;
-  var p = { session_id: s.id, date_visio: s.mail_date_visio||'', lien_visio: s.mail_lien_visio||'', id_visio: s.mail_id_visio||'', lien_suivi: s.lien_suivi_formateur||'' };
   document.getElementById('r-fo').textContent = 'Envoi…';
-  var res = await api('envoyerMailFormateur', p);
-  document.getElementById('r-fo').textContent = res.success ? ('Envoyé à '+s.formateur_email) : ('Erreur: '+(res.error||''));
-  if (res.success) { toast('Mail envoyé'); await api('updateSession',{id:s.id,fields:{statut_mail_formateur:'Envoyé'}}); currentSession.statut_mail_formateur='Envoyé'; prefillMails(); }
-}
-function aperçuFormateur() {
-  var s = currentSession;
-  var suivi = s.lien_suivi_formateur || '';
-  var visioType = s.mail_visio_type || '';
-  document.getElementById('apercu-title').textContent = 'Aperçu mail formateur';
-  document.getElementById('apercu-body').innerHTML =
-    '<p>Bonjour <strong>'+(s.formateur_civilite||'')+' '+(s.formateur_nom||'')+'</strong>,</p>' +
-    '<p>Informations pour votre intervention dans <strong>'+s.nom+'</strong>.</p>' +
-    (suivi ? '<div style="background:#f0f7f0;border:1px solid #c3dbc3;border-radius:7px;padding:12px;margin:10px 0;"><strong>Votre espace de suivi :</strong><br><a href="'+suivi+'" style="color:#0059a9;font-weight:bold;">Ouvrir le document</a></div>' : '') +
-    (visioType ? '<p><strong>Visio :</strong> '+(s.mail_date_visio||'—')+'</p>' : '') +
-    '<p><strong>Teach Up :</strong> '+(s.teachup_id||'—')+'</p>' +
-    '<p><strong>Alexandra GODART</strong> — agodart@hdfbasket.org</p>';
-  document.getElementById('modal-apercu').classList.add('open');
+  var res = await api('envoyerMailFormateur', { session_id: s.id });
+  if (res && res.success) {
+    document.getElementById('r-fo').textContent = '📨 Reçu sur ' + ME + ' — à transférer à ' + (s.formateur_email || 'au formateur');
+    await api('updateSession', { id: s.id, fields: { statut_mail_formateur: 'Envoyé' } });
+    majSessionLocale(s.id, { statut_mail_formateur: 'Envoyé' });
+    prefillMails(); renderTaches(); toast('📨 Mail reçu sur ' + ME);
+  } else {
+    document.getElementById('r-fo').textContent = 'Erreur: ' + ((res && res.error) || '');
+  }
 }
 
 // === QUESTIONNAIRE SATISFACTION ===
 async function sendQS(type) {
-  var lienStag = (currentSession.lien_qs_stag || '').trim();
-  var lienForm = (currentSession.lien_qs_form || '').trim();
-  var dateDernier = currentSession.date_dernier_presentiel || '';
-  if (!lienStag) { toast('Renseigne les liens QS dans ⚙ Config session d\'abord'); return; }
-  var p = { session_id: currentSession.id, type: type, lien_stag: lienStag, lien_form: lienForm, date_dernier_presentiel: dateDernier };
+  var s = currentSession;
+  if (!(s.lien_qs_stag || '').trim()) { toast('Renseigne le lien QS stagiaires dans ✏️ Modifier d\'abord'); return; }
   document.getElementById('r-qs').textContent = 'Envoi…';
-  var res = await api('envoyerQuestionnaireSatisfaction', p);
-  if (res.success) {
-    document.getElementById('r-qs').textContent = '📨 Envoyé sur ta boîte — transfère aux stagiaires' + (lienForm ? ' + formateur' : '');
-    // Sauvegarder les liens dans la session (uniques par session)
-    var fields = { lien_qs_stag: lienStag, lien_qs_form: lienForm };
-    if (dateDernier) fields.date_dernier_presentiel = dateDernier;
-    fields[type === 'envoi1' ? 'statut_qs_envoi1' : 'statut_qs_relance'] = 'Envoyé';
-    await api('updateSession', { id: currentSession.id, fields: fields });
-    currentSession.lien_qs_stag = lienStag;
-    currentSession.lien_qs_form = lienForm;
-    toast('Questionnaire envoyé et liens sauvegardés pour cette session');
+  var res = await api('envoyerQuestionnaireSatisfaction', { session_id: s.id, type: type });
+  if (res && res.success) {
+    document.getElementById('r-qs').textContent = '📨 Reçu sur ' + ME + ' — à transférer aux stagiaires' + (s.lien_qs_form ? ' et au formateur' : '');
+    var f = {}; f[type === 'relance' ? 'statut_qs_relance' : 'statut_qs_envoi1'] = 'Envoyé';
+    await api('updateSession', { id: s.id, fields: f });
+    majSessionLocale(s.id, f);
+    prefillMails(); renderTaches(); renderTDB();
+    toast('📨 Questionnaire reçu sur ' + ME);
   } else {
-    document.getElementById('r-qs').textContent = 'Erreur: ' + (res.error || '');
+    document.getElementById('r-qs').textContent = 'Erreur: ' + ((res && res.error) || '');
   }
 }
 
@@ -2744,122 +2359,36 @@ async function sendQS(type) {
 async function sendAttestations() {
   var s = currentSession;
   if (!s) { toast('Ouvre une session'); return; }
-  var lienAtt = (s.lien_dossier_attestations || '').trim();
-  if (!lienAtt) { toast('Renseigne le lien dossier attestations dans ✏️ Modifier d\'abord'); return; }
+  if (!(s.lien_dossier_attestations || '').trim()) { toast('Renseigne le lien dossier attestations dans ✏️ Modifier d\'abord'); return; }
   document.getElementById('r-att').textContent = 'Envoi…';
   var res = await api('envoyerAttestations', { session_id: s.id });
-  if (res.success) {
-    document.getElementById('r-att').textContent = '📨 Reçu sur ta boîte — transfère à Christelle';
-  } else {
-    document.getElementById('r-att').textContent = 'Erreur: ' + (res.error || '');
-  }
+  document.getElementById('r-att').textContent = res && res.success
+    ? '📨 Reçu sur ' + ME + ' — à transférer à Christelle'
+    : 'Erreur: ' + ((res && res.error) || '');
 }
 
-async function testM(type) {
-  if (!currentSession) { toast('Ouvre une session'); return; }
-  if (!confirm('Envoyer un mail test à ' + ME + ' ?')) return;
-  var s = currentSession;
-  var p = { session_id: s.id, test: true, test_email: ME };
-  var res;
-  if (type === 'formateur') {
-    p.date_visio = s.mail_date_visio || '';
-    p.lien_visio = s.mail_lien_visio || '';
-    p.id_visio = s.mail_id_visio || '';
-    p.lien_suivi = s.lien_suivi_formateur || '';
-    res = await api('envoyerMailFormateur', p);
-  } else if (type === 'kalisport') {
-    p.session_kalisport = s.mail_session_kalisport || '';
-    p.formulaire = s.mail_formulaire || '';
-    p.tdb_lien = s.teachup_lien || '';
-    res = await api('envoyerMailKalisport', p);
-  } else if (type === 'convoc') {
-    p.presentiel_date = '';
-    p.dest_type = 'stag';
-    p.lieu = s.lieu || '';
-    p.dates_globales = s.dates_globales || '';
-    p.visio_type = s.mail_visio_type || '';
-    p.visio_date = s.mail_date_visio || '';
-    p.visio_lien = s.mail_lien_visio || '';
-    p.visio_replay = s.mail_visio_replay || '';
-    p.programme = s.programme_presentiel || '';
-    p.acces = s.mail_acces || '';
-    p.materiel = s.mail_materiel || '';
-    p.facebook = s.mail_fb || 'https://www.facebook.com/groups/632709503927580/';
-    p.complement = '';
-    res = await api('envoyerConvocations', p);
-  } else if (type === 'relance') {
-    p.stagiaires_avec_lien = [{ id: 'TEST', lien: 'https://kalisport.test' }];
-    p.date_debut = fmtDate(s.date_debut);
-    res = await api('envoyerRelancePaiement', p);
-  } else if (type === 'clubs') {
-    p.sessions_ids = [s.id];
-    p.dest = 'christelle'; // TEST : envoie version Christelle à ta boîte
-    p.plan_bf = configData.plan_bf || '';
-    p.plan_detb = configData.plan_detb || '';
-    p.info_bf = configData.info_bf || '';
-    p.info_detb = configData.info_detb || '';
-    res = await api('envoyerMailClubs', p);
-  } else if (type === 'qs') {
-    p.type = 'envoi1';
-    p.lien_stag = s.lien_qs_stag || '';
-    p.lien_form = s.lien_qs_form || '';
-    res = await api('envoyerQuestionnaireSatisfaction', p);
-  } else if (type === 'qs-relance') {
-    p.type = 'relance';
-    p.lien_stag = s.lien_qs_stag || '';
-    p.lien_form = s.lien_qs_form || '';
-    res = await api('envoyerQuestionnaireSatisfaction', p);
-  }
-  if (!res) {
-    toast('⚠️ Aucune réponse de l\'API — vérifie le redéploiement Apps Script');
-    return;
-  }
-  toast(res.success ? ('✓ Test envoyé à ' + ME) : ('⚠️ Erreur : ' + (res.error || 'inconnue')));
-  if (!res.success) alert('Détail erreur : ' + JSON.stringify(res));
-}
 
-// === IMPORT CSV ===
-var CSV_MAP = {'ID':'kalisport_id','NOM_STAGIAIRE':'nom','PRENOM_STAGIAIRE':'prenom','SEXE_STAGIAIRE':'sexe','DATE_NAISSANCE_STAGIAIRE':'date_naissance','AGE_STAGIAIRE':'age','LICENCE_STAGIAIRE':'licence','EMAIL1_STAGIAIRE':'email','EMAIL_PAIEMENT_STAGIAIRE':'email_paiement','CLUB_STAGIAIRE':'club','NUMERO_CLUB_STAGIAIRE':'numero_club','NUMERO_DE_PORTABLE':'telephone','AUTORISATION_PARENTALE_STAGIAIRE':'autorisation_parentale','CATEGORIE_NIVEAU_COACHE':'categorie_niveau','EXPERIENCE':'experience','ROLE_DANS_LA_STRUCTURE':'role_structure','AVEZ_VOUS_UN_REGIME_ALIMENTAIRE_PARTICULIER_?':'regime_alimentaire','AVEZ_VOUS_UNE_SITUATION_PARTICULIERE_:_HANDICAP_?':'situation_handicap','REPAS_LORS_DE_VOTRE_FORMATION_:':'repas'};
 
 
 async function init() {
   var hash = window.location.hash.replace('#','');
-
-  // 1. Afficher le cache immédiatement si disponible (affichage instantané)
+  // 1. Cache local → affichage instantané
   try {
     var raw = localStorage.getItem('irfbb_cache');
     if (raw) {
       var cached = JSON.parse(raw);
       sessions = Array.isArray(cached.sessions) ? cached.sessions : [];
       configData = cached.config || {};
-      loadConfigMails();
-      renderTDB();
-      renderTaches();
-      if (hash && hash.charAt(0) === 'S') openSession(hash);
+      remplirConfig(); renderTDB(); renderTaches();
     }
   } catch(e) {}
-
-  // 2. TOUJOURS charger les vraies données depuis le Sheet (mise à jour en temps réel)
-  try {
-    var data = await api('getInit');
-    sessions = Array.isArray(data.sessions) ? data.sessions : [];
-    configData = data.config || {};
-    try { localStorage.setItem('irfbb_cache', JSON.stringify({ sessions: sessions, config: configData, ts: Date.now() })); } catch(e) {}
-    loadConfigMails();
-    renderTDB();
-    renderTaches();
-    if (hash && hash.charAt(0) === 'S') await openSession(hash);
-  } catch(e) {
-    if (!sessions.length) toast('⚠️ Erreur de chargement');
-  }
+  // 2. Données fraîches depuis le Sheet
+  await loadSessions(true);
+  remplirConfig(); renderTaches();
+  if (hash && sessions.some(function(s){ return s.id === hash; })) openSession(hash);
 }
 init();
 
-// Garder Apps Script chaud — ping toutes les 90 secondes
-// Évite le "cold start" de 3s pour les utilisateurs actifs
-setInterval(function() {
-  fetch(API_URL + '?action=ping').catch(function(){});
-}, 55 * 1000);
 </script>
 </body>
 </html>
