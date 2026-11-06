@@ -2474,6 +2474,7 @@ async function lancerSyncAgenda() {
   var res = await api('syncAgenda');
   r.textContent = res && !res.error
     ? '✓ Agenda : ' + (res.creees||0) + ' créé(s), ' + (res.maj||0) + ' mis à jour, ' + (res.supprimees||0) + ' supprimé(s)'
+      + (res.partiel ? ' — la suite continue automatiquement en arrière-plan (quelques minutes)' : '')
     : '⚠️ ' + ((res && res.error) || 'Erreur');
 }
 async function saveConfigIcal() {
