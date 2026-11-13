@@ -239,7 +239,8 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 
 <!-- CONFIG -->
 <div class="view" id="view-config">
-  <h2 style="font-size:17px;margin-bottom:14px;">⚙ Configuration</h2>
+  <h2 style="font-size:17px;margin-bottom:6px;">⚙ Configuration</h2>
+  <p id="version-script" style="font-size:12px;color:var(--ink-s);margin:0 0 14px;"></p>
   <div class="card">
     <h3 style="font-size:14px;margin-bottom:8px;">Liste des secteurs</h3>
     <p style="font-size:12.5px;color:var(--ink-s);margin-top:0;">Ces secteurs apparaissent dans le formulaire de création de session et dans le filtre du tableau de bord.</p>
@@ -700,6 +701,9 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 var API_URL = 'https://script.google.com/macros/s/AKfycbzx_yE_nMLFxLIG28tydeuFq2ZIwndHCgieNyepw9KLFqLesEchi4CBwS8VEblGISpGbA/exec';
 // Toutes les sorties mail arrivent UNIQUEMENT ici (adresse fixée dans le script Apps Script)
 var ME = 'agodart@hdfbasket.org';
+// Version du script Apps Script attendue par cette app (voir VERSION_SCRIPT dans Code.gs)
+var VERSION_ATTENDUE = '2026-11-13 b';
+var versionScript = '';
 
 var sessions = [], formateurs = [], currentSession = null;
 var virementSession = null;
@@ -830,6 +834,7 @@ async function loadSessions(force) {
     sessions = Array.isArray(data.sessions) ? data.sessions : [];
     configData = data.config || {};
     kalInfo = data.kalisport || kalInfo;
+    versionScript = data.version || '(ancienne version)';
     saveCache();
   } else if (data && data.error) {
     toast('⚠️ ' + data.error);
@@ -837,6 +842,16 @@ async function loadSessions(force) {
   renderTDB();
 }
 var kalInfo = { horsLigne:false, nonSuivis:[], maj:'' };
+function afficherVersionScript() {
+  var ok = versionScript === VERSION_ATTENDUE;
+  var el = document.getElementById('version-script');
+  if (el) el.innerHTML = 'Script Apps Script déployé : <strong>' + versionScript + '</strong> '
+    + (ok ? '<span style="color:#166534;">✓ à jour</span>'
+          : '<span style="color:#b91c1c;">⚠ attendu : ' + VERSION_ATTENDUE + ' — enregistre le code (Ctrl+S) puis Déployer → Gérer les déploiements → ✏️ → Version : Nouvelle version</span>');
+  if (!ok) document.querySelectorAll('.bandeau-kal').forEach(function(x){
+    x.insertAdjacentHTML('afterbegin', '<div class="bk bk-warn">⚠ Le script Apps Script déployé n\'est pas la dernière version (' + versionScript + ' au lieu de ' + VERSION_ATTENDUE + ') : certaines corrections ne sont pas actives. Voir ⚙ Config.</div>');
+  });
+}
 function renderBandeauKalisport() {
   var h = '';
   if (kalInfo.horsLigne) {
@@ -851,6 +866,7 @@ function renderBandeauKalisport() {
       + ' <button class="btn-p" onclick="ouvrirPickerKalisport()">Voir / ajouter</button></div>';
   }
   document.querySelectorAll('.bandeau-kal').forEach(function(el){ el.innerHTML = h; });
+  if (versionScript) afficherVersionScript();
 }
 
 async function actualiserKalisport() {
