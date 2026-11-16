@@ -1613,7 +1613,7 @@ try { Object.assign(filtresTaches, JSON.parse(localStorage.getItem('irfbb_filtre
 function appliquerFiltresUI() {
   var g = function(id){ return document.getElementById(id); };
   if (!g('ft-texte')) return;
-  g('ft-texte').value = filtresTaches.texte || '';
+  if (document.activeElement !== g('ft-texte')) g('ft-texte').value = filtresTaches.texte || '';   // ne pas toucher au champ pendant la frappe
   g('ft-famille').value = filtresTaches.famille || '';
   g('ft-periode').value = filtresTaches.periode || '';
   document.querySelectorAll('#ft-cats button').forEach(function(b){
@@ -1627,7 +1627,7 @@ function appliquerFiltresUI() {
 }
 function majFiltresTaches(depuisBouton) {
   if (!depuisBouton) {
-    filtresTaches.texte = document.getElementById('ft-texte').value.trim();
+    filtresTaches.texte = document.getElementById('ft-texte').value;
     filtresTaches.famille = document.getElementById('ft-famille').value;
     filtresTaches.periode = document.getElementById('ft-periode').value;
   }
@@ -1644,7 +1644,7 @@ function resumeFiltres() {
   var noms = { stag:'📧 Stagiaires', form:'👨‍🏫 Formateur', emar:'🖊 Émargements', admin:'💶 Paiements / prérequis', qs:'⭐ Questionnaires' };
   var fam = { bf:'Brevets Fédéraux', detb:'DETB', autres:'Autres formations' };
   var per = { retard:'en retard', '7':"d'ici 7 jours", '14':"d'ici 14 jours", '31':"d'ici 1 mois" };
-  if (f.texte) p.push('« ' + f.texte + ' »');
+  if (f.texte.trim()) p.push('« ' + f.texte.trim() + ' »');
   if (f.famille) p.push(fam[f.famille]);
   if (f.periode) p.push(per[f.periode]);
   if (f.cats.length) p.push(f.cats.map(function(c){ return noms[c]; }).join(' ou '));
@@ -1656,13 +1656,13 @@ function effacerFiltresSaufTexte() {
 }
 
 function filtresActifs() {
-  return !!(filtresTaches.texte || filtresTaches.famille || filtresTaches.periode || filtresTaches.cats.length);
+  return !!((filtresTaches.texte || '').trim() || filtresTaches.famille || filtresTaches.periode || filtresTaches.cats.length);
 }
 function passeFiltres(t, today) {
   var f = filtresTaches;
   if (f.famille && t.famille !== f.famille) return false;
   if (f.cats.length && f.cats.indexOf(t.cat) === -1) return false;
-  if (f.texte) {
+  if ((f.texte || '').trim()) {
     var mots = f.texte.toLowerCase().split(/\s+/).filter(Boolean);
     if (!mots.every(function(m){ return t.recherche.indexOf(m) > -1; })) return false;
   }
@@ -1732,8 +1732,8 @@ function renderTaches() {
   if (!aFaire.length) html += '<div class="card" style="text-align:center;padding:40px;color:var(--ink-s);">'
     + (filtresActifs()
         ? 'Aucune tâche à faire ne correspond à : <strong>' + resumeFiltres() + '</strong>'
-          + (filtresTaches.texte && (filtresTaches.famille || filtresTaches.periode || filtresTaches.cats.length)
-              ? '<br><button class="btn-g" style="margin-top:10px;font-size:12px;" onclick="effacerFiltresSaufTexte()">Garder « ' + filtresTaches.texte + ' » et retirer les autres filtres</button>' : '')
+          + (filtresTaches.texte.trim() && (filtresTaches.famille || filtresTaches.periode || filtresTaches.cats.length)
+              ? '<br><button class="btn-g" style="margin-top:10px;font-size:12px;" onclick="effacerFiltresSaufTexte()">Garder « ' + filtresTaches.texte.trim() + ' » et retirer les autres filtres</button>' : '')
           + '<br><span style="font-size:12px;">Coche « Voir les faites » pour afficher aussi les tâches déjà faites.</span>'
         : '🎉 Aucune tâche en attente !') + '</div>';
 
