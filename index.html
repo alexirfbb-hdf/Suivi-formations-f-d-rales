@@ -151,7 +151,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 .ft-cats button{font-size:11.5px;padding:4px 9px;border-radius:14px;border:1px solid var(--line);background:var(--white);cursor:pointer;color:var(--ink-s);}
 .ft-cats button.on{background:var(--sage-d);border-color:var(--sage-d);color:#fff;}
 .ft-reset{font-size:11.5px;padding:4px 10px;}
-.ft-compteur{font-size:12px;color:var(--ink-s);margin:-8px 0 12px;}
+.ft-compteur{font-size:12.5px;color:#1E3A8A;background:#DBEAFE;border:1px solid #BFDBFE;border-radius:8px;padding:6px 10px;margin:-6px 0 12px;}
 </style>
 </head>
 <body>
@@ -1639,6 +1639,22 @@ function reinitFiltresTaches() {
   filtresTaches = { texte:'', famille:'', periode:'', cats:[] };
   majFiltresTaches(true);
 }
+function resumeFiltres() {
+  var f = filtresTaches, p = [];
+  var noms = { stag:'📧 Stagiaires', form:'👨‍🏫 Formateur', emar:'🖊 Émargements', admin:'💶 Paiements / prérequis', qs:'⭐ Questionnaires' };
+  var fam = { bf:'Brevets Fédéraux', detb:'DETB', autres:'Autres formations' };
+  var per = { retard:'en retard', '7':"d'ici 7 jours", '14':"d'ici 14 jours", '31':"d'ici 1 mois" };
+  if (f.texte) p.push('« ' + f.texte + ' »');
+  if (f.famille) p.push(fam[f.famille]);
+  if (f.periode) p.push(per[f.periode]);
+  if (f.cats.length) p.push(f.cats.map(function(c){ return noms[c]; }).join(' ou '));
+  return p.join(' · ');
+}
+function effacerFiltresSaufTexte() {
+  filtresTaches = { texte: filtresTaches.texte, famille:'', periode:'', cats:[] };
+  majFiltresTaches(true);
+}
+
 function filtresActifs() {
   return !!(filtresTaches.texte || filtresTaches.famille || filtresTaches.periode || filtresTaches.cats.length);
 }
@@ -1690,8 +1706,8 @@ function renderTaches() {
     + '<div class="stat"><div class="n" style="color:var(--sage-d);">'+faites.length+'</div><div class="l">Faites</div></div>'
     + '</div>';
 
-  if (filtresActifs()) html += '<div class="ft-compteur">Filtre actif : ' + aFaire.length + ' tâche(s) affichée(s) sur ' + totalAvantFiltre
-    + ' — <a href="#" onclick="reinitFiltresTaches();return false;">tout afficher</a></div>';
+  if (filtresActifs()) html += '<div class="ft-compteur">🔎 Filtres actifs : <strong>' + resumeFiltres() + '</strong> — '
+    + aFaire.length + ' tâche(s) sur ' + totalAvantFiltre + ' · <a href="#" onclick="reinitFiltresTaches();return false;">tout afficher</a></div>';
   window.tachesAffichees = [];
   groupes.forEach(function(g) {
     var items = aFaire.filter(g.test);
@@ -1714,7 +1730,12 @@ function renderTaches() {
     html += '</div>';
   });
   if (!aFaire.length) html += '<div class="card" style="text-align:center;padding:40px;color:var(--ink-s);">'
-    + (filtresActifs() ? 'Aucune tâche ne correspond à ce filtre.' : '🎉 Aucune tâche en attente !') + '</div>';
+    + (filtresActifs()
+        ? 'Aucune tâche à faire ne correspond à : <strong>' + resumeFiltres() + '</strong>'
+          + (filtresTaches.texte && (filtresTaches.famille || filtresTaches.periode || filtresTaches.cats.length)
+              ? '<br><button class="btn-g" style="margin-top:10px;font-size:12px;" onclick="effacerFiltresSaufTexte()">Garder « ' + filtresTaches.texte + ' » et retirer les autres filtres</button>' : '')
+          + '<br><span style="font-size:12px;">Coche « Voir les faites » pour afficher aussi les tâches déjà faites.</span>'
+        : '🎉 Aucune tâche en attente !') + '</div>';
 
   if (showDone && faites.length) {
     html += '<div style="margin-top:20px;opacity:.6;"><div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">✅ Faites ('+faites.length+')</div>';
