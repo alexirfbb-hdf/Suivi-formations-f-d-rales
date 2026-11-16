@@ -314,6 +314,9 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
     <h3 style="font-size:14px;margin-bottom:6px;">📥 Calendrier Kalisport</h3>
     <p style="font-size:12px;color:var(--ink-s);margin-bottom:8px;">Adresse du flux iCal : les dates, horaires et lieux de toutes les sessions reliées sont lus en direct dans ce calendrier. Une adresse en <code>webcal://</code> est acceptée.</p>
     <div class="field"><label>URL iCal Kalisport</label><input id="cfg-ical" placeholder="webcal://hautsdefrancebasketball.kalisport.com/calendar.php?p=..."></div>
+    <div class="field"><label>Stages hors de mon périmètre — mots-clés (un par ligne)</label>
+      <textarea id="cfg-exclusions" style="min-height:90px;font-size:12px;" placeholder="BPJEPS&#10;CHARGE DE PROMOTION&#10;REVALIDATION&#10;EVALUATION DETB"></textarea>
+      <small style="color:var(--ink-s);">Un stage Kalisport dont le nom contient l'un de ces mots n'est plus proposé ni signalé « non suivi ». Les stages annulés et terminés sont exclus d'office. Les sessions déjà reliées restent suivies.</small></div>
     <div class="btn-row"><button class="btn-p" onclick="saveConfigIcal()">Enregistrer</button></div>
     <div id="r-cfg-ical" style="font-size:12px;color:var(--ink-s);"></div>
   </div>
@@ -519,8 +522,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
             <select id="f-type">
               <optgroup label="DETB"><option>DETB-CS1</option><option>DETB-CS2</option><option>DETB-CS3</option><option>DETB-CS4</option><option>DETB-CS5</option><option>DETB-CS6</option><option>DETB-CS7</option><option>DETB-CS8</option><option>DETB-CS9</option><option>DETB-CS10</option></optgroup>
               <optgroup label="Brevet Fédéral"><option>Brevet Fédéral Enfants</option><option>Brevet Fédéral Jeunes</option><option>Brevet Fédéral Adultes</option></optgroup>
-              <optgroup label="Autres formations"><option>Basket Bien-être</option><option>Micro Basket</option></optgroup>
-              <option>Métier Resp. Technique</option>
+              <optgroup label="Autres formations"><option>Basket Bien-être</option><option>Micro Basket</option><option>Métier Resp. Technique</option><option>Évaluation DETB</option></optgroup>
             </select>
           </div>
         </div>
@@ -722,7 +724,7 @@ var API_URL = 'https://script.google.com/macros/s/AKfycbzx_yE_nMLFxLIG28tydeuFq2
 // Toutes les sorties mail arrivent UNIQUEMENT ici (adresse fixée dans le script Apps Script)
 var ME = 'agodart@hdfbasket.org';
 // Version du script Apps Script attendue par cette app (voir VERSION_SCRIPT dans Code.gs)
-var VERSION_ATTENDUE = '2026-11-13 b';
+var VERSION_ATTENDUE = '2026-11-16';
 var versionScript = '';
 
 var sessions = [], formateurs = [], currentSession = null;
@@ -1176,7 +1178,12 @@ async function ouvrirPickerKalisport() {
     return;
   }
 
-  var html = '<p style="font-size:12px;color:var(--ink-s);margin:0 0 12px;">Clique sur un stage pour le suivre dans l\'app (dates lues en direct dans Kalisport). Les stages déjà suivis sont grisés : un clic ouvre la session.</p>';
+  var exclus = sessions_kal.filter(function(s){ return s.exclu; });
+  var montrerExclus = !!window.pickerMontrerExclus;
+  if (!montrerExclus) sessions_kal = sessions_kal.filter(function(s){ return !s.exclu; });
+  var html = '<div style="display:flex;justify-content:flex-end;margin:-4px 0 8px;"><label style="font-size:11.5px;color:var(--ink-s);cursor:pointer;">'
+    + '<input type="checkbox" ' + (montrerExclus ? 'checked' : '') + ' onchange="window.pickerMontrerExclus=this.checked;ouvrirPickerKalisport()"> Afficher les stages hors périmètre (' + exclus.length + ' : annulés, terminés, BPJEPS…)</label></div>';
+  html += '<p style="font-size:12px;color:var(--ink-s);margin:0 0 12px;">Clique sur un stage pour le suivre dans l\'app (dates lues en direct dans Kalisport). Les stages déjà suivis sont grisés : un clic ouvre la session.</p>';
   html += '<div style="display:flex;flex-direction:column;gap:6px;">';
   sessions_kal.forEach(function(s) {
     var imported = s.already_imported;
@@ -1190,12 +1197,24 @@ async function ouvrirPickerKalisport() {
       ? (s.session_id ? ' onclick="closeAll();openSession(\'' + s.session_id + '\')" style="cursor:pointer;"' : '')
       : ' onclick="importerKalisportSession(' + JSON.stringify(s.kalisport_id).replace(/"/g,'&quot;') + ',' + JSON.stringify(s.nom||'').replace(/"/g,'&quot;') + ')"';
     html += '<div style="' + rowStyle + '"' + onclick + '>';
-    html += '<div style="font-weight:600;font-size:13px;">' + (s.nom || 'Session ' + s.kalisport_id) + badge + '</div>';
+    if (s.exclu) badge += ' <span style="font-size:10px;color:#b45309;font-weight:normal;">hors périmètre : ' + s.exclu + '</span>';
+    var btnIgn = imported ? '' : (s.exclu === 'ignoré'
+      ? '<button class="btn-g" style="float:right;font-size:10.5px;padding:2px 8px;" onclick="event.stopPropagation();ignorerStage(\'' + s.kalisport_id + '\',false)">↩ Ne plus ignorer</button>'
+      : (!s.exclu ? '<button class="btn-g" style="float:right;font-size:10.5px;padding:2px 8px;" title="Ce stage ne me concerne pas : ne plus le proposer" onclick="event.stopPropagation();ignorerStage(\'' + s.kalisport_id + '\',true)">🚫 Ignorer</button>' : ''));
+    html += btnIgn + '<div style="font-weight:600;font-size:13px;">' + (s.nom || 'Session ' + s.kalisport_id) + badge + '</div>';
     if (meta.length) html += '<div style="font-size:11px;color:var(--ink-s);margin-top:2px;">ID ' + s.kalisport_id + ' · ' + meta.join(' · ') + '</div>';
     html += '</div>';
   });
   html += '</div>';
   content.innerHTML = html;
+}
+
+async function ignorerStage(id, ignorer) {
+  var res = await api('ignorerStageKalisport', { kalisport_id: id, ignorer: ignorer });
+  if (!res || res.error) { toast('Erreur : ' + (res && res.error || 'injoignable')); return; }
+  toast(ignorer ? '🚫 Stage ignoré — il ne sera plus proposé' : '↩ Stage de nouveau proposé');
+  await loadSessions(true);
+  ouvrirPickerKalisport();
 }
 
 async function importerKalisportSession(kalisport_id, nom) {
@@ -1988,6 +2007,24 @@ function dupliquerPresentielForm(i) {
 
 var formModeKal = false;
 
+/**
+ * Sélectionne le type de la session dans la liste, en tolérant les écritures différentes
+ * (« DETB - CS 7 » = « DETB-CS7 », « BASKET BIEN-ETRE » = « Basket Bien-être »).
+ * Si le type n'existe pas dans la liste, il y est ajouté tel quel : il n'est JAMAIS remplacé par un autre.
+ */
+function choisirType(type) {
+  var sel = document.getElementById('f-type');
+  sel.querySelectorAll('option[data-ajout]').forEach(function(o){ o.remove(); });
+  if (!type) { sel.selectedIndex = 0; return; }
+  var cle = function(t){ return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,''); };
+  var trouve = Array.from(sel.options).find(function(o){ return cle(o.value) === cle(type); });
+  if (!trouve) {
+    trouve = document.createElement('option'); trouve.value = type; trouve.textContent = type + ' (type actuel)'; trouve.setAttribute('data-ajout','1');
+    sel.insertBefore(trouve, sel.firstChild);
+  }
+  sel.value = trouve.value;
+}
+
 /** Encadré « ⚠ Différences avec Kalisport » : un bouton pour régler chaque alerte. */
 function renderAlertesKalForm(s) {
   var el = document.getElementById('f-alertes-kal');
@@ -2161,6 +2198,7 @@ async function openNewSession() {
   });
   formPresentiels = [];
   formModeKal = false;
+  choisirType('');
   document.getElementById('f-alertes-kal').innerHTML = '';
   remplirSelectStages('', '');
   renderPresentielsForms();
@@ -2247,12 +2285,7 @@ async function modifierSession() {
   document.getElementById('modal-session-titre').textContent = 'Modifier la session';
   document.getElementById('btn-save-session').textContent = 'Enregistrer les modifications';
   // Forcer le type EN DERNIER (après tous les autres set())
-  if (s.type) {
-    var typeEl = document.getElementById('f-type');
-    Array.from(typeEl.options).forEach(function(o) {
-      if (o.value === s.type || o.text === s.type) { typeEl.value = o.value; }
-    });
-  }
+  choisirType(s.type);
   document.getElementById('modal-session').classList.add('open');
 }
 
@@ -2563,6 +2596,7 @@ function remplirConfig() {
   set('cfg-plan-bf', c.plan_bf); set('cfg-plan-detb', c.plan_detb);
   set('cfg-info-bf', c.info_bf); set('cfg-info-detb', c.info_detb); set('cfg-replay-detb', c.replay_detb);
   set('cfg-ical', c.kalisport_ical_url);
+  set('cfg-exclusions', c.kalisport_exclusions !== undefined && c.kalisport_exclusions !== '' ? c.kalisport_exclusions : 'BPJEPS\nCHARGE DE PROMOTION\nREVALIDATION\nEVALUATION DETB');
   renderDelaisForm();
   loadConfigMails();
   updateSecteursDatalist();
@@ -2594,7 +2628,8 @@ async function lancerSyncAgenda() {
 }
 async function saveConfigIcal() {
   var v = document.getElementById('cfg-ical').value.trim();
-  var res = await saveConfigVals({ kalisport_ical_url: v });
+  var ex = document.getElementById('cfg-exclusions').value.trim();
+  var res = await saveConfigVals({ kalisport_ical_url: v, kalisport_exclusions: ex });
   document.getElementById('r-cfg-ical').textContent = res.error ? '⚠️ ' + res.error : '✓ Adresse iCal enregistrée';
 }
 // Enregistre plusieurs clés Config en un seul appel
