@@ -144,6 +144,14 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 .tag-src{display:inline-block;font-size:9.5px;padding:1px 5px;border-radius:6px;margin-left:4px;vertical-align:middle;}
 .tag-manuel{background:var(--sand-d);color:var(--ink-s);}
 .tag-alerte{background:#fee2e2;color:#b91c1c;cursor:help;}
+.filtres-taches{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--sand);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:16px;}
+.filtres-taches input[type=search]{flex:1 1 240px;width:auto;min-width:200px;font-size:12.5px;padding:6px 10px;margin:0;}
+.filtres-taches select{width:auto;flex:0 0 auto;font-size:12.5px;padding:5px 8px;margin:0;}
+.ft-cats{display:flex;flex-wrap:wrap;gap:4px;}
+.ft-cats button{font-size:11.5px;padding:4px 9px;border-radius:14px;border:1px solid var(--line);background:var(--white);cursor:pointer;color:var(--ink-s);}
+.ft-cats button.on{background:var(--sage-d);border-color:var(--sage-d);color:#fff;}
+.ft-reset{font-size:11.5px;padding:4px 10px;}
+.ft-compteur{font-size:12px;color:var(--ink-s);margin:-8px 0 12px;}
 </style>
 </head>
 <body>
@@ -182,6 +190,19 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="reloadTaches()">↻ Actualiser</button>
     </div>
   </div>
+  <div class="filtres-taches">
+    <input id="ft-texte" type="search" placeholder="🔍 Formation, code, secteur, formateur…" oninput="majFiltresTaches()">
+    <select id="ft-famille" onchange="majFiltresTaches()">
+      <option value="">Toutes formations</option><option value="bf">Brevets Fédéraux</option><option value="detb">DETB</option><option value="autres">Autres</option>
+    </select>
+    <select id="ft-periode" onchange="majFiltresTaches()">
+      <option value="">Toutes échéances</option><option value="retard">En retard</option><option value="7">D'ici 7 jours</option><option value="14">D'ici 14 jours</option><option value="31">D'ici 1 mois</option>
+    </select>
+    <div class="ft-cats" id="ft-cats">
+      <button data-c="stag">📧 Stagiaires</button><button data-c="form">👨‍🏫 Formateur</button><button data-c="emar">🖊 Émargements</button><button data-c="admin">💶 Paiements / prérequis</button><button data-c="qs">⭐ Questionnaires</button>
+    </div>
+    <button class="btn-g ft-reset" onclick="reinitFiltresTaches()" title="Effacer les filtres">✕ Effacer</button>
+  </div>
   <div id="taches-content"></div>
 </div>
 <!-- Barre de sélection multiple -->
@@ -210,7 +231,6 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       </div>
       <button class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="exportTDB()">Export CSV (Excel)</button>
     </div>
-  </div>
   </div>
   <div class="scroll">
     <table class="tdb"><thead>
@@ -1523,42 +1543,43 @@ function construireTaches(s, today, D) {
   var code = s.code_kalisport || s.nom || '—';
   var pres = getPresentiels(s);
   var limiteEmar = addJours(today, -30);
-  function add(t) { t.sessionId = s.id; t.meta = code; out.push(t); }
+  function add(t) { t.sessionId = s.id; t.meta = code; t.famille = (s.type||'').indexOf('Brevet') > -1 ? 'bf' : (s.type||'').indexOf('DETB') > -1 ? 'detb' : 'autres';
+    t.recherche = ((s.code_kalisport||'') + ' ' + (s.nom||'') + ' ' + (s.secteur||'') + ' ' + (s.formateur_nom||'') + ' ' + t.titre).toLowerCase(); out.push(t); }
 
   pres.forEach(function(c, i) {
     var dateP = parseDateLocal(c.date); if (!dateP) return;
     var lbl = 'Présentiel ' + (i+1) + ' — ' + dateP.toLocaleDateString('fr-FR');
     var avant = dateP >= today; // les tâches « avant présentiel » n'ont plus de sens une fois passé
-    if (i === 0 && avant) add({ icon:'📧', titre:'Mail bienvenue ' + lbl + ' → stagiaires',
+    if (i === 0 && avant) add({ cat:'stag', icon:'📧', titre:'Mail bienvenue ' + lbl + ' → stagiaires',
       echeance:addJours(dateP, -D.bienvenue_p1), done:c.stag === 'Envoyé',
       marquer:{ date:c.date, champ:'stag', valeur:'Envoyé' } });
-    if (avant) add({ icon:'📋', titre:'Rappel ' + lbl + ' → stagiaires',
+    if (avant) add({ cat:'stag', icon:'📋', titre:'Rappel ' + lbl + ' → stagiaires',
       echeance:addJours(dateP, -D.rappel_presentiel),
       done:c.rappel_j5 === 'Envoyé' || (i > 0 && c.stag === 'Envoyé'), // ancien format P2+
       marquer:{ date:c.date, champ:'rappel_j5', valeur:'Envoyé' } });
-    if (i > 0 && avant) add({ icon:'👨‍🏫', titre:'Convocation ' + lbl + ' → formateur',
+    if (i > 0 && avant) add({ cat:'form', icon:'👨‍🏫', titre:'Convocation ' + lbl + ' → formateur',
       echeance:addJours(dateP, -D.convoc_formateur), done:c.form === 'Envoyé',
       marquer:{ date:c.date, champ:'form', valeur:'Envoyé' } });
-    if (dateP >= limiteEmar) add({ icon:'🖊', titre:'Vérifier émargements — ' + lbl,
+    if (dateP >= limiteEmar) add({ cat:'emar', icon:'🖊', titre:'Vérifier émargements — ' + lbl,
       echeance:addJours(dateP, D.emargement), done:c.emargement === 'Fait', ouvrir:'session',
       marquer:{ date:c.date, champ:'emargement', valeur:'Fait' } });
   });
 
   var p1 = pres.length ? parseDateLocal(pres[0].date) : null;
   if (p1 && p1 >= today) {
-    add({ icon:'👨‍🏫', titre:'Infos stage → formateur', echeance:addJours(p1, -D.infos_formateur),
+    add({ cat:'form', icon:'👨‍🏫', titre:'Infos stage → formateur', echeance:addJours(p1, -D.infos_formateur),
       done:s.statut_mail_formateur === 'Envoyé', marquer:{ champ:'statut_mail_formateur', valeur:'Envoyé' } });
-    add({ icon:'💶', titre:'Relance paiements manquants', echeance:addJours(p1, -D.relance_paiement),
+    add({ cat:'admin', icon:'💶', titre:'Relance paiements manquants', echeance:addJours(p1, -D.relance_paiement),
       done:s.relance_paiement_fait === 'Oui', marquer:{ champ:'relance_paiement_fait', valeur:'Oui' } });
-    add({ icon:'✔️', titre:'Contrôler les prérequis stagiaires', echeance:addJours(p1, -D.prerequis), ouvrir:'session',
+    add({ cat:'admin', icon:'✔️', titre:'Contrôler les prérequis stagiaires', echeance:addJours(p1, -D.prerequis), ouvrir:'session',
       done:s.prereq_controle_fait === 'Oui', marquer:{ champ:'prereq_controle_fait', valeur:'Oui' } });
   }
 
   var dernier = pres.length ? parseDateLocal(pres[pres.length-1].date) : null;
   if (dernier) {
-    add({ icon:'⭐', titre:'Questionnaire satisfaction — envoi 1', echeance:addJours(dernier, D.qs_envoi1),
+    add({ cat:'qs', icon:'⭐', titre:'Questionnaire satisfaction — envoi 1', echeance:addJours(dernier, D.qs_envoi1),
       done:s.statut_qs_envoi1 === 'Envoyé', marquer:{ champ:'statut_qs_envoi1', valeur:'Envoyé' } });
-    if (s.statut_qs_envoi1 === 'Envoyé') add({ icon:'🔄', titre:'Questionnaire satisfaction — relance',
+    if (s.statut_qs_envoi1 === 'Envoyé') add({ cat:'qs', icon:'🔄', titre:'Questionnaire satisfaction — relance',
       echeance:addJours(dernier, D.qs_relance),
       done:s.statut_qs_relance === 'Envoyé', marquer:{ champ:'statut_qs_relance', valeur:'Envoyé' } });
   }
@@ -1585,6 +1606,57 @@ async function executerMarquage(t) {
   majSessionLocale(t.sessionId, fields);
 }
 
+// ---------- Filtres de l'onglet Tâches (mémorisés sur ce navigateur) ----------
+var filtresTaches = { texte:'', famille:'', periode:'', cats:[] };
+try { Object.assign(filtresTaches, JSON.parse(localStorage.getItem('irfbb_filtres_taches') || '{}')); } catch(e) {}
+
+function appliquerFiltresUI() {
+  var g = function(id){ return document.getElementById(id); };
+  if (!g('ft-texte')) return;
+  g('ft-texte').value = filtresTaches.texte || '';
+  g('ft-famille').value = filtresTaches.famille || '';
+  g('ft-periode').value = filtresTaches.periode || '';
+  document.querySelectorAll('#ft-cats button').forEach(function(b){
+    b.classList.toggle('on', filtresTaches.cats.indexOf(b.dataset.c) > -1);
+    b.onclick = function(){
+      var i = filtresTaches.cats.indexOf(b.dataset.c);
+      if (i > -1) filtresTaches.cats.splice(i, 1); else filtresTaches.cats.push(b.dataset.c);
+      majFiltresTaches(true);
+    };
+  });
+}
+function majFiltresTaches(depuisBouton) {
+  if (!depuisBouton) {
+    filtresTaches.texte = document.getElementById('ft-texte').value.trim();
+    filtresTaches.famille = document.getElementById('ft-famille').value;
+    filtresTaches.periode = document.getElementById('ft-periode').value;
+  }
+  try { localStorage.setItem('irfbb_filtres_taches', JSON.stringify(filtresTaches)); } catch(e) {}
+  appliquerFiltresUI();
+  renderTaches();
+}
+function reinitFiltresTaches() {
+  filtresTaches = { texte:'', famille:'', periode:'', cats:[] };
+  majFiltresTaches(true);
+}
+function filtresActifs() {
+  return !!(filtresTaches.texte || filtresTaches.famille || filtresTaches.periode || filtresTaches.cats.length);
+}
+function passeFiltres(t, today) {
+  var f = filtresTaches;
+  if (f.famille && t.famille !== f.famille) return false;
+  if (f.cats.length && f.cats.indexOf(t.cat) === -1) return false;
+  if (f.texte) {
+    var mots = f.texte.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!mots.every(function(m){ return t.recherche.indexOf(m) > -1; })) return false;
+  }
+  if (f.periode) {
+    var j = Math.ceil((t.echeance - today) / 86400000);
+    if (f.periode === 'retard' ? j >= 0 : j > parseInt(f.periode, 10)) return false;
+  }
+  return true;
+}
+
 function renderTaches() {
   var today = new Date(); today.setHours(0,0,0,0);
   var showDone = document.getElementById('taches-show-done') && document.getElementById('taches-show-done').checked;
@@ -1597,6 +1669,9 @@ function renderTaches() {
     });
   });
   taches.sort(function(a,b) { return a.echeance - b.echeance; });
+  appliquerFiltresUI();
+  var totalAvantFiltre = taches.filter(function(t){ return !t.done; }).length;
+  taches = taches.filter(function(t){ return passeFiltres(t, today); });
 
   var aFaire = taches.filter(function(t){return !t.done;});
   var faites = taches.filter(function(t){return t.done;});
@@ -1615,6 +1690,8 @@ function renderTaches() {
     + '<div class="stat"><div class="n" style="color:var(--sage-d);">'+faites.length+'</div><div class="l">Faites</div></div>'
     + '</div>';
 
+  if (filtresActifs()) html += '<div class="ft-compteur">Filtre actif : ' + aFaire.length + ' tâche(s) affichée(s) sur ' + totalAvantFiltre
+    + ' — <a href="#" onclick="reinitFiltresTaches();return false;">tout afficher</a></div>';
   window.tachesAffichees = [];
   groupes.forEach(function(g) {
     var items = aFaire.filter(g.test);
@@ -1636,7 +1713,8 @@ function renderTaches() {
     });
     html += '</div>';
   });
-  if (!aFaire.length) html += '<div class="card" style="text-align:center;padding:40px;color:var(--ink-s);">🎉 Aucune tâche en attente !</div>';
+  if (!aFaire.length) html += '<div class="card" style="text-align:center;padding:40px;color:var(--ink-s);">'
+    + (filtresActifs() ? 'Aucune tâche ne correspond à ce filtre.' : '🎉 Aucune tâche en attente !') + '</div>';
 
   if (showDone && faites.length) {
     html += '<div style="margin-top:20px;opacity:.6;"><div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">✅ Faites ('+faites.length+')</div>';
