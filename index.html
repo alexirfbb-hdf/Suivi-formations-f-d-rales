@@ -724,7 +724,7 @@ var API_URL = 'https://script.google.com/macros/s/AKfycbzx_yE_nMLFxLIG28tydeuFq2
 // Toutes les sorties mail arrivent UNIQUEMENT ici (adresse fixée dans le script Apps Script)
 var ME = 'agodart@hdfbasket.org';
 // Version du script Apps Script attendue par cette app (voir VERSION_SCRIPT dans Code.gs)
-var VERSION_ATTENDUE = '2026-11-17';
+var VERSION_ATTENDUE = '2026-11-19';
 var versionScript = '';
 
 var sessions = [], formateurs = [], currentSession = null;
@@ -815,6 +815,7 @@ function parseDateLocal(str) {
   if (!isNaN(d.getTime())) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
   return null;
 }
+function isoAujourdhui() { var d = new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
 function fmtDate(d) {
   if (!d) return '';
   try { return parseDateLocal(String(d)).toLocaleDateString('fr-FR'); } catch(e) { return String(d); }
@@ -1084,8 +1085,8 @@ function renderTDB() {
       + '<td onclick="event.stopPropagation();">'+admisMHtml+'</td>'
       + '<td onclick="event.stopPropagation();">'+admisFHtml+'</td>'
       + presCells
-      + '<td>'+badgeStat(s.statut_qs_envoi1)+'</td>'
-      + '<td>'+badgeStat(s.statut_qs_relance)+'</td>'
+      + '<td>'+badgeQS(s.statut_qs_envoi1)+'</td>'
+      + '<td>'+badgeQS(s.statut_qs_relance)+'</td>'
       + '<td onclick="event.stopPropagation();">'+dipSelect+'</td>'
       + '<td style="text-align:center;" onclick="event.stopPropagation();">'
         + '<input type="checkbox" class="chk" '+(s.doc_salarie?'checked':'')+' onchange="updSessionTDB(this,\''+s.id+'\',\'doc_salarie\')"></td>'
@@ -1126,6 +1127,14 @@ async function pointerSession(id) {
   }
 }
 
+// Questionnaires : la case contient la date d'envoi (AAAA-MM-JJ) ; « Envoyé » = ancienne coche sans date
+function qsFait(v) { v = String(v || '').trim(); return !!v && v !== 'À faire'; }
+function qsDate(v) { v = String(v || '').trim(); return /^\d{4}-\d{2}-\d{2}/.test(v) ? fmtDate(v.substring(0,10)) : ''; }
+function badgeQS(v) {
+  if (!qsFait(v)) return '<span class="badge warn">À faire</span>';
+  var d = qsDate(v);
+  return '<span class="badge ok" title="Envoyé'+(d?' le '+d:'')+'">'+(d || '✓')+'</span>';
+}
 function badgeStat(v) {
   if (v === 'Envoyé') return '<span class="badge ok">✓</span>';
   return '<span class="badge warn">'+(v||'À faire')+'</span>';
@@ -1597,10 +1606,10 @@ function construireTaches(s, today, D) {
   var dernier = pres.length ? parseDateLocal(pres[pres.length-1].date) : null;
   if (dernier) {
     add({ cat:'qs', icon:'⭐', titre:'Questionnaire satisfaction — envoi 1', echeance:addJours(dernier, D.qs_envoi1),
-      done:s.statut_qs_envoi1 === 'Envoyé', marquer:{ champ:'statut_qs_envoi1', valeur:'Envoyé' } });
-    if (s.statut_qs_envoi1 === 'Envoyé') add({ cat:'qs', icon:'🔄', titre:'Questionnaire satisfaction — relance',
+      done:qsFait(s.statut_qs_envoi1), marquer:{ champ:'statut_qs_envoi1', valeur:'#date' } });
+    if (qsFait(s.statut_qs_envoi1)) add({ cat:'qs', icon:'🔄', titre:'Questionnaire satisfaction — relance',
       echeance:addJours(dernier, D.qs_relance),
-      done:s.statut_qs_relance === 'Envoyé', marquer:{ champ:'statut_qs_relance', valeur:'Envoyé' } });
+      done:qsFait(s.statut_qs_relance), marquer:{ champ:'statut_qs_relance', valeur:'#date' } });
   }
   return out;
 }
@@ -1618,7 +1627,7 @@ async function executerMarquage(t) {
       fields.convocs_json = JSON.stringify(pres);
     }
   } else {
-    fields[m.champ] = m.valeur;
+    fields[m.champ] = m.valeur === '#date' ? isoAujourdhui() : m.valeur;
     res = await api('updateSession', { id: t.sessionId, fields: fields });
     if (res && res.error) throw new Error(res.error);
   }
@@ -2570,8 +2579,10 @@ function prefillMails() {
   var kal = el('st-kal'); kal.className = 'badge '+(s.statut_mail_kalisport==='Envoyé'?'ok':'neu'); kal.textContent = s.statut_mail_kalisport||'À faire';
   var fo = el('st-fo'); fo.className = 'badge '+(s.statut_mail_formateur==='Envoyé'?'ok':'neu'); fo.textContent = s.statut_mail_formateur||'À faire';
   var cl = el('st-clubs'); cl.className = 'badge '+(s.statut_mail_clubs==='Envoyé'?'ok':'neu'); cl.textContent = s.statut_mail_clubs||'À faire';
-  var qsSt = s.statut_qs_envoi1==='Envoyé'&&s.statut_qs_relance==='Envoyé'?'ok':s.statut_qs_envoi1==='Envoyé'?'warn':'neu';
-  var qsTxt = s.statut_qs_envoi1==='Envoyé'?(s.statut_qs_relance==='Envoyé'?'Relance envoyée':'Envoi 1 fait'):'À faire';
+  var q1 = qsFait(s.statut_qs_envoi1), q2 = qsFait(s.statut_qs_relance);
+  var d1 = qsDate(s.statut_qs_envoi1), d2 = qsDate(s.statut_qs_relance);
+  var qsSt = q1&&q2?'ok':q1?'warn':'neu';
+  var qsTxt = q1?(q2?'Envoi 1 le '+(d1||'✓')+' · relance le '+(d2||'✓'):'Envoi 1 le '+(d1||'✓')):'À faire';
   var qs = el('st-qs'); qs.className = 'badge '+qsSt; qs.textContent = qsTxt;
   // Previews
   var pk = el('prev-kal'); pk.textContent = s.mail_session_kalisport ? 'Session Kalisport configurée · TUP: '+(s.teachup_lien?'✓':'—') : 'Aucun lien — configure dans ✏️ Modifier';
@@ -2797,7 +2808,7 @@ async function sendQS(type) {
   var res = await api('envoyerQuestionnaireSatisfaction', { session_id: s.id, type: type });
   if (res && res.success) {
     document.getElementById('r-qs').textContent = '📨 Reçu sur ' + ME + ' — à transférer aux stagiaires' + (s.lien_qs_form ? ' et au formateur' : '');
-    var f = {}; f[type === 'relance' ? 'statut_qs_relance' : 'statut_qs_envoi1'] = 'Envoyé';
+    var f = {}; f[type === 'relance' ? 'statut_qs_relance' : 'statut_qs_envoi1'] = isoAujourdhui();
     await api('updateSession', { id: s.id, fields: f });
     majSessionLocale(s.id, f);
     prefillMails(); renderTaches(); renderTDB();
