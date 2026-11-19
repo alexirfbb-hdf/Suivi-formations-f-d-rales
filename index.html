@@ -731,7 +731,7 @@ var API_URL = 'https://script.google.com/macros/s/AKfycbzx_yE_nMLFxLIG28tydeuFq2
 // Toutes les sorties mail arrivent UNIQUEMENT ici (adresse fixée dans le script Apps Script)
 var ME = 'agodart@hdfbasket.org';
 // Version du script Apps Script attendue par cette app (voir VERSION_SCRIPT dans Code.gs)
-var VERSION_ATTENDUE = '2026-11-19';
+var VERSION_ATTENDUE = '2026-11-19 b';
 var versionScript = '';
 
 var sessions = [], formateurs = [], currentSession = null;
@@ -2138,6 +2138,12 @@ function renderPresentielsForms() {
       if (p.lieu_kal) row.querySelector('.pres-lieu').disabled = true;
       row.querySelectorAll('button').forEach(function(b){ b.style.display = 'none'; });
       if (p.archive) row.style.opacity = '.6';
+      if (p.a_confirmer) {
+        var w = document.createElement('div');
+        w.style.cssText = 'flex-basis:100%;font-size:11.5px;font-weight:600;color:#b45309;';
+        w.textContent = '⚠ Kalisport : ' + (p.titre_kal || 'date à confirmer').replace(/\*/g, '').trim();
+        row.appendChild(w);
+      }
     });
   }
 }
@@ -2272,7 +2278,7 @@ async function modifierSession() {
     if (s.convocs_json) {
       var conv = JSON.parse(s.convocs_json);
       formPresentiels = conv.map(function(c) {
-        return { date: c.date || '', horaires: c.horaires || '', lieu: c.lieu || '', repas: c.repas || '', stag: c.stag || '', form: c.form || '', rappel_j5: c.rappel_j5 || '', emargement: c.emargement || '', lieu_kal: !!c.lieu_kal, archive: !!c.archive };
+        return { date: c.date || '', horaires: c.horaires || '', lieu: c.lieu || '', repas: c.repas || '', stag: c.stag || '', form: c.form || '', rappel_j5: c.rappel_j5 || '', emargement: c.emargement || '', lieu_kal: !!c.lieu_kal, archive: !!c.archive, a_confirmer: !!c.a_confirmer, titre_kal: c.titre_kal || '' };
       });
     }
   } catch(e) {}
