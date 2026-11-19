@@ -108,6 +108,13 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
 /* TÂCHES */
 .tache{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:9px;margin-bottom:8px;border:1px solid var(--line);background:var(--white);transition:.15s;}
 .tache:hover{border-color:var(--sage);}
+.taches-jour{margin-bottom:24px;padding:14px;border-radius:12px;background:#fffbeb;border:2px solid #f59e0b;box-shadow:0 2px 8px rgba(245,158,11,.15);}
+.taches-jour-titre{font-size:14px;font-weight:800;color:#1f4e79;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
+.taches-jour-titre span{font-weight:400;color:var(--ink-s);}
+.taches-jour .tache{border-left:4px solid #f59e0b;background:#fff;}
+.taches-jour .tache-titre{font-weight:700;}
+.tab-jour{display:inline-block;min-width:18px;padding:1px 6px;margin-left:4px;border-radius:10px;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;text-align:center;}
+.taches-jour-vide{font-size:13px;color:var(--ink-s);padding:4px 2px;}
 .tache.urgent{border-left:4px solid var(--terra);background:#fff8f5;}
 .tache.bientot{border-left:4px solid #f59e0b;background:#fffbeb;}
 .tache.ok{border-left:4px solid var(--sage);background:#f0faf0;opacity:.6;}
@@ -162,7 +169,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
   <button class="btn-g" onclick="actualiserKalisport()" style="font-size:12px;" title="Relire tout de suite le calendrier Kalisport (sinon relu automatiquement toutes les 10 min)">🔄 Actualiser Kalisport</button>
 </div>
 <div class="tabs">
-  <div class="tab" data-view="taches" onclick="switchView('taches')">✅ Tâches</div>
+  <div class="tab" data-view="taches" onclick="switchView('taches')">✅ Tâches <span id="tab-jour" class="tab-jour" style="display:none;"></span></div>
   <div class="tab active" data-view="tdb" onclick="switchView('tdb')">Tableau de bord</div>
   <div class="tab" data-view="annuaire" onclick="switchView('annuaire')">Formateurs</div>
   <div class="tab" data-view="config" onclick="switchView('config')">⚙ Config</div>
@@ -196,7 +203,7 @@ select.dec-non-admis option[value="NON ADMIS"]{background:#fee2e2;color:#991b1b;
       <option value="">Toutes formations</option><option value="bf">Brevets Fédéraux</option><option value="detb">DETB</option><option value="autres">Autres</option>
     </select>
     <select id="ft-periode" onchange="majFiltresTaches()">
-      <option value="">Toutes échéances</option><option value="retard">En retard</option><option value="7">D'ici 7 jours</option><option value="14">D'ici 14 jours</option><option value="31">D'ici 1 mois</option>
+      <option value="">Toutes échéances</option><option value="jour">Aujourd'hui</option><option value="retard">En retard</option><option value="7">D'ici 7 jours</option><option value="14">D'ici 14 jours</option><option value="31">D'ici 1 mois</option>
     </select>
     <div class="ft-cats" id="ft-cats">
       <button data-c="stag">📧 Stagiaires</button><button data-c="form">👨‍🏫 Formateur</button><button data-c="emar">🖊 Émargements</button><button data-c="admin">💶 Paiements / prérequis</button><button data-c="qs">⭐ Questionnaires</button>
@@ -1671,7 +1678,7 @@ function resumeFiltres() {
   var f = filtresTaches, p = [];
   var noms = { stag:'📧 Stagiaires', form:'👨‍🏫 Formateur', emar:'🖊 Émargements', admin:'💶 Paiements / prérequis', qs:'⭐ Questionnaires' };
   var fam = { bf:'Brevets Fédéraux', detb:'DETB', autres:'Autres formations' };
-  var per = { retard:'en retard', '7':"d'ici 7 jours", '14':"d'ici 14 jours", '31':"d'ici 1 mois" };
+  var per = { retard:'en retard', '7':"d'ici 7 jours", '14':"d'ici 14 jours", '31':"d'ici 1 mois", jour:'aujourd\'hui' };
   if (f.texte.trim()) p.push('« ' + f.texte.trim() + ' »');
   if (f.famille) p.push(fam[f.famille]);
   if (f.periode) p.push(per[f.periode]);
@@ -1696,7 +1703,7 @@ function passeFiltres(t, today) {
   }
   if (f.periode) {
     var j = Math.ceil((t.echeance - today) / 86400000);
-    if (f.periode === 'retard' ? j >= 0 : j > parseInt(f.periode, 10)) return false;
+    if (f.periode === 'jour' ? j !== 0 : f.periode === 'retard' ? j >= 0 : j > parseInt(f.periode, 10)) return false;
   }
   return true;
 }
@@ -1715,20 +1722,28 @@ function renderTaches() {
   taches.sort(function(a,b) { return a.echeance - b.echeance; });
   appliquerFiltresUI();
   var totalAvantFiltre = taches.filter(function(t){ return !t.done; }).length;
+  var nbJourTotal = taches.filter(function(t){ return !t.done && Math.round((t.echeance - today)/86400000) === 0; }).length;
+  var tj = document.getElementById('tab-jour');
+  if (tj) { tj.textContent = nbJourTotal; tj.title = nbJourTotal + ' tâche(s) aujourd\'hui'; tj.style.display = nbJourTotal ? '' : 'none'; }
   taches = taches.filter(function(t){ return passeFiltres(t, today); });
 
   var aFaire = taches.filter(function(t){return !t.done;});
   var faites = taches.filter(function(t){return t.done;});
-  var jours = function(t) { return Math.ceil((t.echeance - today)/86400000); };
+  var jours = function(t) { return Math.round((t.echeance - today)/86400000); };
   var groupes = [
-    { label:'🔴 En retard ou cette semaine', test:function(t){ return jours(t) <= 7; }, couleur:'#fee2e2', border:'#fca5a5' },
+    { label:'📌 Aujourd\'hui — ' + today.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' }), jour:true,
+      test:function(t){ return jours(t) === 0; }, couleur:'#1f4e79', border:'#f59e0b', vide:'✅ Rien de prévu aujourd\'hui' },
+    { label:'⚠️ En retard', test:function(t){ return jours(t) < 0; }, couleur:'#fee2e2', border:'#dc2626' },
+    { label:'🔴 Cette semaine', test:function(t){ var d = jours(t); return d > 0 && d <= 7; }, couleur:'#fee2e2', border:'#fca5a5' },
     { label:'🟡 Semaine prochaine', test:function(t){ var d = jours(t); return d > 7 && d <= 14; }, couleur:'#fef9c3', border:'#fde047' },
     { label:'📅 Ce mois', test:function(t){ var d = jours(t); return d > 14 && d <= 31; }, couleur:'#f0f9ff', border:'#bae6fd' },
     { label:'📋 Plus tard', test:function(t){ return jours(t) > 31; }, couleur:'var(--sand)', border:'var(--line)' }
   ];
 
   var nbRetard = aFaire.filter(function(t){ return t.echeance < today; }).length;
+  var nbJour = aFaire.filter(function(t){ return jours(t) === 0; }).length;
   var html = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">'
+    + '<div class="stat" style="border:2px solid #f59e0b;"><div class="n" style="color:#1f4e79;">'+nbJour+'</div><div class="l">Aujourd\'hui</div></div>'
     + '<div class="stat"><div class="n" style="color:var(--sage-d);">'+aFaire.length+'</div><div class="l">À faire</div></div>'
     + (nbRetard?'<div class="stat"><div class="n" style="color:var(--terra);">'+nbRetard+'</div><div class="l">En retard</div></div>':'')
     + '<div class="stat"><div class="n" style="color:var(--sage-d);">'+faites.length+'</div><div class="l">Faites</div></div>'
@@ -1739,7 +1754,12 @@ function renderTaches() {
   window.tachesAffichees = [];
   groupes.forEach(function(g) {
     var items = aFaire.filter(g.test);
-    if (!items.length) return;
+    if (!items.length && !(g.jour && !filtresActifs())) return;
+    if (g.jour) {
+      html += '<div class="taches-jour">'
+        + '<div class="taches-jour-titre">' + g.label + ' <span>(' + items.length + ')</span></div>'
+        + (items.length ? '' : '<div class="taches-jour-vide">' + g.vide + (nbRetard ? ' — mais ' + nbRetard + ' tâche(s) en retard ci-dessous' : '') + '</div>');
+    } else
     html += '<div style="margin-bottom:20px;">'
       + '<div style="font-size:12px;font-weight:700;color:var(--ink-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:6px 10px;border-radius:6px;background:'+g.couleur+';border-left:3px solid '+g.border+';">'
       + g.label + ' <span style="font-weight:400;">(' + items.length + ')</span></div>';
